@@ -1,0 +1,81 @@
+module.exports = {
+	list: [
+		'feat',
+		'style',
+		'test',
+		'fix',
+		'docs',
+		'release',
+		'update',
+		'perf',
+		'chore',
+	],
+	questions: ['type', 'scope', 'subject', 'body', 'breaking', 'issues'],
+	types: {
+		chore: {
+			description: "If you don't know the type will select",
+			emoji: '🤷',
+			value: 'chore',
+		},
+		perf: {
+			description: 'Improve perfomance',
+			emoji: '⚡️',
+			value: 'perf',
+		},
+		release: {
+			description: 'Create a release commit',
+			emoji: '🎯',
+			value: 'release',
+		},
+		docs: {
+			description: ' Create / change some document files (ex: *.docs, *.md)',
+			emoji: '🗒',
+			value: ' docs',
+		},
+		test: {
+			description: 'Add / change a test',
+			emoji: '🔬',
+			value: 'test',
+		},
+		style: {
+			description: 'Only style for layout',
+			emoji: '🎨',
+			value: 'style',
+		},
+		fix: {
+			description: 'Fix a bug',
+			emoji: '🐞',
+			value: 'fix',
+		},
+		feat: {
+			description: 'Create a new feature',
+			emoji: '🧩',
+			value: 'feat',
+		},
+		update: {
+			description: 'Update but not improve performance',
+			emoji: '🧩',
+			value: 'update',
+		},
+	},
+	scopes: [
+		'page',
+		'comp-page',
+		'comp-glob',
+		'lib',
+		'util',
+		'enum',
+		'define',
+		'server',
+		'other',
+	],
+	messages: {
+		type: 'Select the type of committing:',
+		customScope: 'Select the scope this component affects:',
+		subject: 'Title:\n',
+		body: 'Description:\n',
+		breaking: 'List any breaking changes:\n',
+		footer: 'Issues this commit closes, e.g #123:',
+		confirmCommit: 'Ready to commit ?\n',
+	},
+}

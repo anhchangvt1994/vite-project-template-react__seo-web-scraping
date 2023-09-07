@@ -1,0 +1,36 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.cache
+package-lock.json
+yarn.lock
+config/env/.env
+config/env/env.json
+*.DS_Store
+
+!server/dist
+config/utils/PortHandler/.env
+server/**/server-info.json
+server/**/user_data*
+server/**/.cache
+server/**/utils/Cache.worker/pages/*.html

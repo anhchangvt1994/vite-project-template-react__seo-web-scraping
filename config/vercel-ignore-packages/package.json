@@ -1,0 +1,12 @@
+{
+	"name": "vite-packages",
+	"version": "1.0.0",
+	"description": "vite-packages",
+	"main": "",
+	"scripts": {},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"vite": "^4.3.9"
+	}
+}

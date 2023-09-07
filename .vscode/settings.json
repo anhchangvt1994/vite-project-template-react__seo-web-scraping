@@ -1,0 +1,26 @@
+{
+	"nuxt.isNuxtApp": false,
+
+	"path-autocomplete.extensionOnImport": true,
+	"path-autocomplete.includeExtension": true,
+	"path-autocomplete.excludedItems": {
+		"**": {
+			"when": "**/*.{js,ts,jsx,tsx}",
+			"isDir": true,
+			"context": "(import|require).*"
+		}
+	},
+	"path-autocomplete.pathMappings": {
+		"/": "${workspace}/src/assets/static",
+		"assets": "${workspace}/src/assets"
+	},
+	"path-autocomplete.pathSeparators": " \t({[",
+	"editor.suggest.showModules": false,
+	"editor.formatOnSave": false,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.codeActionsOnSave": [
+		"source.formatDocument",
+		"source.fixAll.tslint",
+		"source.fixAll.eslint"
+	]
+}
