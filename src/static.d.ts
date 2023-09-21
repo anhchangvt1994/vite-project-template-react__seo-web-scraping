@@ -1,5 +1,4 @@
 import type { IndexRouteObject } from 'react-router-dom'
-
 declare module '*.svg' {
 	const value: string
 	export = value

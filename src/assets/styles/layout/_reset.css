@@ -114,6 +114,7 @@ body {
 	/* line-height: 1.5 !important; */
 	background: #f2f2f2;
 	color: $dark-color;
+	margin: 0;
 }
 
 a {

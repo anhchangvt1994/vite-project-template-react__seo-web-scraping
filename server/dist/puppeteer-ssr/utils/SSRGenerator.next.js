@@ -98,7 +98,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...SSRHandlerParams }) => {
 	result = await cacheManager.achieve(SSRHandlerParams.url)
 
 	if (result) {
-		if (!isSkipWaiting && result.isRaw) {
+		if (result.isRaw) {
 			_ConsoleHandler2.default.log(
 				'File và nội dung đã tồn tại, đang tiến hành Optimize file'
 			)
@@ -198,7 +198,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...SSRHandlerParams }) => {
 				})()
 
 				if (isSkipWaiting) return res(undefined)
-				else setTimeout(res, 3000)
+				else setTimeout(res, 5000)
 
 				const result = await (async () => {
 					return await handle
@@ -222,18 +222,21 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...SSRHandlerParams }) => {
 
 		if (result) {
 			const isValidToSraping = (() => {
-				const createTimeDuration =
-					Date.now() - new Date(result.createdAt).getTime()
-
 				return (
 					result.isInit ||
-					(!result.available &&
-						createTimeDuration >=
-							(_constants.SERVER_LESS &&
-							_constants3.BANDWIDTH_LEVEL ===
-								_constants3.BANDWIDTH_LEVEL_LIST.ONE
-								? 2000
-								: 10000))
+					(() => {
+						const createTimeDuration =
+							Date.now() - new Date(result.createdAt).getTime()
+						return (
+							!result.available &&
+							createTimeDuration >=
+								(_constants.SERVER_LESS &&
+								_constants3.BANDWIDTH_LEVEL ===
+									_constants3.BANDWIDTH_LEVEL_LIST.ONE
+									? 2000
+									: 10000)
+						)
+					})()
 				)
 			})()
 			if (isValidToSraping) {
@@ -264,7 +267,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...SSRHandlerParams }) => {
 					})()
 
 					if (isSkipWaiting) return res(undefined)
-					else setTimeout(res, 3000)
+					else setTimeout(res, 5000)
 
 					const result = await (async () => {
 						return await handle

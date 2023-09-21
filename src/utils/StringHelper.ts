@@ -1,5 +1,5 @@
 // DOCS: https://github.com/kvz/locutus/blob/master/src/php/strings/str_replace.js
-function str_replace(search, replace, subject, countObj) {
+function str_replace(search, replace, subject, countObj?) {
 	// eslint-disable-line camelcase
 	//  discuss at: https://locutus.io/php/str_replace/
 	// original by: Kevin van Zonneveld (https://kvz.io)
@@ -363,7 +363,7 @@ const _generateSlug = (
 	intMaxLength = 500,
 	isLowerCase = true
 ) => {
-	return function (strText) {
+	return function (strText: string) {
 		strSlugResult = ''
 		strText = str_replace(arrCharFrom, arrCharEnd, strText)
 		strSlugResult = str_replace(arrCharnonAllowed, '', strText)
@@ -384,7 +384,7 @@ const getSlug = _generateSlug()
 
 const getSlugWithoutDash = _generateSlug('')
 
-const getUnsignedLetters = (strText) => {
+const getUnsignedLetters = (strText: string) => {
 	if (!strText) {
 		return ''
 	}
@@ -392,7 +392,7 @@ const getUnsignedLetters = (strText) => {
 	return str_replace(arrCharFrom, arrCharEnd, strText)
 } // generateUnsignedLetters
 
-const generateTitleCase = (title) => {
+const generateTitleCase = (title: string) => {
 	if (typeof title !== 'string') {
 		return ''
 	}
@@ -404,7 +404,7 @@ const generateTitleCase = (title) => {
 		return title.charAt(0).toUpperCase() + title.substring(1)
 	}
 
-	const tmpWordList = []
+	const tmpWordList: string[] = []
 
 	titleSplitted.forEach(function (word) {
 		if (word) {
@@ -422,7 +422,7 @@ const generateSentenceCase = (title) => {
 
 	const titleSplitted = title.toLowerCase().trim().split(' ')
 
-	const tmpWordList = []
+	const tmpWordList: string[] = []
 
 	titleSplitted.forEach(function (word, idx) {
 		if (!word) {

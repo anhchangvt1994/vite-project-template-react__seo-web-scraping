@@ -105,8 +105,8 @@ pm2.connect(false, (err) => {
 
 					const watcher = chokidar.watch(
 						[
-							path.resolve(__dirname, `./**/*.${resourceExtension}`),
-							path.resolve(__dirname, `../utils/**/*.${resourceExtension}`),
+							path.resolve(__dirname, `../**/*.${resourceExtension}`),
+							// path.resolve(__dirname, `../utils/**/*.${resourceExtension}`),
 						],
 						{
 							ignored: /$^/,

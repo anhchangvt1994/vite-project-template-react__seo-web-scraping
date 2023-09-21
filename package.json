@@ -3,7 +3,7 @@
 	"private": true,
 	"version": "0.0.0",
 	"scripts": {
-    "start": "cross-env ENV=production MAX_WORKERS=2 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr",
+		"start": "cross-env ENV=production MAX_WORKERS=2 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr",
 		"dev": "cross-env ENV=development npm run start-dev",
 		"build": "npx tsc && npx vite build",
 		"build:esm": "npx tsc && cross-env ESM=true npx vite build",
@@ -31,20 +31,18 @@
 	"engines": {
 		"node": "18.x"
 	},
-	"workspaces": [
-		"server",
-		"server/src/puppeteer-ssr",
-		"config/commit-packages",
-		"config/lint-and-format-packages",
-		"config/vercel-ignore-packages",
-		"config/build-tool-packages"
-	],
 	"dependencies": {
 		"polished": "^4.2.2",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-router-dom": "^6.14.1",
 		"styled-components": "^6.0.2"
+	},
+	"devDependencies": {
+		"server": "file:./server",
+		"commit-packages": "file:./config/commit-packages",
+		"lint-and-format-packages": "file:./config/lint-and-format-packages",
+		"build-tool-packages": "file:./config/build-tool-packages"
 	},
 	"eslintConfig": {
 		"extends": [

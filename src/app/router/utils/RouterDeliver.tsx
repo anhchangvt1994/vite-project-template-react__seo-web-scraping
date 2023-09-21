@@ -1,11 +1,12 @@
-import type { Params } from 'react-router'
 import {
 	INavigateInfo,
 	IRouteInfo,
 	NavigateInfoContext,
 	RouteInfoContext,
 	useRouteInit,
-} from 'config/router/context/InfoContext'
+} from 'app/router/context/InfoContext'
+import type { Params } from 'react-router'
+import { resetSeoTag } from 'utils/SeoHelper'
 
 let navigateInfo: INavigateInfo = {
 	from: undefined,
@@ -66,11 +67,22 @@ export default function RouterDeliver({ children }) {
 	}
 
 	navigateInfo = {
-		from:
-			!navigateInfo.to || navigateInfo.to.id !== routeInfo.id
-				? navigateInfo.to
-				: navigateInfo.from,
+		from: navigateInfo.to || navigateInfo.from,
 		to: routeInfo,
+	}
+
+	if (
+		navigateInfo.from &&
+		navigateInfo.to &&
+		navigateInfo.from.path !== navigateInfo.to.path
+	) {
+		fetch(navigateInfo.to.path as string, {
+			headers: new Headers({
+				Accept:
+					'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+			}),
+		})
+		resetSeoTag()
 	}
 
 	return (

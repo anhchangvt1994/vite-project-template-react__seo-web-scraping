@@ -3,7 +3,7 @@ img.image-item {
 	background-color: #fdfffc;
 
 	&.--is-error {
-		background: url('/images/icons/image-loading-icon.png') center/contain
+		background: url('images/icons/image-loading-icon.png') center/contain
 			no-repeat;
 	}
 }

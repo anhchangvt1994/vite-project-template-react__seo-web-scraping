@@ -52,6 +52,7 @@ const getKey = (url) => {
 	}
 
 	return url.replace(exports.regexKeyConverter, '').replace(/\//g, '|')
+	// return url.split('?')[0].replace(/^https?:\/\/(www\.)?|^www\.|\/$/, '')
 }
 exports.getKey = getKey // getKey
 

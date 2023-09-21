@@ -2,7 +2,7 @@ import ErrorBoundary from 'utils/ErrorBoundary'
 import LoadingBoundary from 'utils/LoadingBoundary'
 import LoadingPageComponent from 'components/LoadingPageComponent'
 import ErrorLoadingPageComponent from 'components/ErrorPageComponent'
-import { useUserInfo } from 'context/UserInfoContext'
+import { useUserInfo } from 'store/UserInfoContext'
 
 const MainContainer = styled.div`
 	max-width: 1280px;
@@ -22,6 +22,14 @@ function Layout() {
 	const location = useLocation()
 	const route = useRoute()
 	const { userState, setUserState } = useUserInfo()
+
+	if (BotInfo.isBot) {
+		setMetaViewportTag('width=device-width, initial-scale=1')
+	} else {
+		setMetaViewportTag(
+			'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
+		)
+	}
 
 	const onClickLogout = () => {
 		setUserState({ email: '' })

@@ -31,6 +31,7 @@ export const getKey = (url) => {
 	}
 
 	return url.replace(regexKeyConverter, '').replace(/\//g, '|')
+	// return url.split('?')[0].replace(/^https?:\/\/(www\.)?|^www\.|\/$/, '')
 } // getKey
 
 export const getFileInfo = async (file: string): Promise<IFileInfo> => {

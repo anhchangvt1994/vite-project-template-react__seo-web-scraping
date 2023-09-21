@@ -80,7 +80,7 @@ const SSRGenerator = async ({
 	result = await cacheManager.achieve(SSRHandlerParams.url)
 
 	if (result) {
-		if (!isSkipWaiting && result.isRaw) {
+		if (result.isRaw) {
 			Console.log('File và nội dung đã tồn tại, đang tiến hành Optimize file')
 			const asyncTmpResult = new Promise<ISSRResult>(async (res) => {
 				const optimizeHTMLContentPool = WorkerPool.pool(
@@ -173,7 +173,7 @@ const SSRGenerator = async ({
 				})()
 
 				if (isSkipWaiting) return res(undefined)
-				else setTimeout(res, 3000)
+				else setTimeout(res, 5000)
 
 				const result = await (async () => {
 					return await handle
@@ -192,16 +192,19 @@ const SSRGenerator = async ({
 
 		if (result) {
 			const isValidToSraping = (() => {
-				const createTimeDuration =
-					Date.now() - new Date(result.createdAt).getTime()
-
 				return (
 					result.isInit ||
-					(!result.available &&
-						createTimeDuration >=
-							(SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.ONE
-								? 2000
-								: 10000))
+					(() => {
+						const createTimeDuration =
+							Date.now() - new Date(result.createdAt).getTime()
+						return (
+							!result.available &&
+							createTimeDuration >=
+								(SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.ONE
+									? 2000
+									: 10000)
+						)
+					})()
 				)
 			})()
 			if (isValidToSraping) {
@@ -232,7 +235,7 @@ const SSRGenerator = async ({
 					})()
 
 					if (isSkipWaiting) return res(undefined)
-					else setTimeout(res, 3000)
+					else setTimeout(res, 5000)
 
 					const result = await (async () => {
 						return await handle

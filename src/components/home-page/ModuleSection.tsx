@@ -1,4 +1,3 @@
-import { getSlug } from 'utils/SlugHandler'
 import ImageItem, { Outer as ImageOuter } from 'components/ImageItem'
 
 // NOTE - Dummy Data Region

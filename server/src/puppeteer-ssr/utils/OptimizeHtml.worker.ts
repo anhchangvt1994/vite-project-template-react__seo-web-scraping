@@ -32,7 +32,7 @@ const compressContent = (html: string): string => {
 	return html
 } // compressContent
 
-const optimizeContent = (html: string, isFullOptimize = true): string => {
+const optimizeContent = (html: string, isFullOptimize = false): string => {
 	if (!html) return ''
 	html = html.replace(regexOptimizeForPerformanceNormally, '')
 

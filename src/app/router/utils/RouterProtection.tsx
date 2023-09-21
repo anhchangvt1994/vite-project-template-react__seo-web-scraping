@@ -1,9 +1,9 @@
-import type { IUserInfo } from 'context/UserInfoContext'
+import type { IUserInfo } from 'store/UserInfoContext'
 import type { To } from 'react-router'
-import type { INavigateInfo } from 'config/router/context/InfoContext'
-import type { IValidation } from 'config/router/context/ValidationContext'
-import { useUserInfo } from 'context/UserInfoContext'
-import { useNavigateInfo } from 'config/router/context/InfoContext'
+import type { INavigateInfo } from 'app/router/context/InfoContext'
+import type { IValidation } from 'app/router/context/ValidationContext'
+import { useUserInfo } from 'store/UserInfoContext'
+import { useNavigateInfo } from 'app/router/context/InfoContext'
 
 export interface ICertInfo {
 	user: IUserInfo

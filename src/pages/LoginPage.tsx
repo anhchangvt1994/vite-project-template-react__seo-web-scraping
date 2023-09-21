@@ -1,4 +1,4 @@
-import { useUserInfo } from 'context/UserInfoContext'
+import { useUserInfo } from 'store/UserInfoContext'
 import ImageItem, { Outer as ImageOuter } from 'components/ImageItem'
 
 const Page = styled.div``

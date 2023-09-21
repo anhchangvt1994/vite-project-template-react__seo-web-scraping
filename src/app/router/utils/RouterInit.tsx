@@ -1,4 +1,4 @@
-import { RouteInitContext } from 'config/router/context/InfoContext'
+import { RouteInitContext } from 'app/router/context/InfoContext'
 
 export default function RouterInit({ children }) {
 	const location = useLocation()

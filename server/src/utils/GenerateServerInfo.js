@@ -76,9 +76,7 @@ const TLDsMerged = new Array().concat(internationalTLDs).concat(countryTLDs)
 	serverInfo.isServer = !Boolean(
 		address === 'localhost' ||
 			address === '::1' ||
-			/^(127|192)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/.test(
-				address
-			)
+			/^(127)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/.test(address)
 	)
 	// const subfixDomain = address.split('.').slice(-1).join('.')
 	// serverInfo.isServer = (TLDsMerged.includes(subfixDomain))

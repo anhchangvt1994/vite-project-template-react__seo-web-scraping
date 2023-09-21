@@ -1,5 +1,5 @@
 import type { Params } from 'react-router'
-import type { IValidation } from 'config/router/context/ValidationContext'
+import type { IValidation } from 'app/router/context/ValidationContext'
 
 function useValidateBasicParam(): IValidation {
 	const params = useParams()

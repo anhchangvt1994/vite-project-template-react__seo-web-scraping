@@ -53,7 +53,7 @@ const compressContent = (html) => {
 	return html
 } // compressContent
 
-const optimizeContent = (html, isFullOptimize = true) => {
+const optimizeContent = (html, isFullOptimize = false) => {
 	if (!html) return ''
 	html = html.replace(_constants.regexOptimizeForPerformanceNormally, '')
 

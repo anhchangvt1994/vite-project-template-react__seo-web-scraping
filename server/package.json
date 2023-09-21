@@ -12,5 +12,8 @@
 		"cors": "^2.8.5",
 		"pm2": "^5.3.0",
 		"workerpool": "^6.4.0"
+	},
+	"devDependencies": {
+		"puppeteer-ssr": "file:./src/puppeteer-ssr"
 	}
 }

@@ -116,12 +116,9 @@ _pm22.default.connect(false, (err) => {
 						[
 							_path2.default.resolve(
 								__dirname,
-								`./**/*.${_constants.resourceExtension}`
+								`../**/*.${_constants.resourceExtension}`
 							),
-							_path2.default.resolve(
-								__dirname,
-								`../utils/**/*.${_constants.resourceExtension}`
-							),
+							// path.resolve(__dirname, `../utils/**/*.${resourceExtension}`),
 						],
 						{
 							ignored: /$^/,

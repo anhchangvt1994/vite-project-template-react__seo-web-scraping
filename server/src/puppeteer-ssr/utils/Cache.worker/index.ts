@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import WorkerPool from 'workerpool'
-import { pagesPath, resourceExtension } from '../../../constants'
+import { pagesPath } from '../../../constants'
 import Console from '../../../utils/ConsoleHandler'
 import { ISSRResult } from '../../types'
 import {
@@ -10,7 +10,6 @@ import {
 	getKey,
 	setRequestTimeInfo,
 } from './utils'
-import { deleteResource } from '../FollowResource.worker/utils'
 
 const maintainFile = path.resolve(__dirname, '../../../../maintain.html')
 

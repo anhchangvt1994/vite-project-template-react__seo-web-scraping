@@ -24,6 +24,7 @@ dist-ssr
 .cache
 package-lock.json
 yarn.lock
+bun.lockb
 config/env/.env
 config/env/env.json
 *.DS_Store
