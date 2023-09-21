@@ -42,7 +42,8 @@
 		"paths": {
 			"@/*": ["../*"],
 			"assets/*": ["assets/*"],
-			"config/*": ["config/*"],
+			"app/*": ["app/*"],
+			"hooks/*": ["hooks/*"],
 			"pages/*": ["pages/*"],
 			"components/*": ["components/*"],
 			"utils/*": ["utils/*"]

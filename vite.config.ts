@@ -22,10 +22,11 @@ const PUPPETEER_SSR_PORT = getPort('PUPPETEER_SSR_PORT') || 8080
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
-	const react =
-		mode === 'development'
-			? (await import('@vitejs/plugin-react-swc')).default
-			: (await import('@vitejs/plugin-react')).default
+	// const react =
+	// 	mode === 'development'
+	// 		? (await import('@vitejs/plugin-react-swc')).default
+	// 		: (await import('@vitejs/plugin-react')).default
+	const react = await (await import('@vitejs/plugin-react')).default
 
 	promiseENVWriteFileSync.then(function () {
 		generateDTS({
