@@ -9,7 +9,7 @@
 	"overrides": {
 		"isomorphic-fetch@*": "$isomorphic-fetch"
 	},
-	"devDependencies": {
+	"dependencies": {
 		"@pmmmwh/react-refresh-webpack-plugin": "^0.5.10",
 		"@rollup/plugin-alias": "^5.0.0",
 		"@rollup/plugin-node-resolve": "^15.1.0",

@@ -67,7 +67,7 @@ const BrowserManager = (
 				if (canUseLinuxChromium && !executablePath) {
 					Console.log('Tạo executablePath')
 					executablePath = await Chromium.executablePath(
-						'https://github.com/Sparticuz/chromium/releases/download/v116.0.0/chromium-v116.0.0-pack.tar'
+						'https://github.com/Sparticuz/chromium/releases/download/v117.0.0/chromium-v117.0.0-pack.tar'
 					)
 				}
 
