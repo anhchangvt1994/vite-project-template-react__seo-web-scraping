@@ -181,6 +181,7 @@ export const REDIRECT_INJECTION = (req: Request) => {} // REDIRECT_INJECTION
 **> What is BotInfo variable ?**
 
 <p><b>BotInfo</b> is a variable keep the Bot information which sent from server to client. You can use it to decide render / none render component if it is Bot / not Bot.</p>
+
 ```typescript
 interface IBotInfo {
   isBot: boolean
@@ -191,6 +192,7 @@ interface IBotInfo {
 **> What is DeviceInfo variable ?**
 
 <p><b>DeviceInfo</b> is a variable keep the Device information which sent from server to client. You can use it to create adaptive website.</p>
+
 ```typescript
 interface IDeviceInfo {
   type: string
