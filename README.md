@@ -73,7 +73,7 @@ Web Scraping for SEO project (React WSC-SEO) is a product designed for ReactJS d
 
 <h3 id="more">More information</h3>
 
-**Why use this project ?**
+**> Why use this project ?**
 
 <p>As introduced above, React WSC-SEO provides ReactJS developers with an additional option for easy access and SEO optimization if needed. To provide developers with more information about the product and make a more informed decision about its use, React WSC-SEO will provide the following specific advantages and disadvantages:</p>
 
@@ -87,7 +87,7 @@ Disadvantages:
 
 - Cannot deliver complete results on free serverless platforms (such as Vercel), because free serverless platforms often have lower bandwidth, serverless timeout, and storage capacity than paid versions. Therefore, Web Scraping features (a key feature of this product) cannot run at their best capacity when deployed on production.
 
-**How to setup meta SEO tags ?**
+**> How to setup meta SEO tags ?**
 
 I already created utils for this necessary, you just type **setSeoTag** for all setup or **setMeta[X]** for each meta seo tag
 
@@ -114,7 +114,7 @@ setMetaRobotsTag('index, follow')
 setMetaDescriptionTag('Home page Vue 3.x and WSC-SEO')
 ```
 
-**How to setup link SEO tags ?**
+**> How to setup link SEO tags ?**
 
 I already created utils for this necessary, you just type **setSeoTag** for all setup or **setLink[X]** for each meta seo tag
 
@@ -139,7 +139,7 @@ setSeoTag({
 setLinkTwitterTitleTag('Home page')
 ```
 
-**How to setup redirect ?**
+**> How to setup redirect ?**
 
 I already prepared a configuration file to support for redirect case, this configuration file placed in **./server/src/app/redirect.config.ts**
 
@@ -178,7 +178,7 @@ import { Request } from 'express'
 export const REDIRECT_INJECTION = (req: Request) => {} // REDIRECT_INJECTION
 ```
 
-**What is BotInfo variable ?**
+**> What is BotInfo variable ?**
 
 <p><b>BotInfo</b> is a variable keep the Bot information which sent from server to client. You can use it to decide render / none render component if it is Bot / not Bot.</p>
 ```typescript
@@ -188,7 +188,7 @@ interface IBotInfo {
 }
 ```
 
-**What is DeviceInfo variable ?**
+**> What is DeviceInfo variable ?**
 
 <p><b>DeviceInfo</b> is a variable keep the Device information which sent from server to client. You can use it to create adaptive website.</p>
 ```typescript
@@ -201,7 +201,7 @@ interface IDeviceInfo {
 
 <h3 id="deploy">Deploy guide information for testing</h3>
 
-**First discussion**
+**> First discussion**
 
 In reality, you can use the default Chrome Lighthouse extension of the Chromium browser to test the Google page speed of your product, but there are cases where your browser has extensions that directly affect the website loading process, causing Lighthouse to provide inaccurate results. In those cases, you can use the following solutions:
 
@@ -211,7 +211,7 @@ In reality, you can use the default Chrome Lighthouse extension of the Chromium 
 
 For solution 3 (deploying the product), I will guide you on how to deploy the product to Render.
 
-**Some environment variables must know for server side setup**
+**> Some environment variables must know for server side setup**
 
 > At the moment, you can setup it in configuration section / file of server or cross-env in package start script
 
