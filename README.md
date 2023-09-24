@@ -251,6 +251,6 @@ Because the resource of free paid will have a lowest of power (lowest bandwidth,
 
 <h4>Demo</h4>
 
-> This demo url will take more time to restart after sleep
+> This demo url will take a few time to restart after sleep
 
 https://vite-project-template-react-seo-web.onrender.com
