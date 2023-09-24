@@ -73,24 +73,25 @@ Web Scraping for SEO project (React WSC-SEO) is a product designed for ReactJS d
 
 <h3 id="more">More information</h3>
 
-<h4>Why use ?</h4>
-As introduced above, React WSC-SEO provides ReactJS developers with an additional option for easy access and SEO optimization if needed. To provide developers with more information about the product and make a more informed decision about its use, React WSC-SEO will provide the following specific advantages and disadvantages:
+**Why use this project ?**
 
-**Advantages:**
+<p>As introduced above, React WSC-SEO provides ReactJS developers with an additional option for easy access and SEO optimization if needed. To provide developers with more information about the product and make a more informed decision about its use, React WSC-SEO will provide the following specific advantages and disadvantages:</p>
+
+Advantages:
 
 - Provides ISR capabilities for CSR-only ReactJS frameworks (without ReactJS SSR create feature)
 - Provides automation in optimizing for the entire Lighthouse score
 - Helps developers focus entirely on business code without worrying about server code
 
-**Disadvantages:**
+Disadvantages:
 
 - Cannot deliver complete results on free serverless platforms (such as Vercel), because free serverless platforms often have lower bandwidth, serverless timeout, and storage capacity than paid versions. Therefore, Web Scraping features (a key feature of this product) cannot run at their best capacity when deployed on production.
 
-<h4>How to setup meta SEO tags ?</h4>
+**How to setup meta SEO tags ?**
 
 I already created utils for this necessary, you just type **setSeoTag** for all setup or **setMeta[X]** for each meta seo tag
 
-```javascript
+```typescript
 // NOTE - Setup for all
 setSeoTag({
 	title: 'Home page',
@@ -113,7 +114,7 @@ setMetaRobotsTag('index, follow')
 setMetaDescriptionTag('Home page Vue 3.x and WSC-SEO')
 ```
 
-<h4>How to setup link SEO tags ?</h4>
+**How to setup link SEO tags ?**
 
 I already created utils for this necessary, you just type **setSeoTag** for all setup or **setLink[X]** for each meta seo tag
 
@@ -138,7 +139,7 @@ setSeoTag({
 setLinkTwitterTitleTag('Home page')
 ```
 
-<h4>How to setup redirect ?</h4>
+**How to setup redirect ?**
 
 I already prepared a configuration file to support for redirect case, this configuration file placed in **./server/src/app/redirect.config.ts**
 
@@ -148,21 +149,21 @@ In this configuration file we have 2 types of setup :
 
 Use it when you just need to redirect from original path to new path and this path just is a string and no need to detect by using regex.
 
-```javascript
+```typescript
 export interface IRedirectInfoItem {
-  statusCode: number
-  path: string
-  targetPath: string
+	statusCode: number
+	path: string
+	targetPath: string
 }
 
 // NOTE - Declare redirects
 export const REDIRECT_INFO: IRedirectInfoItem[] = [
-  // NOTE - redirect from pathname /test to pathname / with status code 302
-  {
-    path: '/test',
-    targetPath: '/',
-    statusCode: 302,
-  },
+	// NOTE - redirect from pathname /test to pathname / with status code 302
+	{
+		path: '/test',
+		targetPath: '/',
+		statusCode: 302,
+	},
 ]
 ```
 
@@ -170,25 +171,47 @@ export const REDIRECT_INFO: IRedirectInfoItem[] = [
 
 Use it when you need handle more logics before redirect. (Coming soon feature)
 
-```javascript
+```typescript
 import { Request } from 'express'
 
 // NOTE - Declare redirect middleware
 export const REDIRECT_INJECTION = (req: Request) => {} // REDIRECT_INJECTION
 ```
 
+**What is BotInfo variable ?**
+
+<p><b>BotInfo</b> is a variable keep the Bot information which sent from server to client. You can use it to decide render / none render component if it is Bot / not Bot.</p>
+```typescript
+interface IBotInfo {
+  isBot: boolean
+  name: string
+}
+```
+
+**What is DeviceInfo variable ?**
+
+<p><b>DeviceInfo</b> is a variable keep the Device information which sent from server to client. You can use it to create adaptive website.</p>
+```typescript
+interface IDeviceInfo {
+  type: string
+  isMobile: string | boolean
+  os: string
+}
+```
+
 <h3 id="deploy">Deploy guide information for testing</h3>
 
-<h4>First discussion</h4>
+**First discussion**
+
 In reality, you can use the default Chrome Lighthouse extension of the Chromium browser to test the Google page speed of your product, but there are cases where your browser has extensions that directly affect the website loading process, causing Lighthouse to provide inaccurate results. In those cases, you can use the following solutions:
 
-- Open an incognito window to disable extensions (usually extensions will not run in incognito windows)
-- Manually turn off extensions through the browser's extension management
-- Deploy the product to a hosting, VPS or free Node.js serverless that you know and use Google test page speed to measure. (As mentioned above, free services often have a minimum limit on capacity, so they may not provide expected results compared to testing in local or paid environments).
+1. Open an incognito window to disable extensions (usually extensions will not run in incognito windows)
+2. Manually turn off extensions through the browser's extension management
+3. Deploy the product to a hosting, VPS or free Node.js serverless that you know and use Google test page speed to measure. (As mentioned above, free services often have a minimum limit on capacity, so they may not provide expected results compared to testing in local or paid environments).
 
 For solution 3 (deploying the product), I will guide you on how to deploy the product to Render.
 
-<h4>Some environment variables must to know for server side setup</h4>
+**Some environment variables must know for server side setup**
 
 > At the moment, you can setup it in configuration section / file of server or cross-env in package start script
 
