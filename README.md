@@ -94,18 +94,18 @@ I already created utils for this necessary, you just type **setSeoTag** for all 
 ```typescript
 // NOTE - Setup for all
 setSeoTag({
-	title: 'Home page',
-	keywords: 'Home page, vue 3, wsc-seo',
-	description: 'Home page Vue 3.x and WSC-SEO',
-	'og:type': 'website',
-	'og:title': 'Home page',
-	'og:description': 'Home page Vue 3.x and WSC-SEO',
-	'og:url': window.location.pathname,
-	'og:site_name': 'Vue 3.x and WSC-SEO',
-	'og:image': '',
-	'og:image:width': '1200',
-	'og:image:height': '628',
-	robots: 'index, follow',
+  title: 'Home page',
+  keywords: 'Home page, vue 3, wsc-seo',
+  description: 'Home page Vue 3.x and WSC-SEO',
+  'og:type': 'website',
+  'og:title': 'Home page',
+  'og:description': 'Home page Vue 3.x and WSC-SEO',
+  'og:url': window.location.pathname,
+  'og:site_name': 'Vue 3.x and WSC-SEO',
+  'og:image': '',
+  'og:image:width': '1200',
+  'og:image:height': '628',
+  robots: 'index, follow',
 })
 
 // NOTE - Setup for each
@@ -121,18 +121,18 @@ I already created utils for this necessary, you just type **setSeoTag** for all 
 ```javascript
 // NOTE - Setup for all
 setSeoTag({
-	title: 'Home page',
-	keywords: 'Home page, vue 3, wsc-seo',
-	description: 'Home page Vue 3.x and WSC-SEO',
-	'og:type': 'website',
-	'og:title': 'Home page',
-	'og:description': 'Home page Vue 3.x and WSC-SEO',
-	'og:url': window.location.pathname,
-	'og:site_name': 'Vue 3.x and WSC-SEO',
-	'og:image': '',
-	'og:image:width': '1200',
-	'og:image:height': '628',
-	robots: 'index, follow',
+  title: 'Home page',
+  keywords: 'Home page, vue 3, wsc-seo',
+  description: 'Home page Vue 3.x and WSC-SEO',
+  'og:type': 'website',
+  'og:title': 'Home page',
+  'og:description': 'Home page Vue 3.x and WSC-SEO',
+  'og:url': window.location.pathname,
+  'og:site_name': 'Vue 3.x and WSC-SEO',
+  'og:image': '',
+  'og:image:width': '1200',
+  'og:image:height': '628',
+  robots: 'index, follow',
 })
 
 // NOTE - Setup for each
@@ -151,19 +151,19 @@ Use it when you just need to redirect from original path to new path and this pa
 
 ```typescript
 export interface IRedirectInfoItem {
-	statusCode: number
-	path: string
-	targetPath: string
+  statusCode: number
+  path: string
+  targetPath: string
 }
 
 // NOTE - Declare redirects
 export const REDIRECT_INFO: IRedirectInfoItem[] = [
-	// NOTE - redirect from pathname /test to pathname / with status code 302
-	{
-		path: '/test',
-		targetPath: '/',
-		statusCode: 302,
-	},
+  // NOTE - redirect from pathname /test to pathname / with status code 302
+  {
+    path: '/test',
+    targetPath: '/',
+    statusCode: 302,
+  },
 ]
 ```
 
