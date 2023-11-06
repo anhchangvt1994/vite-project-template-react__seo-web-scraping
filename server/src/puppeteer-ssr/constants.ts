@@ -1,5 +1,5 @@
 import { PuppeteerLaunchOptions } from 'puppeteer-core'
-import { userDataPath } from '../constants'
+import { ENV, userDataPath } from '../constants'
 
 // NOTE - Browser Options
 export const optionArgs = [
@@ -80,7 +80,7 @@ export const regexHandleAttrsImageTag: RegExp = /<(source|img)([^>]*)(\/|)>/g
 export const regexHandleAttrsInteractiveTag: RegExp =
 	/<(a|button|input)(?![^>]*rel="nofollow")([^>]*)(\/|)>([\s\S]*?)<\/(a|button)>/g
 export const regexQueryStringSpecialInfo =
-	/botInfo=(?<bot_info>[^&]*)&deviceInfo=(?<device_info>[^&]*)/
+	/botInfo=(?<botInfo>[^&]*)&deviceInfo=(?<deviceInfo>[^&]*)/
 
 export const MAX_WORKERS = process.env.MAX_WORKERS
 	? Number(process.env.MAX_WORKERS)
@@ -111,3 +111,7 @@ export const regexNotFoundPageID = new RegExp(
 )
 
 export const CACHEABLE_STATUS_CODE = { 200: true, 302: true }
+export const COOKIE_EXPIRED =
+	BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO && ENV !== 'development'
+		? 2000
+		: 60000

@@ -1,5 +1,6 @@
 import { Response } from 'express'
 import { IBotInfo } from '../../types'
+import { getCookieFromResponse } from '../../utils/CookieHandler'
 
 export const convertUrlHeaderToQueryString = (
 	url: string,
@@ -8,6 +9,7 @@ export const convertUrlHeaderToQueryString = (
 ) => {
 	if (!url) return ''
 
+	const cookies = getCookieFromResponse(res)
 	let botInfoStringify
 
 	if (simulateBot) {
@@ -16,10 +18,10 @@ export const convertUrlHeaderToQueryString = (
 			name: 'puppeteer-ssr',
 		} as IBotInfo)
 	} else {
-		botInfoStringify = res.getHeader('Bot-Info') as string
+		botInfoStringify = JSON.stringify(cookies?.['BotInfo'])
 	}
 
-	const deviceInfoStringify = res.getHeader('Device-Info') as string
+	const deviceInfoStringify = JSON.stringify(cookies?.['DeviceInfo'])
 
 	let urlFormatted = `${url}${
 		url.indexOf('?') === -1 ? '?' : '&'
@@ -31,10 +33,12 @@ export const convertUrlHeaderToQueryString = (
 export const getUrl = (req) => {
 	if (!req) return ''
 
+	const pathname = req.url?.split('?')[0]
+
 	return (
 		req.query.urlTesting ||
 		(process.env.BASE_URL
-			? process.env.BASE_URL + req.originalUrl
-			: req.protocol + '://' + req.get('host') + req.originalUrl)
+			? process.env.BASE_URL + pathname
+			: req.protocol + '://' + req.get('host') + pathname)
 	).trim()
 } // getUrl

@@ -22,6 +22,11 @@ function Layout() {
 	const location = useLocation()
 	const route = useRoute()
 	const { userState, setUserState } = useUserInfo()
+	const { localeState } = useLocaleInfo()
+	const curLocale = useMemo(
+		() => getLocale(localeState.lang, localeState.country),
+		[localeState.lang, localeState.country]
+	)
 
 	if (BotInfo.isBot) {
 		setMetaViewportTag('width=device-width, initial-scale=1')
@@ -40,6 +45,23 @@ function Layout() {
 		<div className="layout">
 			<MainContainer>
 				<Header>
+					<div>
+						<Link
+							style={{ cursor: 'pointer' }}
+							to={route.fullPath?.replace(curLocale, 'vi-vn') ?? ''}
+							replace
+						>
+							VI
+						</Link>
+						<span style={{ display: 'inline-block', margin: '0 8px' }}>|</span>
+						<Link
+							style={{ cursor: 'pointer' }}
+							to={route.fullPath?.replace(curLocale, 'en-us') ?? ''}
+							replace
+						>
+							EN
+						</Link>
+					</div>
 					{userState && userState.email ? (
 						<>
 							{userState.email + ' | '}

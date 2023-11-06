@@ -1,0 +1,34 @@
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+
+const convertUrlHeaderToQueryString = (
+	url,
+	[botInfoStringify, deviceInfoStringify],
+	simulateBot = false
+) => {
+	if (!url) return ''
+
+	if (simulateBot) {
+		botInfoStringify = JSON.stringify({
+			isBot: true,
+			name: 'puppeteer-ssr',
+		})
+	}
+
+	let urlFormatted = `${url}${
+		url.indexOf('?') === -1 ? '?' : '&'
+	}botInfo=${botInfoStringify}&deviceInfo=${deviceInfoStringify}`.trim()
+
+	return urlFormatted
+}
+exports.convertUrlHeaderToQueryString = convertUrlHeaderToQueryString // formatUrl
+
+const getUrl = (url) => {
+	if (!url) return ''
+
+	return (
+		url.searchParams.urlTesting ||
+		(process.env.BASE_URL ? process.env.BASE_URL + url.pathname : url.href)
+	).trim()
+}
+exports.getUrl = getUrl // getUrl

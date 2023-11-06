@@ -158,7 +158,7 @@ const remove = (url: string) => {
 		return Console.log('Does not exist file reference url!')
 
 	try {
-		fs.rmSync(file, { recursive: true })
+		fs.unlinkSync(file)
 	} catch (err) {
 		console.error(err)
 		throw err

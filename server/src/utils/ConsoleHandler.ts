@@ -1,4 +1,5 @@
 import { InspectOptions } from 'node:util'
+import { ENV } from '../constants'
 
 export interface IConsole {
 	assert(condition: any, ...data: any[]): void
@@ -25,7 +26,7 @@ export interface IConsole {
 }
 
 const Console = (() => {
-	if (process.env.ENV !== 'staging') {
+	if (ENV !== 'staging') {
 		const consoleFormatted = {}
 		for (const key in console) {
 			consoleFormatted[key] = () => {}

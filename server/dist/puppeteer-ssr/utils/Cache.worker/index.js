@@ -194,7 +194,7 @@ const remove = (url) => {
 		return _ConsoleHandler2.default.log('Does not exist file reference url!')
 
 	try {
-		_fs2.default.rmSync(file, { recursive: true })
+		_fs2.default.unlinkSync(file)
 	} catch (err) {
 		console.error(err)
 		throw err

@@ -88,7 +88,7 @@ const regexHandleAttrsInteractiveTag =
 	/<(a|button|input)(?![^>]*rel="nofollow")([^>]*)(\/|)>([\s\S]*?)<\/(a|button)>/g
 exports.regexHandleAttrsInteractiveTag = regexHandleAttrsInteractiveTag
 const regexQueryStringSpecialInfo =
-	/botInfo=(?<bot_info>[^&]*)&deviceInfo=(?<device_info>[^&]*)/
+	/botInfo=(?<botInfo>[^&]*)&deviceInfo=(?<deviceInfo>[^&]*)/
 exports.regexQueryStringSpecialInfo = regexQueryStringSpecialInfo
 
 const MAX_WORKERS = process.env.MAX_WORKERS
@@ -139,3 +139,9 @@ exports.regexNotFoundPageID = regexNotFoundPageID
 
 const CACHEABLE_STATUS_CODE = { 200: true, 302: true }
 exports.CACHEABLE_STATUS_CODE = CACHEABLE_STATUS_CODE
+const COOKIE_EXPIRED =
+	exports.BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO &&
+	_constants.ENV !== 'development'
+		? 2000
+		: 60000
+exports.COOKIE_EXPIRED = COOKIE_EXPIRED

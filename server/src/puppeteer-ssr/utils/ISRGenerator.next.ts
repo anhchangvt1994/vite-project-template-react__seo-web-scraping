@@ -12,7 +12,7 @@ import {
 } from '../constants'
 import { ISSRResult } from '../types'
 import CacheManager from './CacheManager'
-import SSRHandler from './SSRHandler'
+import ISRHandler from './ISRHandler'
 
 const cacheManager = CacheManager()
 
@@ -32,8 +32,10 @@ const fetchData = async (
 		const response = await fetch(
 			input + (reqData ? `?${params.toString()}` : ''),
 			init
-		)
-		const data = await response.json()
+		).then((res) => res.text())
+
+		const data = /^{(.|[\r\n])*?}$/.test(response) ? JSON.parse(response) : {}
+
 		return data
 	} catch (error) {
 		Console.error(error)
@@ -46,21 +48,21 @@ const getRestOfDuration = (startGenerating, gapDuration = 0) => {
 	return DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
 } // getRestOfDuration
 
-interface ISSRGeneratorParams {
+interface IISRGeneratorParams {
 	url: string
 	isSkipWaiting?: boolean
 }
 
 const SSRGenerator = async ({
 	isSkipWaiting = false,
-	...SSRHandlerParams
-}: ISSRGeneratorParams): Promise<ISSRResult> => {
+	...ISRHandlerParams
+}: IISRGeneratorParams): Promise<ISSRResult> => {
 	if (!process.env.BASE_URL) {
 		Console.error('Missing base url!')
 		return
 	}
 
-	if (!SSRHandlerParams.url) {
+	if (!ISRHandlerParams.url) {
 		Console.error('Missing scraping url!')
 		return
 	}
@@ -77,7 +79,7 @@ const SSRGenerator = async ({
 		})
 
 	let result: ISSRResult
-	result = await cacheManager.achieve(SSRHandlerParams.url)
+	result = await cacheManager.achieve(ISRHandlerParams.url)
 
 	if (result) {
 		if (result.isRaw) {
@@ -108,7 +110,7 @@ const SSRGenerator = async ({
 						optimizeHTMLContentPool.terminate()
 						const result = await cacheManager.set({
 							html,
-							url: SSRHandlerParams.url,
+							url: ISRHandlerParams.url,
 							isRaw: false,
 						})
 
@@ -134,7 +136,7 @@ const SSRGenerator = async ({
 
 						const result = await cacheManager.set({
 							html,
-							url: SSRHandlerParams.url,
+							url: ISRHandlerParams.url,
 							isRaw: false,
 						})
 
@@ -154,21 +156,22 @@ const SSRGenerator = async ({
 							{
 								method: 'GET',
 								headers: new Headers({
-									Authorization: 'mtr-ssr-handler',
+									Authorization: 'web-scraping-service',
 									Accept: 'application/json',
+									service: 'web-scraping-service',
 								}),
 							},
 							{
 								startGenerating,
 								isFirstRequest: true,
-								url: SSRHandlerParams.url,
+								url: ISRHandlerParams.url,
 							}
 						)
 					else
-						return SSRHandler({
+						return ISRHandler({
 							startGenerating,
 							isFirstRequest: true,
-							...SSRHandlerParams,
+							...ISRHandlerParams,
 						})
 				})()
 
@@ -184,8 +187,8 @@ const SSRGenerator = async ({
 
 			if (tmpResult && tmpResult.status) result = tmpResult
 		}
-	} else if (!result) {
-		result = await cacheManager.get(SSRHandlerParams.url)
+	} else {
+		result = await cacheManager.get(ISRHandlerParams.url)
 
 		Console.log('Kiểm tra có đủ điều kiện tạo page mới không ?')
 		Console.log('result.available', result?.available)
@@ -216,21 +219,22 @@ const SSRGenerator = async ({
 								{
 									method: 'GET',
 									headers: new Headers({
-										Authorization: 'mtr-ssr-handler',
+										Authorization: 'web-scraping-service',
 										Accept: 'application/json',
+										service: 'web-scraping-service',
 									}),
 								},
 								{
 									startGenerating,
 									isFirstRequest: true,
-									url: SSRHandlerParams.url,
+									url: ISRHandlerParams.url,
 								}
 							)
 						else
-							return SSRHandler({
+							return ISRHandler({
 								startGenerating,
 								isFirstRequest: true,
-								...SSRHandlerParams,
+								...ISRHandlerParams,
 							})
 					})()
 
@@ -246,7 +250,7 @@ const SSRGenerator = async ({
 
 				if (tmpResult && tmpResult.status) result = tmpResult
 				else {
-					const tmpResult = await cacheManager.achieve(SSRHandlerParams.url)
+					const tmpResult = await cacheManager.achieve(ISRHandlerParams.url)
 					result = tmpResult || result
 				}
 			} else if (!isSkipWaiting) {
@@ -265,7 +269,7 @@ const SSRGenerator = async ({
 								: 200
 
 						setTimeout(async () => {
-							const tmpResult = await cacheManager.achieve(SSRHandlerParams.url)
+							const tmpResult = await cacheManager.achieve(ISRHandlerParams.url)
 
 							if (tmpResult && tmpResult.response) return res(tmpResult)
 

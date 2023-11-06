@@ -7,7 +7,9 @@ import RouterDeliver from './utils/RouterDeliver'
 import RouterInit from './utils/RouterInit'
 import RouterProtection from './utils/RouterProtection'
 import RouterValidation from './utils/RouterValidation'
+import RouterPreHandler from './utils/RouterPreHandler'
 import { ServerStore } from 'store/ServerStore'
+import { LocaleInfoProvider } from './context/LocaleInfoContext'
 
 ServerStore.init()
 
@@ -20,17 +22,21 @@ const routes: RouteObjectCustomize[] = [
 	{
 		path: import.meta.env.ROUTER_BASE_PATH,
 		element: (
-			<RouterInit>
-				<RouterValidation NotFoundPage={NotFoundPage}>
-					<RouterDeliver>
-						<RouterProtection
-							WatingVerifyRouterIDList={WAITING_VERIFY_ROUTER_ID_LIST}
-						>
-							<Layout />
-						</RouterProtection>
-					</RouterDeliver>
-				</RouterValidation>
-			</RouterInit>
+			<LocaleInfoProvider>
+				<RouterPreHandler>
+					<RouterInit>
+						<RouterValidation NotFoundPage={NotFoundPage}>
+							<RouterDeliver>
+								<RouterProtection
+									WatingVerifyRouterIDList={WAITING_VERIFY_ROUTER_ID_LIST}
+								>
+									<Layout />
+								</RouterProtection>
+							</RouterDeliver>
+						</RouterValidation>
+					</RouterInit>
+				</RouterPreHandler>
+			</LocaleInfoProvider>
 		),
 		children: [
 			{
@@ -110,6 +116,32 @@ const routes: RouteObjectCustomize[] = [
 		],
 	},
 ]
+
+if (
+	routes.length > 0 &&
+	routes[0].children &&
+	routes[0].children.length > 0 &&
+	(LocaleInfo.langSelected || LocaleInfo.countrySelected)
+) {
+	const formatRoute = (routes) => {
+		if (!routes || !routes.length) return
+
+		const total = routes.length
+
+		for (let i = 0; i < total; i++) {
+			if (
+				(routes[i] && routes[i].path === '*') ||
+				(routes[i] && routes[i].path === import.meta.env.ROUTER_LOGIN_PATH)
+			)
+				continue
+
+			routes[i].path =
+				routes[i].path === '/' ? ':locale' : `:locale/${routes[i].path}`
+		}
+	} // formatRoute
+
+	formatRoute(routes[0].children)
+}
 
 const router = createBrowserRouter(routes as RouteObject[], {
 	basename: '/',

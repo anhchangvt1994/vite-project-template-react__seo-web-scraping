@@ -6,11 +6,17 @@ import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
 import { ENV, pagesPath } from './constants'
 import puppeteerSSRService from './puppeteer-ssr'
+import { COOKIE_EXPIRED } from './puppeteer-ssr/constants'
+import ServerConfig from './server.config'
 import Console from './utils/ConsoleHandler'
+import { setCookie } from './utils/CookieHandler'
 import detectBot from './utils/DetectBot'
 import detectDevice from './utils/DetectDevice'
+import detectLocale from './utils/DetectLocale'
+import DetectRedirect from './utils/DetectRedirect'
 import detectStaticExtension from './utils/DetectStaticExtension'
-import RedirectHandler from './utils/RedirectHandler'
+
+const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -48,13 +54,13 @@ const startServer = async () => {
 			const isStatic = detectStaticExtension(req)
 			/**
 			 * NOTE
-			 * Cache-Control max-age is 3 months
+			 * Cache-Control max-age is 1 year
 			 * calc by using:
 			 * https://www.inchcalculator.com/convert/month-to-second/
 			 */
 			if (isStatic) {
 				if (ENV !== 'development') {
-					res.set('Cache-Control', 'public, max-age=7889238')
+					res.set('Cache-Control', 'public, max-age=31556952')
 				}
 
 				try {
@@ -76,24 +82,83 @@ const startServer = async () => {
 		.use(function (req, res, next) {
 			let botInfo
 			if (req.headers.service === 'puppeteer') {
-				botInfo = req.headers['bot_info'] || ''
+				botInfo = req.headers['botInfo'] || ''
 			} else {
 				botInfo = JSON.stringify(detectBot(req))
 			}
 
-			res.setHeader('Bot-Info', botInfo)
+			setCookie(res, `BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`)
 			next()
 		})
-		.use(RedirectHandler)
+		.use(function (req, res, next) {
+			const localeInfo = detectLocale(req)
+			const enableLocale =
+				ServerConfig.locale.enable &&
+				Boolean(
+					!ServerConfig.locale.routes ||
+						!ServerConfig.locale.routes[req.url as string] ||
+						ServerConfig.locale.routes[req.url as string].enable
+				)
+
+			setCookie(
+				res,
+				`LocaleInfo=${JSON.stringify(
+					localeInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+			)
+
+			if (enableLocale) {
+				setCookie(
+					res,
+					`lang=${
+						localeInfo?.langSelected ?? ServerConfig.locale.defaultLang
+					};Path=/`
+				)
+
+				if (ServerConfig.locale.defaultCountry) {
+					setCookie(
+						res,
+						`country=${
+							localeInfo?.countrySelected ?? ServerConfig.locale.defaultCountry
+						};Path=/`
+					)
+				}
+			}
+			next()
+		})
+		.use(function (req, res, next) {
+			const redirectResult = DetectRedirect(req, res)
+
+			if (redirectResult.status !== 200) {
+				if (req.headers.accept === 'application/json') {
+					req.url = `${redirectResult.path}${redirectResult.search}`
+					res.end(JSON.stringify(redirectResult))
+				} else {
+					if (redirectResult.path.length > 1)
+						redirectResult.path = redirectResult.path.replace(
+							/\/$|\/(\?)/,
+							'$1'
+						)
+					res.writeHead(redirectResult.status, {
+						Location: redirectResult.path,
+						'cache-control': 'no-store',
+					})
+					return res.end()
+				}
+			} else next()
+		})
 		.use(function (req, res, next) {
 			let deviceInfo
 			if (req.headers.service === 'puppeteer') {
-				deviceInfo = req.headers['device_info'] || ''
+				deviceInfo = req.headers['deviceInfo'] || ''
 			} else {
 				deviceInfo = JSON.stringify(detectDevice(req))
 			}
 
-			res.setHeader('Device-Info', deviceInfo)
+			setCookie(
+				res,
+				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
+			)
 			next()
 		})
 	;(await puppeteerSSRService).init(app)
@@ -115,20 +180,32 @@ const startServer = async () => {
 			persistent: true,
 		})
 
-		watcher.on('change', async (path) => {
-			Console.log(`File ${path} has been changed`)
-			await server.close()
-			setTimeout(() => {
-				spawn(
-					'node',
-					['--require', 'sucrase/register', 'server/src/index.ts'],
-					{
-						stdio: 'inherit',
-						shell: true,
-					}
-				)
+		if (!process.env.REFRESH_SERVER) {
+			spawn('vite', [], {
+				stdio: 'inherit',
+				shell: true,
 			})
-			process.exit(0)
+		}
+
+		// watcher.on('change', async (path) => {
+		// 	Console.log(`File ${path} has been changed`)
+		// 	await server.close()
+		// 	spawn(
+		// 		'node',
+		// 		[
+		// 			'cross-env REFRESH_SERVER=1 --require sucrase/register server/src/index.ts',
+		// 		],
+		// 		{
+		// 			stdio: 'inherit',
+		// 			shell: true,
+		// 		}
+		// 	)
+		// 	process.exit(0)
+		// })
+	} else {
+		spawn('vite', ['preview'], {
+			stdio: 'inherit',
+			shell: true,
 		})
 	}
 }

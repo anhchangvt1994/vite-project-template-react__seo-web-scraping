@@ -441,6 +441,16 @@ const generateSentenceCase = (title) => {
 
 const getCustomSlug = _generateSlug
 
+const getLocale = (lang?: string, country?: string) => {
+	const arrLocale: string[] = []
+
+	if (lang && LocaleInfo.langSelected) arrLocale.push(lang)
+	if (country && LocaleInfo.countrySelected)
+		arrLocale.push(country.toLowerCase())
+
+	return arrLocale.join('-')
+} // getLocale
+
 export {
 	getSlug,
 	getSlugWithoutDash,
@@ -448,4 +458,5 @@ export {
 	getCustomSlug,
 	generateTitleCase,
 	generateSentenceCase,
+	getLocale,
 }

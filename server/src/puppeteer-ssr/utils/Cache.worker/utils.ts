@@ -30,7 +30,10 @@ export const getKey = (url) => {
 		return
 	}
 
-	return url.replace(regexKeyConverter, '').replace(/\//g, '|')
+	return url
+		.replace(regexKeyConverter, '')
+		.replace(/\//g, '|')
+		.replace('?|?&', '')
 	// return url.split('?')[0].replace(/^https?:\/\/(www\.)?|^www\.|\/$/, '')
 } // getKey
 

@@ -67,7 +67,7 @@ const BrowserManager = (
 				if (canUseLinuxChromium && !executablePath) {
 					Console.log('Tạo executablePath')
 					executablePath = await Chromium.executablePath(
-						'https://github.com/Sparticuz/chromium/releases/download/v117.0.0/chromium-v117.0.0-pack.tar'
+						'https://github.com/Sparticuz/chromium/releases/download/v118.0.0/chromium-v118.0.0-pack.tar'
 					)
 				}
 
@@ -99,7 +99,7 @@ const BrowserManager = (
 				let tabsClosed = 0
 				const browser: Browser = (await browserLaunch) as Browser
 
-				browser.on('createNewPage', async (page: Page) => {
+				browser.on('createNewPage', (async (page: Page) => {
 					await new Promise((resolveCloseTab) => {
 						const timeoutCloseTab = setTimeout(() => {
 							if (!page.isClosed()) {
@@ -121,7 +121,7 @@ const BrowserManager = (
 						browser.close()
 						deleteUserDataDir(selfUserDataDirPath)
 					}
-				})
+				}) as any)
 			} catch (err) {
 				Console.error(err)
 			}

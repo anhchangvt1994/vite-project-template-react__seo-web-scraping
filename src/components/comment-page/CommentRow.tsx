@@ -32,7 +32,7 @@ const NameLabel = styled.p`
 const ContentLabel = styled.div``
 
 const data = Suspender(() => {
-	const duration = Math.floor(Math.random() * 10) * 100
+	const duration = Math.floor(Math.random() * 2) * 1000
 	return new Promise((res) => {
 		setTimeout(function () {
 			res('OK')

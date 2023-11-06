@@ -1,52 +1,79 @@
-import { Page } from 'puppeteer-core'
-import WorkerPool from 'workerpool'
-import { SERVER_LESS, resourceExtension, userDataPath } from '../../constants'
-import Console from '../../utils/ConsoleHandler'
-import {
-	BANDWIDTH_LEVEL,
-	BANDWIDTH_LEVEL_LIST,
-	CACHEABLE_STATUS_CODE,
-	DURATION_TIMEOUT,
-	MAX_WORKERS,
-	POWER_LEVEL,
-	POWER_LEVEL_LIST,
-	regexNotFoundPageID,
-	regexQueryStringSpecialInfo,
-} from '../constants'
-import { ENV } from '../../constants'
-import { ISSRResult } from '../types'
-import BrowserManager from './BrowserManager'
-import CacheManager from './CacheManager'
+'use strict'
+Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _nullishCoalesce(lhs, rhsFn) {
+	if (lhs != null) {
+		return lhs
+	} else {
+		return rhsFn()
+	}
+}
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
+
+var _constants = require('../../constants')
+var _ConsoleHandler = require('../../utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+
+var _constants3 = require('../constants')
+
+var _BrowserManager = require('./BrowserManager')
+var _BrowserManager2 = _interopRequireDefault(_BrowserManager)
+var _CacheManager = require('./CacheManager')
+var _CacheManager2 = _interopRequireDefault(_CacheManager)
 
 const browserManager = (() => {
-	if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
-		return BrowserManager(() => `${userDataPath}/user_data_${Date.now()}`)
-	return BrowserManager()
+	if (_constants.ENV === 'development') return undefined
+	if (_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.THREE)
+		return _BrowserManager2.default.call(
+			void 0,
+			() => `${_constants.userDataPath}/user_data_${Date.now()}`
+		)
+	return _BrowserManager2.default.call(void 0)
 })()
-
-interface ISSRHandlerParam {
-	startGenerating: number
-	isFirstRequest: boolean
-	url: string
-}
 
 const getRestOfDuration = (startGenerating, gapDuration = 0) => {
 	if (!startGenerating) return 0
 
-	return DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
+	return (
+		_constants3.DURATION_TIMEOUT - gapDuration - (Date.now() - startGenerating)
+	)
 } // getRestOfDuration
 
-const waitResponse = async (page: Page, url: string, duration: number) => {
+const waitResponse = async (page, url, duration) => {
 	const timeoutDuration = (() => {
 		const maxDuration =
-			BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.TWO ? 3000 : DURATION_TIMEOUT
+			_constants3.BANDWIDTH_LEVEL === _constants3.BANDWIDTH_LEVEL_LIST.TWO
+				? 2000
+				: _constants3.DURATION_TIMEOUT
 
 		return duration > maxDuration ? maxDuration : duration
 	})()
 	const startWaiting = Date.now()
 	let response
 	try {
-		response = await page.goto(url, {
+		response = await page.goto(url.split('?')[0], {
 			waitUntil: 'networkidle2',
 			timeout: timeoutDuration,
 		})
@@ -60,20 +87,20 @@ const waitResponse = async (page: Page, url: string, duration: number) => {
 	if (restOfDuration <= 0) return response
 
 	await new Promise((res) => {
-		let duration = ENV === 'development' ? 3000 : 250
+		let duration = _constants.ENV === 'development' ? 3000 : 250
 		const maxLimitTimeout = restOfDuration > 3000 ? 3000 : restOfDuration
 		let limitTimeout = setTimeout(
 			() => {
 				if (responseTimeout) clearTimeout(responseTimeout)
 				res(undefined)
 			},
-			ENV === 'development'
+			_constants.ENV === 'development'
 				? 10000
 				: restOfDuration > maxLimitTimeout
 				? maxLimitTimeout
 				: restOfDuration
 		)
-		let responseTimeout: NodeJS.Timeout
+		let responseTimeout
 		const handleTimeout = () => {
 			if (responseTimeout) clearTimeout(responseTimeout)
 			responseTimeout = setTimeout(() => {
@@ -81,7 +108,7 @@ const waitResponse = async (page: Page, url: string, duration: number) => {
 				res(undefined)
 			}, duration)
 
-			duration = ENV === 'development' ? 3000 : 150
+			duration = _constants.ENV === 'development' ? 3000 : 150
 		}
 
 		handleTimeout()
@@ -102,13 +129,13 @@ const waitResponse = async (page: Page, url: string, duration: number) => {
 
 const gapDurationDefault = 1500
 
-const SSRHandler = async ({ isFirstRequest, url }: ISSRHandlerParam) => {
+const ISRHandler = async ({ isFirstRequest, url }) => {
 	const startGenerating = Date.now()
 	if (getRestOfDuration(startGenerating, gapDurationDefault) <= 0) return
 
-	const cacheManager = CacheManager()
+	const cacheManager = _CacheManager2.default.call(void 0)
 
-	Console.log('Bắt đầu tạo page mới')
+	_ConsoleHandler2.default.log('Bắt đầu tạo page mới')
 
 	const page = await browserManager.newPage()
 
@@ -123,8 +150,8 @@ const SSRHandler = async ({ isFirstRequest, url }: ISSRHandlerParam) => {
 		return
 	}
 
-	Console.log('Số giây còn lại là: ', restOfDuration / 1000)
-	Console.log('Tạo page mới thành công')
+	_ConsoleHandler2.default.log('Số giây còn lại là: ', restOfDuration / 1000)
+	_ConsoleHandler2.default.log('Tạo page mới thành công')
 
 	let html = ''
 	let status = 200
@@ -148,7 +175,18 @@ const SSRHandler = async ({ isFirstRequest, url }: ISSRHandlerParam) => {
 			}
 		})
 
-		const specialInfo = regexQueryStringSpecialInfo.exec(url)?.groups ?? {}
+		const specialInfo = _nullishCoalesce(
+			_optionalChain([
+				_constants3.regexQueryStringSpecialInfo,
+				'access',
+				(_) => _.exec,
+				'call',
+				(_2) => _2(url),
+				'optionalAccess',
+				(_3) => _3.groups,
+			]),
+			() => ({})
+		)
 
 		await page.setExtraHTTPHeaders({
 			...specialInfo,
@@ -156,7 +194,7 @@ const SSRHandler = async ({ isFirstRequest, url }: ISSRHandlerParam) => {
 		})
 
 		await new Promise(async (res) => {
-			Console.log(`Bắt đầu crawl url: ${url}`)
+			_ConsoleHandler2.default.log(`Bắt đầu crawl url: ${url}`)
 
 			let response
 
@@ -166,34 +204,43 @@ const SSRHandler = async ({ isFirstRequest, url }: ISSRHandlerParam) => {
 				if (err.name !== 'TimeoutError') {
 					isGetHtmlProcessError = true
 					res(false)
-					return Console.error(err)
+					return _ConsoleHandler2.default.error(err)
 				}
 			} finally {
-				status = response?.status?.() ?? status
-				Console.log('Crawl thành công!')
-				Console.log(`Response status là: ${status}`)
+				status = _nullishCoalesce(
+					_optionalChain([
+						response,
+						'optionalAccess',
+						(_4) => _4.status,
+						'optionalCall',
+						(_5) => _5(),
+					]),
+					() => status
+				)
+				_ConsoleHandler2.default.log('Crawl thành công!')
+				_ConsoleHandler2.default.log(`Response status là: ${status}`)
 
 				res(true)
 			}
 		})
 	} catch (err) {
-		Console.log('Page mới đã bị lỗi')
-		Console.error(err)
+		_ConsoleHandler2.default.log('Page mới đã bị lỗi')
+		_ConsoleHandler2.default.error(err)
 		return
 	}
 
 	if (isGetHtmlProcessError) return
 
-	let result: ISSRResult
+	let result
 	try {
 		html = await page.content() // serialized HTML of page DOM.
 		await page.close()
 	} catch (err) {
-		Console.error(err)
+		_ConsoleHandler2.default.error(err)
 		return
 	} finally {
-		status = html && regexNotFoundPageID.test(html) ? 404 : 200
-		if (CACHEABLE_STATUS_CODE[status]) {
+		status = html && _constants3.regexNotFoundPageID.test(html) ? 404 : 200
+		if (_constants3.CACHEABLE_STATUS_CODE[status]) {
 			result = await cacheManager.set({
 				html,
 				url,
@@ -240,4 +287,4 @@ const SSRHandler = async ({ isFirstRequest, url }: ISSRHandlerParam) => {
 	// }
 }
 
-export default SSRHandler
+exports.default = ISRHandler

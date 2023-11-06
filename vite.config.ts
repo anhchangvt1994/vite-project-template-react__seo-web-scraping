@@ -84,6 +84,7 @@ export default defineConfig(async ({ mode }) => {
 					},
 					{
 						'app/router/context/InfoContext': ['useRoute'],
+						'app/router/context/LocaleInfoContext': ['useLocaleInfo'],
 						'utils/StringHelper.ts': [
 							'getSlug',
 							'getSlugWithoutDash',
@@ -91,6 +92,7 @@ export default defineConfig(async ({ mode }) => {
 							'getCustomSlug',
 							'generateTitleCase',
 							'generateSentenceCase',
+							'getLocale',
 						],
 						'hooks/useStringHelper.ts': [
 							'useSlug',
@@ -129,7 +131,7 @@ export default defineConfig(async ({ mode }) => {
 							'setMetaTwitterCardTag',
 							'setSeoTag',
 						],
-						'store/ServerStore.ts': ['BotInfo', 'DeviceInfo'],
+						'store/ServerStore.ts': ['BotInfo', 'DeviceInfo', 'LocaleInfo'],
 						'utils/CookieHelper.ts': ['getCookie', 'setCookie'],
 					},
 					{
@@ -201,28 +203,38 @@ export default defineConfig(async ({ mode }) => {
 			},
 		},
 		server: {
-			...(mode === 'production'
-				? {
-						proxy: {
+			watch: {
+				ignored: ['**/config/**', '**/server/**'],
+			},
+			proxy:
+				mode === 'development'
+					? {
 							'/': {
 								target: `http://localhost:${PUPPETEER_SSR_PORT}`,
-								// bypass(req) {
-								// 	if (
-								// 		/^(?!.*(text\/html|application\/json))/.test(
-								// 			req.headers['accept'] as string
-								// 		)
-								// 	)
-								// 		return req.url
-								// 	else if (/text\/html/.test(req.headers['accept'] as string))
-								// 		req.headers['static_html_path'] = path.resolve(
-								// 			__dirname,
-								// 			'./index.html'
-								// 		)
-								// },
+								bypass(req) {
+									if (
+										/text\/html|application\/json/.test(
+											req.headers['accept'] as string
+										)
+									) {
+										req.headers['static-html-path'] = path.resolve(
+											__dirname,
+											'./config/templates/index.development.html'
+										)
+									} else if (!/.js.map|favicon.ico/g.test(req.url as string))
+										return req.url
+								},
 							},
-						},
-				  }
-				: {}),
+					  }
+					: {
+							'/': {
+								target: `http://localhost:${PUPPETEER_SSR_PORT}`,
+								bypass(req) {
+									if (/.js.map|favicon.ico/g.test(req.url as string))
+										return req.url
+								},
+							},
+					  },
 		},
 	}
 })

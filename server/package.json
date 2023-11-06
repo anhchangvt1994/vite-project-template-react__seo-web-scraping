@@ -7,11 +7,16 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"@fastify/middie": "^8.3.0",
 		"@types/express": "^4.17.17",
-		"express": "^4.18.2",
 		"cors": "^2.8.5",
+		"express": "^4.18.2",
+		"fastify": "^4.23.0",
+		"fs-extra": "^11.1.1",
+		"geoip-lite": "^1.4.7",
 		"pm2": "^5.3.0",
-		"workerpool": "^6.4.0",
-		"puppeteer-ssr": "file:./src/puppeteer-ssr"
+		"puppeteer-ssr": "file:./src/puppeteer-ssr",
+		"uWebSockets.js": "uNetworking/uWebSockets.js#v20.33.0",
+		"workerpool": "^6.4.0"
 	}
 }
