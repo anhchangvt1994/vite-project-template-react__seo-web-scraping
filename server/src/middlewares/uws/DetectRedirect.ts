@@ -26,7 +26,12 @@ const DetectRedirectMiddle = (res: HttpResponse, req: HttpRequest): Boolean => {
 				redirectResult.path = redirectResult.path.replace(/\/$|\/(\?)/, '$1')
 			res
 				.writeStatus(String(redirectResult.status))
-				.writeHeader('Location', redirectResult.path)
+				.writeHeader(
+					'Location',
+					`${redirectResult.path}${
+						redirectResult.search ? redirectResult.search : ''
+					}`
+				)
 				.writeHeader('cache-control', 'no-store')
 				.end('', true)
 		}
