@@ -145,7 +145,9 @@ const startServer = async () => {
 							'$1'
 						)
 					res.writeHead(redirectResult.status, {
-						Location: redirectResult.path,
+						Location: `${redirectResult.path}${
+							redirectResult.search ? redirectResult.search : ''
+						}`,
 						'cache-control': 'no-store',
 					})
 					return res.end()
