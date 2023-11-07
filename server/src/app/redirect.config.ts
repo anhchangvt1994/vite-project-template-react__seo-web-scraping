@@ -28,13 +28,6 @@ export const REDIRECT_INJECTION = (
 	req,
 	res
 ): IRedirectResult => {
-	let statusCode = 200
-
-	// if (/(0|1|2)$/.test(redirectUrl)) {
-	// 	statusCode = 302
-	// 	redirectUrl = redirectUrl.replace(/(0|1|2)$/, '3')
-	// }
-
 	const enableLocale =
 		ServerConfig.locale.enable &&
 		Boolean(

@@ -20,13 +20,6 @@ exports.REDIRECT_INFO = REDIRECT_INFO
 
 // NOTE - Declare redirect middleware
 const REDIRECT_INJECTION = (redirectResult, req, res) => {
-	let statusCode = 200
-
-	// if (/(0|1|2)$/.test(redirectUrl)) {
-	// 	statusCode = 302
-	// 	redirectUrl = redirectUrl.replace(/(0|1|2)$/, '3')
-	// }
-
 	const enableLocale =
 		_serverconfig2.default.locale.enable &&
 		Boolean(
