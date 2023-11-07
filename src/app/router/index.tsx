@@ -7,7 +7,7 @@ import RouterDeliver from './utils/RouterDeliver'
 import RouterInit from './utils/RouterInit'
 import RouterProtection from './utils/RouterProtection'
 import RouterValidation from './utils/RouterValidation'
-import RouterPreHandler from './utils/RouterPreHandler'
+import ServerRouterHandler from './utils/ServerRouterHandler'
 import { ServerStore } from 'store/ServerStore'
 import { LocaleInfoProvider } from './context/LocaleInfoContext'
 
@@ -23,7 +23,7 @@ const routes: RouteObjectCustomize[] = [
 		path: import.meta.env.ROUTER_BASE_PATH,
 		element: (
 			<LocaleInfoProvider>
-				<RouterPreHandler>
+				<ServerRouterHandler>
 					<RouterInit>
 						<RouterValidation NotFoundPage={NotFoundPage}>
 							<RouterDeliver>
@@ -35,7 +35,7 @@ const routes: RouteObjectCustomize[] = [
 							</RouterDeliver>
 						</RouterValidation>
 					</RouterInit>
-				</RouterPreHandler>
+				</ServerRouterHandler>
 			</LocaleInfoProvider>
 		),
 		children: [

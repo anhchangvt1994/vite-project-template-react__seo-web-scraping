@@ -1,6 +1,6 @@
 ## First and foremost
 
-React Web Scraping for SEO project (React WSC-SEO) is a project created with the aim of researching and applying the advantages of web scraping to support SEO for React projects. It is not intended for commercial purposes and is not allowed to be used for commercialization. React WSC-SEO is considered a choice for SEO automation purposes, in addition to providing SSR capabilities for CSR-only frameworks such as ReactJS (there is a version for Vue, see [here](https://github.com/anhchangvt1994/vite-project-template-vue__seo-web-scraping)) and does not require comparison or replacement for current Frontend meta frameworks such as Next, Nuxt, Rmix, SvelteKit, etc.
+React Web Scraping for SEO project (React WSC-SEO) is a project created with the aim of researching and applying the advantages of web scraping to support SEO for React projects. It is not intended for commercial purposes and is not allowed to be used for commercialization. React WSC-SEO is considered a choice for SEO automation purposes, in addition to providing SSR capabilities for CSR-only frameworks such as ReactJS (there is a version for React, see [here](https://github.com/anhchangvt1994/vite-project-template-react__seo-web-scraping)) and does not require comparison or replacement for current Frontend meta frameworks such as Next, Nuxt, Rmix, SvelteKit, etc.
 
 ## First start
 
@@ -20,7 +20,7 @@ For more information about this project.
 
 <h2>Install</h2>
 
-##### Expect Node 18.x or higher
+##### Expect Node 18.18.x or higher
 
 Clone source with SSH url:
 
@@ -57,7 +57,17 @@ bun install
 ### Table of benefit information that you must know
 
 - [What is React Web Scraping for SEO ?](#what)
-- [More information](#more)
+- [Why use this project ?](#why-use-it)
+- [Benefits](#benefits)
+  - [How to setup meta SEO tags ?](#meta-seo-tags)
+  - [How to setup link SEO tags ?](#link-seo-tags)
+  - [How to config redirect ?](#redirect)
+  - [How to config server ?](#server-config)
+  - [What is BotInfo variable ?](#bot-info)
+  - [What is DeviceInfo variable ?](#device-info)
+  - [What is LocaleInfo variable ?](#locale-info)
+  - [Integrate Fastify option to improve benchmark](#integrate-fastify)
+  - [Integrate uWebSockets option to improve benchmark](#integrate-uws)
 - [Deploy guide information](#deploy)
 
 <h3 id="what">What is React Web Scraping for SEO ?</h3>
@@ -71,9 +81,7 @@ Web Scraping for SEO project (React WSC-SEO) is a product designed for ReactJS d
 
 ![alt text](/src/assets/static/images/readme/tiki-lighthouse.jpg 'Title')
 
-<h3 id="more">More information</h3>
-
-**> Why use this project ?**
+<h3 id="why-use-it">Why use this project ?</h3>
 
 <p>As introduced above, React WSC-SEO provides ReactJS developers with an additional option for easy access and SEO optimization if needed. To provide developers with more information about the product and make a more informed decision about its use, React WSC-SEO will provide the following specific advantages and disadvantages:</p>
 
@@ -87,7 +95,9 @@ Disadvantages:
 
 - Cannot deliver complete results on free serverless platforms (such as Vercel), because free serverless platforms often have lower bandwidth, serverless timeout, and storage capacity than paid versions. Therefore, Web Scraping features (a key feature of this product) cannot run at their best capacity when deployed on production.
 
-**> How to setup meta SEO tags ?**
+<h3 id="benefits">Benefits</h3>
+
+#### <span id="meta-seo-tags">How to setup meta SEO tags ?</span>
 
 I already created utils for this necessary, you just type **setSeoTag** for all setup or **setMeta[X]** for each meta seo tag
 
@@ -95,13 +105,13 @@ I already created utils for this necessary, you just type **setSeoTag** for all 
 // NOTE - Setup for all
 setSeoTag({
   title: 'Home page',
-  keywords: 'Home page, vue 3, wsc-seo',
-  description: 'Home page Vue 3.x and WSC-SEO',
+  keywords: 'Home page, react 3, wsc-seo',
+  description: 'Home page React 3.x and WSC-SEO',
   'og:type': 'website',
   'og:title': 'Home page',
-  'og:description': 'Home page Vue 3.x and WSC-SEO',
+  'og:description': 'Home page React 3.x and WSC-SEO',
   'og:url': window.location.pathname,
-  'og:site_name': 'Vue 3.x and WSC-SEO',
+  'og:site_name': 'React 3.x and WSC-SEO',
   'og:image': '',
   'og:image:width': '1200',
   'og:image:height': '628',
@@ -111,10 +121,10 @@ setSeoTag({
 // NOTE - Setup for each
 setMetaKeywordsTag('Home page')
 setMetaRobotsTag('index, follow')
-setMetaDescriptionTag('Home page Vue 3.x and WSC-SEO')
+setMetaDescriptionTag('Home page React 3.x and WSC-SEO')
 ```
 
-**> How to setup link SEO tags ?**
+#### <span id="link-seo-tags">How to setup link SEO tags ?</span>
 
 I already created utils for this necessary, you just type **setSeoTag** for all setup or **setLink[X]** for each meta seo tag
 
@@ -122,13 +132,13 @@ I already created utils for this necessary, you just type **setSeoTag** for all 
 // NOTE - Setup for all
 setSeoTag({
   title: 'Home page',
-  keywords: 'Home page, vue 3, wsc-seo',
-  description: 'Home page Vue 3.x and WSC-SEO',
+  keywords: 'Home page, react 3, wsc-seo',
+  description: 'Home page React 3.x and WSC-SEO',
   'og:type': 'website',
   'og:title': 'Home page',
-  'og:description': 'Home page Vue 3.x and WSC-SEO',
+  'og:description': 'Home page React 3.x and WSC-SEO',
   'og:url': window.location.pathname,
-  'og:site_name': 'Vue 3.x and WSC-SEO',
+  'og:site_name': 'React 3.x and WSC-SEO',
   'og:image': '',
   'og:image:width': '1200',
   'og:image:height': '628',
@@ -139,7 +149,7 @@ setSeoTag({
 setLinkTwitterTitleTag('Home page')
 ```
 
-**> How to setup redirect ?**
+#### <span id="redirect">How to setup redirect ?</span>
 
 I already prepared a configuration file to support for redirect case, this configuration file placed in **./server/src/app/redirect.config.ts**
 
@@ -169,7 +179,7 @@ export const REDIRECT_INFO: IRedirectInfoItem[] = [
 
 2. Dynamic configuration
 
-Use it when you need handle more logics before redirect. (Coming soon feature)
+Use it when you need handle more logics before redirect.
 
 ```typescript
 export const REDIRECT_INJECTION = (
@@ -178,22 +188,22 @@ export const REDIRECT_INJECTION = (
   res
 ): IRedirectResult => {
   const enableLocale =
-    ServerConfig.locale.enable &&
-    Boolean(
-      !ServerConfig.locale.routes ||
-      !ServerConfig.locale.routes[redirectResult.originPath] ||
-      ServerConfig.locale.routes[redirectResult.originPath].enable
-    )
+  ServerConfig.locale.enable &&
+  Boolean(
+    !ServerConfig.locale.routes ||
+    !ServerConfig.locale.routes[redirectResult.originPath] ||
+    ServerConfig.locale.routes[redirectResult.originPath].enable
+  )
 
   if (enableLocale) {
     const localeCodeValidationResult = ValidateLocaleCode(redirectResult, res)
 
     if (localeCodeValidationResult.status !== 200) {
-      redirectResult.status =
-      redirectResult.status === 301
+    redirectResult.status =
+    redirectResult.status === 301
       ? redirectResult.status
       : localeCodeValidationResult.status
-      redirectResult.path = localeCodeValidationResult.path
+    redirectResult.path = localeCodeValidationResult.path
     }
   }
 
@@ -201,9 +211,28 @@ export const REDIRECT_INJECTION = (
 } // REDIRECT_INJECTION
 ```
 
-**> What is BotInfo variable ?**
+#### <span id="server-config">How to config server ?</span>
 
-<p><b>BotInfo</b> is a variable keep the Bot information which sent from server to client. You can use it to decide render / none render component if it is Bot / not Bot.</p>
+You can config some behavior for server to match with your necessary, to do it you just open the <b>server/server.config.ts</b> file and config into it.
+
+```typescript
+import { defineServerConfig } from './utils/ServerConfigHandler'
+
+const ServerConfig = defineServerConfig({
+  locale: {
+    enable: true, // enable use /:locale dispatcher param (default false)
+    defaultLang: 'en', // default language for website
+    defaultCountry: 'us', // default country for website (set it empty if you just use language)
+    // hideDefaultLocale: false // hide the default locale or show it such as other locales (default false)
+  },
+})
+
+export default ServerConfig
+```
+
+#### <span id="bot-info">What is BotInfo variable ?</span>
+
+<p><b>BotInfo</b> is a variable contains the Bot information which sent from server to client. You can use it to decide render / none render component if it is Bot / not Bot.</p>
 
 ```typescript
 interface IBotInfo {
@@ -212,9 +241,9 @@ interface IBotInfo {
 }
 ```
 
-**> What is DeviceInfo variable ?**
+#### <span id="device-info">What is DeviceInfo variable ?</span>
 
-<p><b>DeviceInfo</b> is a variable keep the Device information which sent from server to client. You can use it to create adaptive website.</p>
+<p><b>DeviceInfo</b> is a variable contains the Device information which sent from server to client. You can use it to create adaptive website.</p>
 
 ```typescript
 interface IDeviceInfo {
@@ -222,6 +251,75 @@ interface IDeviceInfo {
   isMobile: string | boolean
   os: string
 }
+```
+
+#### <span id="locale-info">What is LocaleInfo variable ?</span>
+
+<p><b>LocaleInfo</b> is a variable contains some information about the locale. You can use it for more cases need to check "Where user's request from ?", "What language in user's country or user's client use ?"</p>
+<p>The <b>/:locale</b> dispatcher param is the practice case to use LocaleInfo and I already integrate that case in this project. Enable it in <b>server/server.config.ts</b> is all you need to do to use it feature.</p>
+
+```typescript
+export interface ILocaleInfo {
+  lang: string // user's language (base on location)
+  country: string // user's country (base on location)
+  clientLang: string // browser's language (base on user's browser in use)
+  clientCountry: string // browser's country (base on user's browser in use)
+  defaultLang: string // default language of website (you define it in server.config.ts, it will be client language if empty)
+  defaultCountry: string // default country of website (you define it in server.config.ts, it will be client country if empty)
+  langSelected: string // language selected by user (it will be default language if empty)
+  countrySelected: string // country selected by user
+  hideDefaultLocale: boolean // If your default locale is /en-us and you need to hide it -> use it (default true)
+  range: [number, number]
+  region: string
+  eu: string
+  timezone: string
+  city: string
+  ll: [number, number]
+  metro: number
+  area: number
+}
+```
+
+<p>NOTE:</p>
+
+Beside the `LocaleInfo` used such as a normal variable to get more information about locale, this project also provide for you a hook called `useLocale` which help you get and watch the information about `lang` (language) and `country` that you using.
+
+#### <span id="integrate-fastify">Integrate Fastify option to improve the benchmark</span>
+
+<p>Inside <a href="https://expressjs.com/" target="_blank">ExpressJS</a> like the default, I also integrated <a href="https://fastify.dev/" target="_blank">FastifyJS</a> into the project to take advantage of FastifyJS's benchmark processing capability, thereby improving the performance and flexibility of the project.</p>
+<p>You can use it by using the command lines above</p>
+
+```bash
+npm run dev:fastify
+```
+
+```bash
+npm run preview:fastify
+```
+
+<p>And you can setup it for "start" script to deploy into your server by replace "pm2-puppeteer-ssr" to "pm2-puppeteer-ssr:fastify"</p>
+
+```json
+"start": "cross-env ENV=production MAX_WORKERS=2 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr:fastify",
+```
+
+#### <span id="integrate-uws">Integrate uWebSockets option to improve the benchmark</span>
+
+<p>Inside <a href="https://expressjs.com/" target="_blank">ExpressJS</a> like the default and <a href="https://fastify.dev/" target="_blank">FastifyJS</a> like an option, I also integrated <a href="https://github.com/uNetworking/uWebSockets" target="_blank">uWebSockets</a> into the project to take advantage of uWebSockets's benchmark processing capability, thereby improving the performance and flexibility of the project.</p>
+<p>You can use it by using the command lines above</p>
+
+```bash
+npm run dev:uws
+```
+
+```bash
+npm run preview:uws
+```
+
+<p>And you can setup it for "start" script to deploy into your server by replace "pm2-puppeteer-ssr" to "pm2-puppeteer-ssr:uws"</p>
+
+```json
+"start": "cross-env ENV=production MAX_WORKERS=2 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr:uws",
 ```
 
 <h3 id="deploy">Deploy guide information for testing</h3>

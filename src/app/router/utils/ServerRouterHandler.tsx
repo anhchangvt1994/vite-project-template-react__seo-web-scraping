@@ -55,7 +55,7 @@ const validPathListCached = new Map<
 	}
 >()
 
-export default function RouterLocaleValidation({ children }) {
+export default function ServerRouterHandler({ children }) {
 	const location = useLocation()
 	const { locale } = useParams()
 	const localeContext = useLocaleInfo()
@@ -120,7 +120,7 @@ export default function RouterLocaleValidation({ children }) {
 							location.search === res.search
 						) {
 							validPathListCached.set(
-								res.originPath?.replace(new RegExp(`^(\/|)${curLocale}`), '') ??
+								res.originPath?.replace(new RegExp(`^(\/|)${curLocale}`), '') ||
 									'/',
 								{
 									status: SUCCESS_CODE_LIST.includes(res.status)
@@ -135,7 +135,7 @@ export default function RouterLocaleValidation({ children }) {
 												)}`
 											),
 											''
-										) ?? '/',
+										) || '/',
 								}
 							)
 						}
@@ -164,6 +164,7 @@ export default function RouterLocaleValidation({ children }) {
 		} else if (
 			enableLocale &&
 			validPathInfo &&
+			locale !== curLocale &&
 			location.pathname.replace(new RegExp(`^(\/|)${locale}`), '') ===
 				prevPath.replace(new RegExp(`^(\/|)${curLocale}`), '')
 		) {
@@ -198,15 +199,19 @@ export default function RouterLocaleValidation({ children }) {
 			enableLocale &&
 			validPathInfo &&
 			validPathInfo.status !== 200 &&
-			!location.pathname.startsWith(`/${curLocale}`)
+			(!location.pathname.startsWith(`/${curLocale}`) ||
+				location.pathname.replace(`/${curLocale}`, '') === '/' ||
+				(location.pathname.replace(`/${curLocale}`, '') || '/') !==
+					validPathInfo.path)
 		) {
 			// console.log('change local with cache')
+
 			setElement(
 				<Navigate
 					to={
 						`/${curLocale}${
 							validPathInfo.path === '/' ? '' : validPathInfo.path
-						}` as string
+						}${location.search}` as string
 					}
 					replace
 				/>
