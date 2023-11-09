@@ -287,7 +287,7 @@ const startServer = async () => {
 		// 	)
 		// 	process.exit(0)
 		// })
-	} else {
+	} else if (!_constants.serverInfo.isServer) {
 		_child_process.spawn.call(void 0, 'vite', ['preview'], {
 			stdio: 'inherit',
 			shell: true,
