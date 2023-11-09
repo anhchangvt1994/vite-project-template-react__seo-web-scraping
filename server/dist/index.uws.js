@@ -57,11 +57,13 @@ const cleanResourceWithCondition = async () => {
 
 const startServer = async () => {
 	await cleanResourceWithCondition()
-	let port = _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
+	let port =
+		process.env.PORT || _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
 	port = await _PortHandler.findFreePort.call(
 		void 0,
 		port || process.env.PUPPETEER_SSR_PORT || 8080
 	)
+	process.env.PORT = port
 	_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 
 	const app = require('uWebSockets.js')./*SSL*/ App({

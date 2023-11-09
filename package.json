@@ -3,7 +3,8 @@
 	"private": true,
 	"version": "0.0.0",
 	"scripts": {
-		"start": "cross-env ENV=production MAX_WORKERS=2 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr:uws",
+		"start": "npx cross-env MAX_WORKERS=4 node server/dist/index.uws.js",
+		"start:pm2": "cross-env ENV=production MAX_WORKERS=4 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr:uws",
 		"dev": "cross-env ENV=development npm run start-dev",
 		"dev:fastify": "cross-env ENV=development npm run start-dev:fastify",
 		"dev:uws": "cross-env ENV=development npm run start-dev:uws",
@@ -33,14 +34,14 @@
 		"prepare": "git config core.autocrlf false && npx husky install",
 		"preinstall": "node server/src/utils/GenerateServerInfo.js && node server/src/puppeteer-ssr/utils/CreatePuppeteerConfigFile.js"
 	},
+	"engines": {
+		"node": "18.18.x"
+	},
 	"browserslist": [
 		"> 1%",
 		"last 2 versions",
 		"not dead"
 	],
-	"engines": {
-		"node": "18.x"
-	},
 	"dependencies": {
 		"polished": "^4.2.2",
 		"react": "^18.2.0",
