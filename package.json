@@ -3,7 +3,7 @@
 	"private": true,
 	"version": "0.0.0",
 	"scripts": {
-		"start": "npx cross-env MAX_WORKERS=4 node server/dist/index.uws.js",
+		"start": "npx cross-env MAX_WORKERS=7 node server/dist/index.uws.js",
 		"start:pm2": "cross-env ENV=production MAX_WORKERS=7 CLUSTER_INSTANCES=1 npm run pm2-puppeteer-ssr:uws",
 		"dev": "cross-env ENV=development npm run start-dev",
 		"dev:fastify": "cross-env ENV=development npm run start-dev:fastify",
