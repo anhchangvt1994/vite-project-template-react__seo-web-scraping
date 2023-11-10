@@ -20,7 +20,7 @@ if (serverInfoStringify) {
 	}
 }
 
-if (serverInfo && serverInfo.isServer) {
+if (serverInfo && serverInfo.platform !== 'linux' && serverInfo.isServer) {
 	fs.copyFile(puppeteerConfigPath, targetPath, (err) => {
 		if (err) {
 			console.error(err)

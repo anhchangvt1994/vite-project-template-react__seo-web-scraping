@@ -35,7 +35,7 @@
 		"preinstall": "node server/src/utils/GenerateServerInfo.js && node server/src/puppeteer-ssr/utils/CreatePuppeteerConfigFile.js"
 	},
 	"engines": {
-		"node": "18.18.x"
+		"node": ">=18.18.x"
 	},
 	"browserslist": [
 		"> 1%",
