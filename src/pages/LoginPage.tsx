@@ -39,7 +39,7 @@ const Button = styled.button`
 
 export default function LoginPage() {
 	const route = useRoute()
-	const { userInfo, setUserState } = useUserInfo()
+	const { setUserState } = useUserInfo()
 
 	const onClickLogin = () => {
 		setUserState({ email: 'abc@gmail.com' })

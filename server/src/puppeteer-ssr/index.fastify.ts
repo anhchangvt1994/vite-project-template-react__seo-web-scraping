@@ -93,7 +93,7 @@ const puppeteerSSRService = (async () => {
 					res as any,
 					!botInfo.isBot
 				)
-				if (botInfo.isBot) {
+				if (!req.headers['redirect'] && botInfo.isBot) {
 					try {
 						const result = await ISRGenerator({
 							url,
@@ -128,7 +128,7 @@ const puppeteerSSRService = (async () => {
 					}
 
 					return
-				} else {
+				} else if (!botInfo.isBot) {
 					try {
 						if (SERVER_LESS) {
 							await ISRGenerator({
@@ -157,7 +157,11 @@ const puppeteerSSRService = (async () => {
 			if (headers.accept === 'application/json')
 				res
 					.header('Cache-Control', 'no-store')
-					.send({ status: 200, originPath: pathname, path: pathname })
+					.send(
+						req.headers['redirect']
+							? JSON.parse(req.headers['redirect'] as string)
+							: { status: 200, originPath: pathname, path: pathname }
+					)
 			else {
 				const filePath =
 					(req.headers['static-html-path'] as string) ||

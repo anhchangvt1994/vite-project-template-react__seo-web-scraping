@@ -33,7 +33,13 @@ export const convertUrlHeaderToQueryString = (
 export const getUrl = (req) => {
 	if (!req) return ''
 
-	const pathname = req.url?.split('?')[0]
+	const pathname = (() => {
+		let tmpPathName
+		if (req.headers['redirect'])
+			tmpPathName = JSON.parse(req.headers['redirect'] as string)?.path
+
+		return (tmpPathName || req.url)?.split('?')?.[0]
+	})()
 
 	return (
 		req.query.urlTesting ||

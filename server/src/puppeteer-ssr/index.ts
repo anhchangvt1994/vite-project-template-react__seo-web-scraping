@@ -93,7 +93,7 @@ const puppeteerSSRService = (async () => {
 					!botInfo.isBot
 				)
 
-				if (botInfo.isBot) {
+				if (!req.headers['redirect'] && botInfo.isBot) {
 					try {
 						const result = await ISRGenerator({
 							url,
@@ -131,7 +131,7 @@ const puppeteerSSRService = (async () => {
 					}
 
 					return
-				} else {
+				} else if (!botInfo.isBot) {
 					try {
 						if (SERVER_LESS) {
 							await ISRGenerator({
@@ -158,7 +158,15 @@ const puppeteerSSRService = (async () => {
 			 * https://www.inchcalculator.com/convert/year-to-second/
 			 */
 			if (headers.accept === 'application/json')
-				res.send({ status: 200, originPath: pathname, path: pathname })
+				res
+					.set({
+						'Cache-Control': 'no-store',
+					})
+					.send(
+						req.headers['redirect']
+							? JSON.parse(req.headers['redirect'] as string)
+							: { status: 200, originPath: pathname, path: pathname }
+					)
 			else {
 				const filePath =
 					(req.headers['static-html-path'] as string) ||

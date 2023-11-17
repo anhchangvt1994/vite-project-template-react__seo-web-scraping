@@ -1,5 +1,10 @@
+import LoadingPageComponent from 'components/LoadingPageComponent'
 import { ServerStore } from 'store/ServerStore'
 import { resetSeoTag } from 'utils/SeoHelper'
+import {
+	INIT_LOADING_INFO,
+	useLoadingInfo,
+} from '../context/LoadingInfoContext'
 
 interface IFetchOnRouteResponse {
 	originPath: string
@@ -21,10 +26,6 @@ const fetchOnRoute = (() => {
 		controller = new AbortController()
 
 		const data = await new Promise(async (res) => {
-			setTimeout(() => {
-				// controller?.abort('reject')
-				res(null)
-			}, 1000)
 			const response = await fetch(path, {
 				...init,
 				signal: controller.signal,
@@ -58,7 +59,8 @@ const validPathListCached = new Map<
 export default function ServerRouterHandler({ children }) {
 	const location = useLocation()
 	const { locale } = useParams()
-	const localeContext = useLocaleInfo()
+	const { loadingState, setLoadingState } = useLoadingInfo()
+	const { setLocaleState } = useLocaleInfo()
 	const [element, setElement] = useState<JSX.Element>()
 	const enableLocale = useMemo(
 		() => Boolean(LocaleInfo.langSelected || LocaleInfo.countrySelected),
@@ -86,6 +88,10 @@ export default function ServerRouterHandler({ children }) {
 		})()
 
 		if (!BotInfo.isBot && !validPathInfo) {
+			setLoadingState({
+				isShow: true,
+				element: <LoadingPageComponent />,
+			})
 			// console.log('fetch')
 			const fullPath = `${location.pathname}${
 				location.search
@@ -99,21 +105,26 @@ export default function ServerRouterHandler({ children }) {
 					Accept: 'application/json',
 				}),
 			}).then((res) => {
+				// setLoadingState(INIT_LOADING_INFO)
 				// NOTE - Handle pre-render for bot with locale options turned on
 
 				if (enableLocale) {
 					ServerStore.reInit.LocaleInfo()
 
-					localeContext.setLocaleState({
+					setLocaleState({
 						lang: LocaleInfo.langSelected,
 						country: LocaleInfo.countrySelected,
 					})
 				}
 
 				if (res) {
+					const curLocale = getLocale(
+						LocaleInfo.langSelected,
+						LocaleInfo.countrySelected
+					)
 					if (
 						REDIRECT_CODE_LIST.includes(res.status) ||
-						(SUCCESS_CODE_LIST.includes(res.status) && locale)
+						(SUCCESS_CODE_LIST.includes(res.status) && locale === curLocale)
 					) {
 						if (
 							!(location.search && res.search) ||
@@ -160,6 +171,8 @@ export default function ServerRouterHandler({ children }) {
 					resetSeoTag()
 					setElement(children)
 				}
+
+				setLoadingState(INIT_LOADING_INFO)
 			})
 		} else if (
 			enableLocale &&
@@ -179,16 +192,14 @@ export default function ServerRouterHandler({ children }) {
 						LocaleInfo.defaultLang ? arrLocale[1] : arrLocale[0]
 					)
 
-				if (cookies) {
-					const objCookies = JSON.parse(cookies)
-					objCookies.langSelected = getCookie('lang')
-					objCookies.countrySelected = getCookie('country')
-					setCookie('LocaleInfo', JSON.stringify(objCookies))
-				}
+				const objCookies = cookies ? JSON.parse(cookies) : LocaleInfo
+				objCookies.langSelected = getCookie('lang')
+				objCookies.countrySelected = getCookie('country')
+				setCookie('LocaleInfo', JSON.stringify(objCookies))
 
 				ServerStore.reInit.LocaleInfo()
 
-				localeContext.setLocaleState({
+				setLocaleState({
 					lang: LocaleInfo.langSelected,
 					country: LocaleInfo.countrySelected,
 				})
@@ -224,5 +235,5 @@ export default function ServerRouterHandler({ children }) {
 		prevPath = location.pathname
 	}, [location.pathname])
 
-	return element
+	return (loadingState.isShow && loadingState.element) || element
 }

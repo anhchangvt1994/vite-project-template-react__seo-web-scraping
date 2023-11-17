@@ -134,12 +134,22 @@ const puppeteerSSRService = (async () => {
 						: 'http'
 				}://${req.getHeader('host')}`
 
+			_DetectStatic2.default.call(void 0, res, req)
+
 			// NOTE - Check if static will send static file
-			if (_DetectStatic2.default.call(void 0, res, req)) return
+			if (res.writableEnded) return
 
 			// NOTE - Detect, setup BotInfo and LocaleInfo
 			_DetectBot2.default.call(void 0, res, req)
 			_DetectLocale2.default.call(void 0, res, req)
+
+			const botInfo = _optionalChain([
+				res,
+				'access',
+				(_) => _.cookies,
+				'optionalAccess',
+				(_2) => _2.botInfo,
+			])
 
 			// NOTE - Check redirect or not
 			const isRedirect = _DetectRedirect2.default.call(void 0, res, req)
@@ -149,18 +159,15 @@ const puppeteerSSRService = (async () => {
 			 * - We need crawl page although this request is not a bot
 			 * When we request by enter first request, redirect will checked and will redirect immediately in server. But when we change router in client side, the request will be a extra fetch from client to server to check redirect information, in this case redirect will run in client not server and won't any request call to server after client run redirect. So we need crawl page in server in the first fetch request that client call to server (if header.accept is 'application/json' then it's fetch request from client)
 			 */
-			if (isRedirect && req.getHeader('accept') !== 'application/json') return
+			if (
+				(res.writableEnded && botInfo.isBot) ||
+				(isRedirect && req.getHeader('accept') !== 'application/json')
+			)
+				return
 
 			// NOTE - Detect DeviceInfo
 			_DetectDevice2.default.call(void 0, res, req)
 
-			const botInfo = _optionalChain([
-				res,
-				'access',
-				(_) => _.cookies,
-				'optionalAccess',
-				(_2) => _2.botInfo,
-			])
 			const enableISR =
 				_serverconfig2.default.isr.enable &&
 				Boolean(
@@ -200,13 +207,7 @@ const puppeteerSSRService = (async () => {
 								 * calc by using:
 								 * https://www.inchcalculator.com/convert/year-to-second/
 								 */
-								res
-									.writeHeader(
-										'Server-Timing',
-										`Prerender;dur=50;desc="Headless render time (ms)"`
-									)
-									.writeHeader('Cache-Control', 'no-store')
-									.writeStatus(String(result.status))
+								res.writeStatus(String(result.status))
 
 								if (result.status === 503) res.writeHeader('Retry-After', '120')
 
@@ -217,17 +218,40 @@ const puppeteerSSRService = (async () => {
 								) {
 									try {
 										const body = _fs2.default.readFileSync(result.response)
-										res.end(body, true)
+										res
+											.writeHeader(
+												'set-cookie',
+												`BotInfo=${JSON.stringify(
+													res.cookies.botInfo
+												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+											)
+											.writeHeader(
+												'set-cookie',
+												`DeviceInfo=${JSON.stringify(
+													res.cookies.deviceInfo
+												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+											)
+											.writeHeader(
+												'set-cookie',
+												`LocaleInfo=${JSON.stringify(
+													res.cookies.localeInfo
+												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+											)
+											.end(body, true)
 									} catch (e) {
-										res.writeStatus('404').end('File not found!', true)
+										res.writeStatus('404').end('Page not found!', true)
 									}
 								} else if (result.html) {
-									try {
-										const body = _fs2.default.readFileSync(result.html)
-										res.end(body, true)
-									} catch (e2) {
-										res.end(`${result.status} Error`, true)
+									if (result.status === 200) {
+										res
+											.writeHeader(
+												'Server-Timing',
+												`Prerender;dur=50;desc="Headless render time (ms)"`
+											)
+											.writeHeader('Cache-Control', 'no-store')
 									}
+
+									res.end(result.html || '', true)
 								} else {
 									res.end(`${result.status} Error`, true)
 								}
@@ -238,8 +262,11 @@ const puppeteerSSRService = (async () => {
 					} catch (err) {
 						_ConsoleHandler2.default.error('url', url)
 						_ConsoleHandler2.default.error(err)
-						res.writeStatus('500').end('Server Error!', true)
+						// NOTE - Error: uWS.HttpResponse must not be accessed after uWS.HttpResponse.onAborted callback, or after a successful response. See documentation for uWS.HttpResponse and consult the user manual.
+						// res.writeStatus('500').end('Server Error!', true)
 					}
+
+					res.writableEnded = true
 				} else {
 					try {
 						if (_constants.SERVER_LESS) {
@@ -260,33 +287,7 @@ const puppeteerSSRService = (async () => {
 				}
 			}
 
-			if (!isRedirect && !botInfo.isBot) {
-				// NOTE - Setup cookie information
-				res
-					.writeHeader(
-						'set-cookie',
-						`BotInfo=${JSON.stringify(
-							res.cookies.botInfo
-						)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-					)
-					.writeHeader(
-						'set-cookie',
-						`DeviceInfo=${JSON.stringify(
-							res.cookies.deviceInfo
-						)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-					)
-
-				if (res.cookies.lang)
-					res.writeHeader('set-cookie', `lang=${res.cookies.lang};Path=/`)
-				if (res.cookies.country)
-					res.writeHeader('set-cookie', `country=${res.cookies.country};Path=/`)
-
-				res.writeHeader(
-					'Content-Type',
-					req.getHeader('accept') === 'application/json'
-						? 'application/json'
-						: 'text/html; charset=utf-8'
-				)
+			if (!res.writableEnded) {
 				/**
 				 * NOTE
 				 * Cache-Control max-age is 1 year
@@ -294,29 +295,92 @@ const puppeteerSSRService = (async () => {
 				 * https://www.inchcalculator.com/convert/year-to-second/
 				 */
 				if (req.getHeader('accept') === 'application/json')
-					res.end(
-						JSON.stringify({
-							status: 200,
-							originPath: req.getUrl(),
-							path: req.getUrl(),
-						}),
-						true
-					)
-				else {
 					res
-						.writeHeader('Cache-Control', 'no-store')
-						.writeHeader('etag', 'false')
-						.writeHeader('lastModified', 'false')
-
+						.writeStatus('200')
+						.writeHeader(
+							'set-cookie',
+							`BotInfo=${JSON.stringify(
+								res.cookies.botInfo
+							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+						)
+						.writeHeader(
+							'set-cookie',
+							`DeviceInfo=${JSON.stringify(
+								res.cookies.deviceInfo
+							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+						)
+						.writeHeader(
+							'set-cookie',
+							`LocaleInfo=${JSON.stringify(
+								res.cookies.localeInfo
+							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+						)
+						.end(
+							JSON.stringify({
+								status: 200,
+								originPath: req.getUrl(),
+								path: req.getUrl(),
+							}),
+							true
+						)
+				else {
 					const filePath =
 						req.getHeader('static-html-path') ||
 						_path2.default.resolve(__dirname, '../../../dist/index.html')
 
 					try {
 						const body = _fs2.default.readFileSync(filePath)
-						res.writeStatus('200').end(body, true)
-					} catch (e3) {
-						res.writeStatus('404').end('File not found!', true)
+						res
+							.writeStatus('200')
+							.writeHeader(
+								'Content-Type',
+								req.getHeader('accept') === 'application/json'
+									? 'application/json'
+									: 'text/html; charset=utf-8'
+							)
+							.writeHeader(
+								'set-cookie',
+								`BotInfo=${JSON.stringify(
+									res.cookies.botInfo
+								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+							)
+							.writeHeader(
+								'set-cookie',
+								`DeviceInfo=${JSON.stringify(
+									res.cookies.deviceInfo
+								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+							)
+							.writeHeader(
+								'set-cookie',
+								`LocaleInfo=${JSON.stringify(
+									res.cookies.localeInfo
+								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+							)
+						res
+							.writeHeader('Cache-Control', 'no-store')
+							.writeHeader('etag', 'false')
+							.writeHeader('lastModified', 'false')
+
+						// NOTE - Setup cookie information
+						if (res.cookies.lang)
+							res.writeHeader('set-cookie', `lang=${res.cookies.lang};Path=/`)
+						if (res.cookies.country)
+							res.writeHeader(
+								'set-cookie',
+								`country=${res.cookies.country};Path=/`
+							)
+
+						res.end(body, true)
+					} catch (e2) {
+						res
+							.writeStatus('404')
+							.writeHeader(
+								'Content-Type',
+								req.getHeader('accept') === 'application/json'
+									? 'application/json'
+									: 'text/html; charset=utf-8'
+							)
+							.end('File not found!', true)
 					}
 				}
 			}

@@ -25,14 +25,13 @@ const DetectStaticMiddle = (res: HttpResponse, req: HttpRequest): Boolean => {
 			const mimeType = serveStatic.mime.lookup(filePath)
 			const body = fs.readFileSync(filePath)
 			res.writeHeader('Content-Type', mimeType as string).end(body)
-			// req.setYield(true)
 		} catch {
 			res.writeStatus('404')
 			res.end('File not found')
 		}
-	}
 
-	return isStatic
+		res.writableEnded = true
+	}
 }
 
 export default DetectStaticMiddle

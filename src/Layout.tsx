@@ -23,6 +23,7 @@ function Layout() {
 	const route = useRoute()
 	const { userState, setUserState } = useUserInfo()
 	const { localeState } = useLocaleInfo()
+
 	const curLocale = useMemo(
 		() => getLocale(localeState.lang, localeState.country),
 		[localeState.lang, localeState.country]

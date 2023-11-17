@@ -9,7 +9,7 @@ import RouterProtection from './utils/RouterProtection'
 import RouterValidation from './utils/RouterValidation'
 import ServerRouterHandler from './utils/ServerRouterHandler'
 import { ServerStore } from 'store/ServerStore'
-import { LocaleInfoProvider } from './context/LocaleInfoContext'
+import { LoadingInfoProvider } from './context/LoadingInfoContext'
 
 ServerStore.init()
 
@@ -22,7 +22,7 @@ const routes: RouteObjectCustomize[] = [
 	{
 		path: import.meta.env.ROUTER_BASE_PATH,
 		element: (
-			<LocaleInfoProvider>
+			<LoadingInfoProvider>
 				<ServerRouterHandler>
 					<RouterInit>
 						<RouterValidation NotFoundPage={NotFoundPage}>
@@ -36,7 +36,7 @@ const routes: RouteObjectCustomize[] = [
 						</RouterValidation>
 					</RouterInit>
 				</ServerRouterHandler>
-			</LocaleInfoProvider>
+			</LoadingInfoProvider>
 		),
 		children: [
 			{

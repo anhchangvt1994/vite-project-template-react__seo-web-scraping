@@ -66,7 +66,10 @@ export default function RouterDeliver({ children }) {
 	}
 
 	navigateInfo = {
-		from: navigateInfo.to || navigateInfo.from,
+		from:
+			navigateInfo.to && navigateInfo.to.fullPath !== routeInfo.fullPath
+				? navigateInfo.to
+				: navigateInfo.from,
 		to: routeInfo,
 	}
 

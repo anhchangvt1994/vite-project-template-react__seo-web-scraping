@@ -31,7 +31,6 @@ function _optionalChain(ops) {
 	}
 	return value
 }
-
 var _constants = require('../../constants')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
@@ -62,67 +61,71 @@ const getRestOfDuration = (startGenerating, gapDuration = 0) => {
 } // getRestOfDuration
 
 const waitResponse = async (page, url, duration) => {
-	const timeoutDuration = (() => {
-		const maxDuration =
-			_constants3.BANDWIDTH_LEVEL === _constants3.BANDWIDTH_LEVEL_LIST.TWO
-				? 2000
-				: _constants3.DURATION_TIMEOUT
+	// const timeoutDuration = (() => {
+	// 	const maxDuration =
+	// 		BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.TWO ? 2000 : DURATION_TIMEOUT
 
-		return duration > maxDuration ? maxDuration : duration
-	})()
-	const startWaiting = Date.now()
+	// 	return duration > maxDuration ? maxDuration : duration
+	// })()
+	// const startWaiting = Date.now()
 	let response
 	try {
-		response = await page.goto(url.split('?')[0], {
-			waitUntil: 'networkidle2',
-			timeout: timeoutDuration,
+		response = await new Promise(async (resolve) => {
+			const result = await new Promise((resolveAfterPageLoad) => {
+				page
+					.goto(url.split('?')[0], {
+						waitUntil: 'domcontentloaded',
+					})
+					.then((res) => {
+						setTimeout(
+							() => resolveAfterPageLoad(res),
+							_constants3.BANDWIDTH_LEVEL > 1 ? 250 : 500
+						)
+					})
+					.catch((err) => {
+						throw err
+					})
+			})
+
+			const html = await page.content()
+
+			if (_constants3.regexNotFoundPageID.test(html)) return resolve(result)
+
+			// await page.goto(url.split('?')[0], {
+			// 	waitUntil: 'networkidle2',
+			// 	timeout: 2000,
+			// })
+			// await page.goto(url.split('?')[0])
+
+			await new Promise((resolveAfterPageLoadInFewSecond) => {
+				const startTimeout = (() => {
+					let timeout
+					return (duration = _constants3.BANDWIDTH_LEVEL > 1 ? 200 : 500) => {
+						if (timeout) clearTimeout(timeout)
+						timeout = setTimeout(resolveAfterPageLoadInFewSecond, duration)
+					}
+				})()
+
+				startTimeout()
+
+				page.on('requestfinished', () => {
+					startTimeout()
+				})
+				page.on('requestservedfromcache', () => {
+					startTimeout()
+				})
+				page.on('requestfailed', () => {
+					startTimeout()
+				})
+
+				setTimeout(resolveAfterPageLoadInFewSecond, 5000)
+			})
+
+			resolve(result)
 		})
 	} catch (err) {
 		throw err
 	}
-
-	const waitingDuration = Date.now() - startWaiting
-	const restOfDuration = timeoutDuration - waitingDuration
-
-	if (restOfDuration <= 0) return response
-
-	await new Promise((res) => {
-		let duration = _constants.ENV === 'development' ? 3000 : 250
-		const maxLimitTimeout = restOfDuration > 3000 ? 3000 : restOfDuration
-		let limitTimeout = setTimeout(
-			() => {
-				if (responseTimeout) clearTimeout(responseTimeout)
-				res(undefined)
-			},
-			_constants.ENV === 'development'
-				? 10000
-				: restOfDuration > maxLimitTimeout
-				? maxLimitTimeout
-				: restOfDuration
-		)
-		let responseTimeout
-		const handleTimeout = () => {
-			if (responseTimeout) clearTimeout(responseTimeout)
-			responseTimeout = setTimeout(() => {
-				if (limitTimeout) clearTimeout(limitTimeout)
-				res(undefined)
-			}, duration)
-
-			duration = _constants.ENV === 'development' ? 3000 : 150
-		}
-
-		handleTimeout()
-
-		page.on('requestfinished', () => {
-			handleTimeout()
-		})
-		page.on('requestservedfromcache', () => {
-			handleTimeout()
-		})
-		page.on('requestfailed', () => {
-			handleTimeout()
-		})
-	})
 
 	return response
 } // waitResponse
@@ -158,7 +161,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 	let isGetHtmlProcessError = false
 
 	try {
-		// await page.waitForNetworkIdle({ idleTime: 250 })
+		await page.waitForNetworkIdle({ idleTime: 150 })
 		await page.setRequestInterception(true)
 		page.on('request', (req) => {
 			const resourceType = req.resourceType()
@@ -250,7 +253,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 			await cacheManager.remove(url)
 			return {
 				status,
-				html,
+				html: status === 404 ? 'Page not found!' : html,
 			}
 		}
 	}

@@ -33,8 +33,7 @@ function _optionalChain(ops) {
 var _middie = require('@fastify/middie')
 var _middie2 = _interopRequireDefault(_middie)
 var _child_process = require('child_process')
-var _chokidar = require('chokidar')
-var _chokidar2 = _interopRequireDefault(_chokidar)
+
 var _cors = require('cors')
 var _cors2 = _interopRequireDefault(_cors)
 var _fastify = require('fastify')
@@ -50,8 +49,7 @@ var _indexfastify = require('./puppeteer-ssr/index.fastify')
 var _indexfastify2 = _interopRequireDefault(_indexfastify)
 var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
-var _ConsoleHandler = require('./utils/ConsoleHandler')
-var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+
 var _CookieHandler = require('./utils/CookieHandler')
 var _DetectBot = require('./utils/DetectBot')
 var _DetectBot2 = _interopRequireDefault(_DetectBot)
@@ -91,13 +89,19 @@ const cleanResourceWithCondition = async () => {
 const startServer = async () => {
 	await cleanResourceWithCondition()
 	let port =
-		process.env.PORT || _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
+		_constants.ENV !== 'development'
+			? process.env.PORT ||
+			  _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
+			: _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
 	port = await _PortHandler.findFreePort.call(
 		void 0,
 		port || process.env.PUPPETEER_SSR_PORT || 8080
 	)
-	process.env.PORT = port
 	_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
+
+	if (_constants.ENV !== 'development') {
+		process.env.PORT = port
+	}
 
 	const app = _fastify2.default.call(void 0)
 
@@ -212,10 +216,7 @@ const startServer = async () => {
 
 			if (redirectResult.status !== 200) {
 				if (req.headers.accept === 'application/json') {
-					req.url = redirectResult.path
-					res
-						.setHeader('Cache-Control', 'no-store')
-						.end(JSON.stringify(redirectResult))
+					req.headers['redirect'] = JSON.stringify(redirectResult)
 				} else {
 					if (redirectResult.path.length > 1)
 						redirectResult.path = redirectResult.path.replace(
@@ -230,7 +231,8 @@ const startServer = async () => {
 					})
 					return res.end()
 				}
-			} else next()
+			}
+			next()
 		})
 		.use(function (req, res, next) {
 			let deviceInfo
@@ -254,7 +256,7 @@ const startServer = async () => {
 			port,
 		},
 		() => {
-			_ConsoleHandler2.default.log('Server started. Press Ctrl+C to quit')
+			console.log(`Server started port ${port}. Press Ctrl+C to quit`)
 			_optionalChain([
 				process,
 				'access',
@@ -272,13 +274,10 @@ const startServer = async () => {
 
 	if (process.env.ENV === 'development') {
 		// NOTE - restart server onchange
-		const watcher = _chokidar2.default.watch(
-			[_path2.default.resolve(__dirname, './**/*.ts')],
-			{
-				ignored: /$^/,
-				persistent: true,
-			}
-		)
+		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
+		// 	ignored: /$^/,
+		// 	persistent: true,
+		// })
 
 		if (!process.env.REFRESH_SERVER) {
 			_child_process.spawn.call(void 0, 'vite', [], {

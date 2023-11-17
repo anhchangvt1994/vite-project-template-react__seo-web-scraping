@@ -96,12 +96,16 @@ const puppeteerSSRService = (async () => {
 						: 'http'
 				}://${req.getHeader('host')}`
 
+			DetectStaticMiddle(res, req)
+
 			// NOTE - Check if static will send static file
-			if (DetectStaticMiddle(res, req)) return
+			if (res.writableEnded) return
 
 			// NOTE - Detect, setup BotInfo and LocaleInfo
 			DetectBotMiddle(res, req)
 			DetectLocaleMiddle(res, req)
+
+			const botInfo: IBotInfo = res.cookies?.botInfo
 
 			// NOTE - Check redirect or not
 			const isRedirect = DetectRedirectMiddle(res, req)
@@ -111,12 +115,15 @@ const puppeteerSSRService = (async () => {
 			 * - We need crawl page although this request is not a bot
 			 * When we request by enter first request, redirect will checked and will redirect immediately in server. But when we change router in client side, the request will be a extra fetch from client to server to check redirect information, in this case redirect will run in client not server and won't any request call to server after client run redirect. So we need crawl page in server in the first fetch request that client call to server (if header.accept is 'application/json' then it's fetch request from client)
 			 */
-			if (isRedirect && req.getHeader('accept') !== 'application/json') return
+			if (
+				(res.writableEnded && botInfo.isBot) ||
+				(isRedirect && req.getHeader('accept') !== 'application/json')
+			)
+				return
 
 			// NOTE - Detect DeviceInfo
 			DetectDeviceMiddle(res, req)
 
-			const botInfo: IBotInfo = res.cookies?.botInfo
 			const enableISR =
 				ServerConfig.isr.enable &&
 				Boolean(
@@ -155,13 +162,7 @@ const puppeteerSSRService = (async () => {
 								 * calc by using:
 								 * https://www.inchcalculator.com/convert/year-to-second/
 								 */
-								res
-									.writeHeader(
-										'Server-Timing',
-										`Prerender;dur=50;desc="Headless render time (ms)"`
-									)
-									.writeHeader('Cache-Control', 'no-store')
-									.writeStatus(String(result.status))
+								res.writeStatus(String(result.status))
 
 								if (result.status === 503) res.writeHeader('Retry-After', '120')
 
@@ -172,17 +173,40 @@ const puppeteerSSRService = (async () => {
 								) {
 									try {
 										const body = fs.readFileSync(result.response)
-										res.end(body, true)
+										res
+											.writeHeader(
+												'set-cookie',
+												`BotInfo=${JSON.stringify(
+													res.cookies.botInfo
+												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+											)
+											.writeHeader(
+												'set-cookie',
+												`DeviceInfo=${JSON.stringify(
+													res.cookies.deviceInfo
+												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+											)
+											.writeHeader(
+												'set-cookie',
+												`LocaleInfo=${JSON.stringify(
+													res.cookies.localeInfo
+												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+											)
+											.end(body, true)
 									} catch {
-										res.writeStatus('404').end('File not found!', true)
+										res.writeStatus('404').end('Page not found!', true)
 									}
 								} else if (result.html) {
-									try {
-										const body = fs.readFileSync(result.html as string)
-										res.end(body, true)
-									} catch {
-										res.end(`${result.status} Error`, true)
+									if (result.status === 200) {
+										res
+											.writeHeader(
+												'Server-Timing',
+												`Prerender;dur=50;desc="Headless render time (ms)"`
+											)
+											.writeHeader('Cache-Control', 'no-store')
 									}
+
+									res.end(result.html || '', true)
 								} else {
 									res.end(`${result.status} Error`, true)
 								}
@@ -193,8 +217,11 @@ const puppeteerSSRService = (async () => {
 					} catch (err) {
 						Console.error('url', url)
 						Console.error(err)
-						res.writeStatus('500').end('Server Error!', true)
+						// NOTE - Error: uWS.HttpResponse must not be accessed after uWS.HttpResponse.onAborted callback, or after a successful response. See documentation for uWS.HttpResponse and consult the user manual.
+						// res.writeStatus('500').end('Server Error!', true)
 					}
+
+					res.writableEnded = true
 				} else {
 					try {
 						if (SERVER_LESS) {
@@ -215,33 +242,7 @@ const puppeteerSSRService = (async () => {
 				}
 			}
 
-			if (!isRedirect && !botInfo.isBot) {
-				// NOTE - Setup cookie information
-				res
-					.writeHeader(
-						'set-cookie',
-						`BotInfo=${JSON.stringify(
-							res.cookies.botInfo
-						)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-					)
-					.writeHeader(
-						'set-cookie',
-						`DeviceInfo=${JSON.stringify(
-							res.cookies.deviceInfo
-						)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-					)
-
-				if (res.cookies.lang)
-					res.writeHeader('set-cookie', `lang=${res.cookies.lang};Path=/`)
-				if (res.cookies.country)
-					res.writeHeader('set-cookie', `country=${res.cookies.country};Path=/`)
-
-				res.writeHeader(
-					'Content-Type',
-					req.getHeader('accept') === 'application/json'
-						? 'application/json'
-						: 'text/html; charset=utf-8'
-				)
+			if (!res.writableEnded) {
 				/**
 				 * NOTE
 				 * Cache-Control max-age is 1 year
@@ -249,29 +250,92 @@ const puppeteerSSRService = (async () => {
 				 * https://www.inchcalculator.com/convert/year-to-second/
 				 */
 				if (req.getHeader('accept') === 'application/json')
-					res.end(
-						JSON.stringify({
-							status: 200,
-							originPath: req.getUrl(),
-							path: req.getUrl(),
-						}),
-						true
-					)
-				else {
 					res
-						.writeHeader('Cache-Control', 'no-store')
-						.writeHeader('etag', 'false')
-						.writeHeader('lastModified', 'false')
-
+						.writeStatus('200')
+						.writeHeader(
+							'set-cookie',
+							`BotInfo=${JSON.stringify(
+								res.cookies.botInfo
+							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+						)
+						.writeHeader(
+							'set-cookie',
+							`DeviceInfo=${JSON.stringify(
+								res.cookies.deviceInfo
+							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+						)
+						.writeHeader(
+							'set-cookie',
+							`LocaleInfo=${JSON.stringify(
+								res.cookies.localeInfo
+							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+						)
+						.end(
+							JSON.stringify({
+								status: 200,
+								originPath: req.getUrl(),
+								path: req.getUrl(),
+							}),
+							true
+						)
+				else {
 					const filePath =
 						(req.getHeader('static-html-path') as string) ||
 						path.resolve(__dirname, '../../../dist/index.html')
 
 					try {
 						const body = fs.readFileSync(filePath)
-						res.writeStatus('200').end(body, true)
+						res
+							.writeStatus('200')
+							.writeHeader(
+								'Content-Type',
+								req.getHeader('accept') === 'application/json'
+									? 'application/json'
+									: 'text/html; charset=utf-8'
+							)
+							.writeHeader(
+								'set-cookie',
+								`BotInfo=${JSON.stringify(
+									res.cookies.botInfo
+								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+							)
+							.writeHeader(
+								'set-cookie',
+								`DeviceInfo=${JSON.stringify(
+									res.cookies.deviceInfo
+								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+							)
+							.writeHeader(
+								'set-cookie',
+								`LocaleInfo=${JSON.stringify(
+									res.cookies.localeInfo
+								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+							)
+						res
+							.writeHeader('Cache-Control', 'no-store')
+							.writeHeader('etag', 'false')
+							.writeHeader('lastModified', 'false')
+
+						// NOTE - Setup cookie information
+						if (res.cookies.lang)
+							res.writeHeader('set-cookie', `lang=${res.cookies.lang};Path=/`)
+						if (res.cookies.country)
+							res.writeHeader(
+								'set-cookie',
+								`country=${res.cookies.country};Path=/`
+							)
+
+						res.end(body, true)
 					} catch {
-						res.writeStatus('404').end('File not found!', true)
+						res
+							.writeStatus('404')
+							.writeHeader(
+								'Content-Type',
+								req.getHeader('accept') === 'application/json'
+									? 'application/json'
+									: 'text/html; charset=utf-8'
+							)
+							.end('File not found!', true)
 					}
 				}
 			}

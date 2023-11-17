@@ -1,12 +1,12 @@
 import { PuppeteerLaunchOptions } from 'puppeteer-core'
-import { ENV, userDataPath } from '../constants'
+import { ENV, SERVER_LESS, userDataPath } from '../constants'
 
 // NOTE - Browser Options
 export const optionArgs = [
 	'--no-sandbox',
 	'--disable-setuid-sandbox',
 	'--headless',
-	'--disable-gpu',
+	// '--disable-gpu',
 	'--disable-software-rasterizer',
 	'--hide-scrollbars',
 	'--disable-translate',
@@ -18,12 +18,8 @@ export const optionArgs = [
 	'--ignore-certificate-errors',
 	'--ignore-certificate-errors-spki-list ',
 	'--disable-features=IsolateOrigins,SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure',
-	// '--disable-site-isolation-trials',
 	'--no-zygote',
-	// '--use-gl=desktop',
 	'--disable-accelerated-2d-canvas',
-	// '--disable-features=site-per-process',
-	// '--disable-infobars',
 	'--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
 	'--disable-background-networking', // Disable several subsystems which run network requests in the background. This is for use 									  // when doing network performance testing to avoid noise in the measurements. ↪
 	'--disable-background-timer-throttling', // Disable task throttling of timer tasks from background pages. ↪
@@ -50,7 +46,10 @@ export const optionArgs = [
 	'--no-pings',
 	'--password-store=basic',
 	'--use-gl=swiftshader',
+	'--use-angle=gl-egl',
 	'--use-mock-keychain',
+	// '--use-gl=angle',
+	// '--use-angle=gl-egl',
 ]
 
 export const defaultBrowserOptions: PuppeteerLaunchOptions = {
@@ -85,7 +84,9 @@ export const regexQueryStringSpecialInfo =
 export const MAX_WORKERS = process.env.MAX_WORKERS
 	? Number(process.env.MAX_WORKERS)
 	: 7
-export const DURATION_TIMEOUT = process.env.DURATION_TIMEOUT
+export const DURATION_TIMEOUT = SERVER_LESS
+	? 5000
+	: process.env.DURATION_TIMEOUT
 	? Number(process.env.DURATION_TIMEOUT)
 	: 20000
 export const POWER_LEVEL = process.env.POWER_LEVEL

@@ -56,17 +56,29 @@ exports.convertUrlHeaderToQueryString = convertUrlHeaderToQueryString // formatU
 const getUrl = (req) => {
 	if (!req) return ''
 
-	const pathname = _optionalChain([
-		req,
-		'access',
-		(_3) => _3.url,
-		'optionalAccess',
-		(_4) => _4.split,
-		'call',
-		(_5) => _5('?'),
-		'access',
-		(_6) => _6[0],
-	])
+	const pathname = (() => {
+		let tmpPathName
+		if (req.headers['redirect'])
+			tmpPathName = _optionalChain([
+				JSON,
+				'access',
+				(_3) => _3.parse,
+				'call',
+				(_4) => _4(req.headers['redirect']),
+				'optionalAccess',
+				(_5) => _5.path,
+			])
+
+		return _optionalChain([
+			tmpPathName || req.url,
+			'optionalAccess',
+			(_6) => _6.split,
+			'call',
+			(_7) => _7('?'),
+			'optionalAccess',
+			(_8) => _8[0],
+		])
+	})()
 
 	return (
 		req.query.urlTesting ||

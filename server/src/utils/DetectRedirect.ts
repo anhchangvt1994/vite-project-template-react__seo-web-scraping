@@ -13,7 +13,7 @@ const DetectRedirect: (req, res) => IRedirectResult = (req, res) => {
 		search: urlInfo.search
 			.replace(/key=([^&]*)/, '')
 			.replace(/&{2,}/, '&')
-			.replace('?|?&', ''),
+			.replace(/(\?|\?\&{0,})$/, ''),
 		status: 200,
 	}
 

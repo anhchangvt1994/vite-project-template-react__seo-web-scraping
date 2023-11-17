@@ -39,14 +39,13 @@ const DetectStaticMiddle = (res, req) => {
 			const mimeType = _servestatic2.default.mime.lookup(filePath)
 			const body = _fs2.default.readFileSync(filePath)
 			res.writeHeader('Content-Type', mimeType).end(body)
-			// req.setYield(true)
 		} catch (e) {
 			res.writeStatus('404')
 			res.end('File not found')
 		}
-	}
 
-	return isStatic
+		res.writableEnded = true
+	}
 }
 
 exports.default = DetectStaticMiddle

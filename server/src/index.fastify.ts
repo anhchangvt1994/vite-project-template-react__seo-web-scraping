@@ -40,10 +40,16 @@ const cleanResourceWithCondition = async () => {
 
 const startServer = async () => {
 	await cleanResourceWithCondition()
-	let port = process.env.PORT || getPort('PUPPETEER_SSR_PORT')
+	let port =
+		ENV !== 'development'
+			? process.env.PORT || getPort('PUPPETEER_SSR_PORT')
+			: getPort('PUPPETEER_SSR_PORT')
 	port = await findFreePort(port || process.env.PUPPETEER_SSR_PORT || 8080)
-	process.env.PORT = port
 	setPort(port, 'PUPPETEER_SSR_PORT')
+
+	if (ENV !== 'development') {
+		process.env.PORT = port
+	}
 
 	const app = fastify()
 
@@ -135,10 +141,7 @@ const startServer = async () => {
 
 			if (redirectResult.status !== 200) {
 				if (req.headers.accept === 'application/json') {
-					req.url = redirectResult.path
-					res
-						.setHeader('Cache-Control', 'no-store')
-						.end(JSON.stringify(redirectResult))
+					req.headers['redirect'] = JSON.stringify(redirectResult)
 				} else {
 					if (redirectResult.path.length > 1)
 						redirectResult.path = redirectResult.path.replace(
@@ -153,7 +156,8 @@ const startServer = async () => {
 					})
 					return res.end()
 				}
-			} else next()
+			}
+			next()
 		})
 		.use(function (req, res, next) {
 			let deviceInfo
@@ -176,7 +180,7 @@ const startServer = async () => {
 			port,
 		},
 		() => {
-			Console.log('Server started. Press Ctrl+C to quit')
+			console.log(`Server started port ${port}. Press Ctrl+C to quit`)
 			process.send?.('ready')
 		}
 	)
@@ -188,10 +192,10 @@ const startServer = async () => {
 
 	if (process.env.ENV === 'development') {
 		// NOTE - restart server onchange
-		const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
-			ignored: /$^/,
-			persistent: true,
-		})
+		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
+		// 	ignored: /$^/,
+		// 	persistent: true,
+		// })
 
 		if (!process.env.REFRESH_SERVER) {
 			spawn('vite', [], {

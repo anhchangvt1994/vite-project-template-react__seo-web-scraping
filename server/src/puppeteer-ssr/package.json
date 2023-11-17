@@ -10,6 +10,6 @@
 	"dependencies": {
 		"puppeteer": "^21.1.0",
 		"html-minifier": "^4.0.0",
-		"@sparticuz/chromium-min": "118.0.0"
+		"@sparticuz/chromium-min": "119.0.0"
 	}
 }

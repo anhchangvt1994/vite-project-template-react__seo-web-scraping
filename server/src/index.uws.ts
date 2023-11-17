@@ -1,11 +1,9 @@
 import { spawn } from 'child_process'
-import chokidar from 'chokidar'
 import fs from 'fs'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
-import { pagesPath, serverInfo } from './constants'
+import { ENV, pagesPath, serverInfo } from './constants'
 import puppeteerSSRService from './puppeteer-ssr/index.uws'
-import Console from './utils/ConsoleHandler'
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -26,10 +24,16 @@ const cleanResourceWithCondition = async () => {
 
 const startServer = async () => {
 	await cleanResourceWithCondition()
-	let port = process.env.PORT || getPort('PUPPETEER_SSR_PORT')
+	let port =
+		ENV !== 'development'
+			? process.env.PORT || getPort('PUPPETEER_SSR_PORT')
+			: getPort('PUPPETEER_SSR_PORT')
 	port = await findFreePort(port || process.env.PUPPETEER_SSR_PORT || 8080)
-	process.env.PORT = port
 	setPort(port, 'PUPPETEER_SSR_PORT')
+
+	if (ENV !== 'development') {
+		process.env.PORT = port
+	}
 
 	const app = require('uWebSockets.js')./*SSL*/ App({
 		key_file_name: 'misc/key.pem',
@@ -65,10 +69,10 @@ const startServer = async () => {
 	if (process.env.ENV === 'development') {
 		const serverIndexFilePath = path.resolve(__dirname, './index.uws.ts')
 		// NOTE - restart server onchange
-		const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
-			ignored: /$^/,
-			persistent: true,
-		})
+		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
+		// 	ignored: /$^/,
+		// 	persistent: true,
+		// })
 
 		if (!process.env.REFRESH_SERVER) {
 			spawn('vite', [], {
@@ -84,7 +88,7 @@ const startServer = async () => {
 		// 		spawn(
 		// 			'node',
 		// 			[
-		// 				`npx cross-env REFRESH_SERVER=1 --require sucrase/register ${serverIndexFilePath}`,
+		// 				`cross-env REFRESH_SERVER=1 --require sucrase/register ${serverIndexFilePath}`,
 		// 			],
 		// 			{
 		// 				stdio: 'inherit',

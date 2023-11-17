@@ -38,6 +38,7 @@ const BOT_LIST = new Map([
 	['lighthouse', /[Ll]ighthouse/],
 	['telegram', /[Tt]elegram[Bb]ot/],
 	['seznam', /[Ss]eznam[Bb]ot/],
+	['another', /SEO|Bot|SeobilityBot|SeoSiteCheckup|GTmetrix/],
 ]) // BOT_LIST
 
 const detectBot = (req) => {

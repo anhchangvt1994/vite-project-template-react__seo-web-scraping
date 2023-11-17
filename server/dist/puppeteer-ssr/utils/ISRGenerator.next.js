@@ -224,7 +224,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 		)
 
 		if (result) {
-			const isValidToSraping = (() => {
+			const isValidToScraping = (() => {
 				return (
 					result.isInit ||
 					(() => {
@@ -242,7 +242,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 					})()
 				)
 			})()
-			if (isValidToSraping) {
+			if (isValidToScraping) {
 				const tmpResult = await new Promise(async (res) => {
 					const handle = (() => {
 						if (_constants.SERVER_LESS)
@@ -271,7 +271,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 					})()
 
 					if (isSkipWaiting) return res(undefined)
-					else setTimeout(res, 5000)
+					else setTimeout(res, _constants.SERVER_LESS ? 5000 : 10000)
 
 					const result = await (async () => {
 						return await handle
@@ -286,11 +286,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 					result = tmpResult || result
 				}
 			} else if (!isSkipWaiting) {
-				const restOfDuration = (() => {
-					const duration = getRestOfDuration(startGenerating, 2000)
-
-					return duration < 5000 ? duration : 5000
-				})()
+				const restOfDuration = getRestOfDuration(startGenerating, 2000)
 
 				if (restOfDuration >= 500) {
 					let waitingDuration = 0

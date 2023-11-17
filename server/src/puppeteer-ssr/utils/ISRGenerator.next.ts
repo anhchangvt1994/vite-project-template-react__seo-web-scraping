@@ -194,7 +194,7 @@ const SSRGenerator = async ({
 		Console.log('result.available', result?.available)
 
 		if (result) {
-			const isValidToSraping = (() => {
+			const isValidToScraping = (() => {
 				return (
 					result.isInit ||
 					(() => {
@@ -210,7 +210,7 @@ const SSRGenerator = async ({
 					})()
 				)
 			})()
-			if (isValidToSraping) {
+			if (isValidToScraping) {
 				const tmpResult: ISSRResult = await new Promise(async (res) => {
 					const handle = (() => {
 						if (SERVER_LESS)
@@ -239,7 +239,7 @@ const SSRGenerator = async ({
 					})()
 
 					if (isSkipWaiting) return res(undefined)
-					else setTimeout(res, 5000)
+					else setTimeout(res, SERVER_LESS ? 5000 : 10000)
 
 					const result = await (async () => {
 						return await handle
@@ -254,11 +254,7 @@ const SSRGenerator = async ({
 					result = tmpResult || result
 				}
 			} else if (!isSkipWaiting) {
-				const restOfDuration = (() => {
-					const duration = getRestOfDuration(startGenerating, 2000)
-
-					return duration < 5000 ? duration : 5000
-				})()
+				const restOfDuration = getRestOfDuration(startGenerating, 2000)
 
 				if (restOfDuration >= 500) {
 					let waitingDuration = 0

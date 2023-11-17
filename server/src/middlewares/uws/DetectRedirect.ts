@@ -20,7 +20,7 @@ const DetectRedirectMiddle = (res: HttpResponse, req: HttpRequest): Boolean => {
 					)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 				)
 				.writeHeader('Cache-Control', 'no-store')
-				.end(JSON.stringify(redirectResult))
+				.end(JSON.stringify(redirectResult), true)
 		} else {
 			if (redirectResult.path.length > 1)
 				redirectResult.path = redirectResult.path.replace(/\/$|\/(\?)/, '$1')
@@ -35,13 +35,8 @@ const DetectRedirectMiddle = (res: HttpResponse, req: HttpRequest): Boolean => {
 				.writeHeader('cache-control', 'no-store')
 				.end('', true)
 		}
-	} else {
-		res.writeHeader(
-			'set-cookie',
-			`LocaleInfo=${JSON.stringify(
-				res.cookies.localeInfo
-			)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-		)
+
+		res.writableEnded = true
 	}
 
 	return isRedirect

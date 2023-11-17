@@ -24,8 +24,6 @@ function _optionalChain(ops) {
 	return value
 }
 var _child_process = require('child_process')
-var _chokidar = require('chokidar')
-var _chokidar2 = _interopRequireDefault(_chokidar)
 var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
@@ -58,13 +56,19 @@ const cleanResourceWithCondition = async () => {
 const startServer = async () => {
 	await cleanResourceWithCondition()
 	let port =
-		process.env.PORT || _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
+		_constants.ENV !== 'development'
+			? process.env.PORT ||
+			  _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
+			: _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
 	port = await _PortHandler.findFreePort.call(
 		void 0,
 		port || process.env.PUPPETEER_SSR_PORT || 8080
 	)
-	process.env.PORT = port
 	_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
+
+	if (_constants.ENV !== 'development') {
+		process.env.PORT = port
+	}
 
 	const app = require('uWebSockets.js')./*SSL*/ App({
 		key_file_name: 'misc/key.pem',
@@ -111,13 +115,10 @@ const startServer = async () => {
 			'./index.uws.ts'
 		)
 		// NOTE - restart server onchange
-		const watcher = _chokidar2.default.watch(
-			[_path2.default.resolve(__dirname, './**/*.ts')],
-			{
-				ignored: /$^/,
-				persistent: true,
-			}
-		)
+		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
+		// 	ignored: /$^/,
+		// 	persistent: true,
+		// })
 
 		if (!process.env.REFRESH_SERVER) {
 			_child_process.spawn.call(void 0, 'vite', [], {
@@ -133,7 +134,7 @@ const startServer = async () => {
 		// 		spawn(
 		// 			'node',
 		// 			[
-		// 				`npx cross-env REFRESH_SERVER=1 --require sucrase/register ${serverIndexFilePath}`,
+		// 				`cross-env REFRESH_SERVER=1 --require sucrase/register ${serverIndexFilePath}`,
 		// 			],
 		// 			{
 		// 				stdio: 'inherit',
