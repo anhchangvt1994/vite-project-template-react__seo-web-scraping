@@ -265,10 +265,15 @@ const startServer = async () => {
 		// })
 
 		if (!process.env.REFRESH_SERVER) {
-			_child_process.spawn.call(void 0, 'vite', [], {
-				stdio: 'inherit',
-				shell: true,
-			})
+			_child_process.spawn.call(
+				void 0,
+				'VITE_CJS_IGNORE_WARNING=true vite',
+				[],
+				{
+					stdio: 'inherit',
+					shell: true,
+				}
+			)
 		}
 
 		// watcher.on('change', async (path) => {
@@ -287,10 +292,15 @@ const startServer = async () => {
 		// 	process.exit(0)
 		// })
 	} else if (!_constants.serverInfo.isServer) {
-		_child_process.spawn.call(void 0, 'vite', ['preview'], {
-			stdio: 'inherit',
-			shell: true,
-		})
+		_child_process.spawn.call(
+			void 0,
+			'VITE_CJS_IGNORE_WARNING=true vite',
+			['preview'],
+			{
+				stdio: 'inherit',
+				shell: true,
+			}
+		)
 	}
 }
 

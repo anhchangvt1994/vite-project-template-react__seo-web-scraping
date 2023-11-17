@@ -138,15 +138,8 @@ export default function ServerRouterHandler({ children }) {
 										? 301
 										: res.status,
 									path:
-										res.path?.replace(
-											new RegExp(
-												`^(\/|)${getLocale(
-													LocaleInfo.langSelected,
-													LocaleInfo.countrySelected
-												)}`
-											),
-											''
-										) || '/',
+										res.path?.replace(new RegExp(`^(\/|)${curLocale}`), '') ||
+										'/',
 								}
 							)
 						}
@@ -178,8 +171,10 @@ export default function ServerRouterHandler({ children }) {
 			enableLocale &&
 			validPathInfo &&
 			locale !== curLocale &&
-			location.pathname.replace(new RegExp(`^(\/|)${locale}`), '') ===
-				prevPath.replace(new RegExp(`^(\/|)${curLocale}`), '')
+			location.pathname.replace(
+				new RegExp(`^(\/|)${locale}|\/{0,}$`, 'g'),
+				''
+			) === prevPath.replace(new RegExp(`^(\/|)${curLocale}|\/{0,}$`, 'g'), '')
 		) {
 			const arrLocale = location.pathname.split('/')[1]?.split('-')
 

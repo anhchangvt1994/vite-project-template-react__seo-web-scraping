@@ -188,7 +188,7 @@ const startServer = async () => {
 		// })
 
 		if (!process.env.REFRESH_SERVER) {
-			spawn('vite', [], {
+			spawn('VITE_CJS_IGNORE_WARNING=true vite', [], {
 				stdio: 'inherit',
 				shell: true,
 			})
@@ -210,7 +210,7 @@ const startServer = async () => {
 		// 	process.exit(0)
 		// })
 	} else if (!serverInfo.isServer) {
-		spawn('vite', ['preview'], {
+		spawn('VITE_CJS_IGNORE_WARNING=true vite', ['preview'], {
 			stdio: 'inherit',
 			shell: true,
 		})
