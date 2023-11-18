@@ -47,7 +47,6 @@ const optionArgs = [
 	'--no-pings',
 	'--password-store=basic',
 	'--use-gl=swiftshader',
-	'--use-angle=gl-egl',
 	'--use-mock-keychain',
 	// '--use-gl=angle',
 	// '--use-angle=gl-egl',
