@@ -139,27 +139,25 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 							res(result)
 						}, restOfDuration)
 
+						let tmpHTML = ''
+
 						try {
 							if (
 								_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.THREE
 							)
-								html = await optimizeHTMLContentPool.exec('compressContent', [
-									html,
-								])
-
-							html = await optimizeHTMLContentPool.exec('optimizeContent', [
-								html,
-								true,
-							])
+								tmpHTML = await optimizeHTMLContentPool.exec(
+									'compressContent',
+									[html]
+								)
 						} catch (err) {
-							_ConsoleHandler2.default.error(err)
-							return
+							tmpHTML = html
+							// Console.error(err)
 						} finally {
 							clearTimeout(timeout)
 							optimizeHTMLContentPool.terminate()
 
 							const result = await cacheManager.set({
-								html,
+								html: tmpHTML,
 								url: ISRHandlerParams.url,
 								isRaw: false,
 							})
@@ -201,7 +199,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 				})()
 
 				if (isSkipWaiting) return res(undefined)
-				else setTimeout(res, 5000)
+				else setTimeout(res, 10000)
 
 				const result = await (async () => {
 					return await handle

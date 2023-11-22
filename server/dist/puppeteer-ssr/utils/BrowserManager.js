@@ -3,6 +3,13 @@ Object.defineProperty(exports, '__esModule', { value: true })
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj }
 }
+async function _asyncNullishCoalesce(lhs, rhsFn) {
+	if (lhs != null) {
+		return lhs
+	} else {
+		return await rhsFn()
+	}
+}
 function _optionalChain(ops) {
 	let lastAccessLHS = undefined
 	let value = ops[0]
@@ -19,6 +26,27 @@ function _optionalChain(ops) {
 			value = fn(value)
 		} else if (op === 'call' || op === 'optionalCall') {
 			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
+async function _asyncOptionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = await fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = await fn((...args) => value.call(lastAccessLHS, ...args))
 			lastAccessLHS = undefined
 		}
 	}
@@ -169,7 +197,21 @@ const BrowserManager = (
 		totalRequests++
 		const curBrowserLaunch = browserLaunch
 
-		await new Promise((res) => setTimeout(res, (totalRequests - 1) * 1000))
+		const pages = await _asyncNullishCoalesce(
+			await _asyncOptionalChain([
+				await await _asyncOptionalChain([
+					await curBrowserLaunch,
+					'optionalAccess',
+					async (_5) => _5.pages,
+					'call',
+					async (_6) => _6(),
+				]),
+				'optionalAccess',
+				async (_7) => _7.length,
+			]),
+			async () => 0
+		)
+		await new Promise((res) => setTimeout(res, pages * 20))
 
 		return curBrowserLaunch
 	} // _get
@@ -182,9 +224,9 @@ const BrowserManager = (
 			page = await _optionalChain([
 				browser,
 				'optionalAccess',
-				(_5) => _5.newPage,
+				(_8) => _8.newPage,
 				'optionalCall',
-				(_6) => _6(),
+				(_9) => _9(),
 			])
 		} catch (err) {
 			return

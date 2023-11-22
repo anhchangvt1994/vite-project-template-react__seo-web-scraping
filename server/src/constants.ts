@@ -416,3 +416,6 @@ export const LOCALE_LIST_WITH_LANGUAGE = {
 
 export const COUNTRY_CODE_DEFAULT = 'us'
 export const LANGUAGE_CODE_DEFAULT = 'en'
+export const ENABLE_CONSOLE_DEBUGGER = Boolean(
+	process.env.ENABLE_CONSOLE_DEBUGGER
+)

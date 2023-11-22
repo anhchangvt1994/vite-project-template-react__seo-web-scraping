@@ -117,25 +117,22 @@ const SSRGenerator = async ({
 						res(result)
 					}, restOfDuration)
 
+					let tmpHTML = ''
+
 					try {
 						if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
-							html = await optimizeHTMLContentPool.exec('compressContent', [
+							tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
 								html,
 							])
-
-						html = await optimizeHTMLContentPool.exec('optimizeContent', [
-							html,
-							true,
-						])
 					} catch (err) {
-						Console.error(err)
-						return
+						tmpHTML = html
+						// Console.error(err)
 					} finally {
 						clearTimeout(timeout)
 						optimizeHTMLContentPool.terminate()
 
 						const result = await cacheManager.set({
-							html,
+							html: tmpHTML,
 							url: ISRHandlerParams.url,
 							isRaw: false,
 						})
@@ -176,7 +173,7 @@ const SSRGenerator = async ({
 				})()
 
 				if (isSkipWaiting) return res(undefined)
-				else setTimeout(res, 5000)
+				else setTimeout(res, 10000)
 
 				const result = await (async () => {
 					return await handle

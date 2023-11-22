@@ -37,7 +37,7 @@ const compressContent = (html) => {
 		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
 	)
 		return html
-	else if (_constants3.ENV === 'production') {
+	else if (_constants3.ENV !== 'development') {
 		html = _htmlminifier.minify.call(void 0, html, {
 			collapseBooleanAttributes: true,
 			collapseInlineTagWhitespace: true,

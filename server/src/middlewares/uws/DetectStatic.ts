@@ -5,7 +5,7 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js'
 import { ENV } from '../../constants'
 import detectStaticExtension from '../../utils/DetectStaticExtension.uws'
 
-const DetectStaticMiddle = (res: HttpResponse, req: HttpRequest): Boolean => {
+const DetectStaticMiddle = (res: HttpResponse, req: HttpRequest) => {
 	const isStatic = detectStaticExtension(req)
 	/**
 	 * NOTE

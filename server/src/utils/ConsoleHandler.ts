@@ -1,5 +1,5 @@
 import { InspectOptions } from 'node:util'
-import { ENV } from '../constants'
+import { ENABLE_CONSOLE_DEBUGGER } from '../constants'
 
 export interface IConsole {
 	assert(condition: any, ...data: any[]): void
@@ -26,16 +26,13 @@ export interface IConsole {
 }
 
 const Console = (() => {
-	if (ENV !== 'staging') {
-		const consoleFormatted = {}
-		for (const key in console) {
-			consoleFormatted[key] = () => {}
-		}
-
-		return consoleFormatted as Console
+	if (ENABLE_CONSOLE_DEBUGGER) return console
+	const consoleFormatted = {}
+	for (const key in console) {
+		consoleFormatted[key] = () => {}
 	}
 
-	return console
+	return consoleFormatted as Console
 })()
 
 export default Console

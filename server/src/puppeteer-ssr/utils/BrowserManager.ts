@@ -140,7 +140,8 @@ const BrowserManager = (
 		totalRequests++
 		const curBrowserLaunch = browserLaunch
 
-		await new Promise((res) => setTimeout(res, (totalRequests - 1) * 1000))
+		const pages = (await (await curBrowserLaunch)?.pages())?.length ?? 0
+		await new Promise((res) => setTimeout(res, pages * 20))
 
 		return curBrowserLaunch
 	} // _get

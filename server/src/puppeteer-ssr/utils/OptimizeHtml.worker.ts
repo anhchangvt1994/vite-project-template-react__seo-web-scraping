@@ -16,7 +16,7 @@ const compressContent = (html: string): string => {
 	if (!html) return ''
 	else if (DISABLE_COMPRESS_HTML || POWER_LEVEL === POWER_LEVEL_LIST.ONE)
 		return html
-	else if (ENV === 'production') {
+	else if (ENV !== 'development') {
 		html = minify(html, {
 			collapseBooleanAttributes: true,
 			collapseInlineTagWhitespace: true,

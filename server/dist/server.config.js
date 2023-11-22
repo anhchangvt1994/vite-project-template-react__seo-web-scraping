@@ -13,6 +13,7 @@ const ServerConfig = _ServerConfigHandler.defineServerConfig.call(void 0, {
 			},
 		},
 	},
+	crawler: 'http://localhost:3000',
 })
 
 exports.default = ServerConfig
