@@ -58,6 +58,7 @@ bun install
 
 - [What is React Web Scraping for SEO ?](#what)
 - [Why use this project ?](#why-use-it)
+- [How it works ?](#how-it-works)
 - [Benefits](#benefits)
   - [How to setup meta SEO tags ?](#meta-seo-tags)
   - [How to setup link SEO tags ?](#link-seo-tags)
@@ -66,6 +67,7 @@ bun install
   - [What is BotInfo variable ?](#bot-info)
   - [What is DeviceInfo variable ?](#device-info)
   - [What is LocaleInfo variable ?](#locale-info)
+  - [What is remote crawler ?](#remote-crawler)
   - [Integrate Fastify option to improve benchmark](#integrate-fastify)
   - [Integrate uWebSockets option to improve benchmark](#integrate-uws)
 - [Deploy guide information](#deploy)
@@ -94,6 +96,21 @@ Advantages:
 Disadvantages:
 
 - Cannot deliver complete results on free serverless platforms (such as Vercel), because free serverless platforms often have lower bandwidth, serverless timeout, and storage capacity than paid versions. Therefore, Web Scraping features (a key feature of this product) cannot run at their best capacity when deployed on production.
+
+<h3 id="how-it-works">How it works ?</h3>
+
+Don't like Nuxt, Next or other meta frameworks you known before. The HTML document content with styles that you see will different document content Search Engine see. That means, the users can not see real style of content that Search Engine see. The content with no script, no style and optimized for SEO.
+
+What are difference ?
+
+When an user makes a request to server, the server will detect that user is a real user or Bot.
+
+- If user is a real user, the server will normal send to client a response include `index.html` content, after archive that content, client will start a process called `Client Side Rendering (CSR)`
+- If user is a Bot, the server will do the `Incremental Static Regeneration (ISR)` process. That process includes `Server Side Rendering (SSR)` -> Cache -> send a response with full content cached.
+
+>In this project, the ISR process also has a nice feature called `Auto Optimize SEO`, the content after `SSR` will be scanned and optimized to show the best of friendly content for Bot.
+
+>You can see the content what Bot see by using tab `network condition` and change the `user agent` to `GoogleBot`.
 
 <h3 id="benefits">Benefits</h3>
 
@@ -283,6 +300,51 @@ export interface ILocaleInfo {
 <p>NOTE:</p>
 
 Beside the `LocaleInfo` used such as a normal variable to get more information about locale, this project also provide for you a hook called `useLocale` which help you get and watch the information about `lang` (language) and `country` that you using.
+
+#### <span id="remote-crawler">What is remote crawler ?</span>
+
+The crawler (web-scraping) is one of the main service of this project. It provides ability to SSR instead of CSR default. Allow the CSR project can be SEO.
+
+The remote crawler (remote web-scraping) is crawler service separated from the main project. It provides a flexible ability to improve crawler's performance if you have a free host (power limit) or have a pricing host with low of bandwidth. You can deploy the [remote crawler]() in another host with better bandwidth or use [ngrok](https://ngrok.com/) alternative in your machine for simplest way. After that you can setup crawler and crawler secret key (optional) for that remote crawler. And finish! You have a remote crawler with powerful of performance.
+
+##### Setup remote crawler step-by-step
+1. Clone this [remote crawler repository]().
+2. Open `server.config.ts` and setup `crawlerSecretKey` if needed. You can setup it by using environment adding feature provided from hosting or cloud and then add environment key `CRAWLER_SECRET_KEY`.
+
+##### If you have a good bandwidth server</b>
+1. Deploy `remote crawler project` into that server.
+2. Run build and run start.
+3. Copy `remote crawler url` and setup it into value of `process.env.CRAWLER` of main project.
+
+> You can setup it by using
+>- Environment adding feature provided from hosting or cloud.
+>- cross-env in start script in `package.json`
+>- Define it in `server.config.ts`
+>```typescript
+> import { defineServerConfig } from './utils/ServerConfigHandler'
+> if(process.env.ENV === 'production') {
+>   process.env.CRAWLER = 'https://remote-cralwer.com'
+>   process.env.CRAWLER_SECRET_KEY = 'ABCDEF' // optional,
+>   // if remote crawler has a secret key, you must to set
+>}
+> const ServerConfig = defineServerConfig({
+>   ...,
+>   crawler: 'http://localhost:3000', // It will be use
+>   // when process.env.CRAWLER is empty
+>})
+>export default ServerConfig
+>```
+
+##### If you use [ngrok](https://ngrok.com/)
+1. Run build and
+- Run start, if you don't want to follow console of crawling step.
+- Run preview, if you want to follow console of crawling step.
+> Notice that the default port is `3000`, because some cloud / hosting need port `3000` to make connection. If you want to custom it, just setup `process.env.PORT` by using
+>- Environment adding feature provided from hosting or cloud.
+>- cross-env in start script in package.json
+2. Run ngrok script right way in docs of `ngrok`.
+> Notice that `ngrok` will generate a random domain name at each start time, if you need a static domain name, you can research this [solution](https://dashboard.ngrok.com/cloud-edge/domains) in `ngrok` docs, don't forget register an account.
+3. Copy `remote crawler url` of ngrok and setup it into value of `process.env.CRAWLER` of main project.
 
 #### <span id="integrate-fastify">Integrate Fastify option to improve the benchmark</span>
 
