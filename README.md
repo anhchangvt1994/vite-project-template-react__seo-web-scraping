@@ -305,10 +305,10 @@ Beside the `LocaleInfo` used such as a normal variable to get more information a
 
 The crawler (web-scraping) is one of the main service of this project. It provides ability to SSR instead of CSR default. Allow the CSR project can be SEO.
 
-The remote crawler (remote web-scraping) is crawler service separated from the main project. It provides a flexible ability to improve crawler's performance if you have a free host (power limit) or have a pricing host with low of bandwidth. You can deploy the [remote crawler]() in another host with better bandwidth or use [ngrok](https://ngrok.com/) alternative in your machine for simplest way. After that you can setup crawler and crawler secret key (optional) for that remote crawler. And finish! You have a remote crawler with powerful of performance.
+The remote crawler (remote web-scraping) is crawler service separated from the main project. It provides a flexible ability to improve crawler's performance if you have a free host (power limit) or have a pricing host with low of bandwidth. You can deploy the [remote crawler](https://github.com/anhchangvt1994/web-scraping-seo-service) in another host with better bandwidth or use [ngrok](https://ngrok.com/) alternative in your machine for simplest way. After that you can setup crawler and crawler secret key (optional) for that remote crawler. And finish! You have a remote crawler with powerful of performance.
 
 ##### Setup remote crawler step-by-step
-1. Clone this [remote crawler repository]().
+1. Clone this [remote crawler repository](https://github.com/anhchangvt1994/web-scraping-seo-service).
 2. Open `server.config.ts` and setup `crawlerSecretKey` if needed. You can setup it by using environment adding feature provided from hosting or cloud and then add environment key `CRAWLER_SECRET_KEY`.
 
 ##### If you have a good bandwidth server</b>
