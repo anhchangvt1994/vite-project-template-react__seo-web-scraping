@@ -1,16 +1,16 @@
-import workerpool from 'workerpool'
 import { minify } from 'html-minifier'
+import workerpool from 'workerpool'
+import { ENV } from '../../constants'
 import {
-	regexHandleAttrsImageTag,
-	regexHandleAttrsInteractiveTag,
-	regexOptimizeForPerformanceNormally,
-	regexOptimizeForPerformanceHardly,
-	POWER_LEVEL,
-	POWER_LEVEL_LIST,
 	DISABLE_COMPRESS_HTML,
 	DISABLE_DEEP_OPTIMIZE,
+	POWER_LEVEL,
+	POWER_LEVEL_LIST,
+	regexHandleAttrsImageTag,
+	regexHandleAttrsInteractiveTag,
+	regexOptimizeForPerformanceHardly,
+	regexOptimizeForPerformanceNormally,
 } from '../constants'
-import { ENV } from '../../constants'
 
 const compressContent = (html: string): string => {
 	if (!html) return ''
@@ -51,15 +51,18 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 				).trim()
 
 				switch (true) {
-					case curAttrs.indexOf('alt=') === -1:
+					case newAttrs.indexOf('alt=') === -1:
 						newAttrs = `alt="text" ${newAttrs}`
-					case curAttrs.indexOf('height=') === -1:
+					case newAttrs.indexOf('height=') === -1:
 						newAttrs = `height="200" ${newAttrs}`
-					case curAttrs.indexOf('width=') === -1:
+					case newAttrs.indexOf('width=') === -1:
 						newAttrs = `width="150" ${newAttrs}`
-						break
 					default:
 						break
+				}
+
+				if (newAttrs.indexOf('height=') === -1) {
+					console.log(newAttrs)
 				}
 
 				return `<img ${newAttrs}>`
@@ -101,11 +104,28 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 								''
 							)
 							tmpContent = `welcome to ${tmpContent || href}`
+
+							// if (curAttrs.indexOf('aria-label=') === -1)
+							// 	tmpAttrs = `aria-label="welcome" ${tmpAttrs}`
 							break
-						case tmpTag === 'button' && !content:
-							tmpContent = 'click'
-						case tmpTag === 'button' && curAttrs.indexOf('type=') === -1:
-							tmpAttrs = `type="button" ${tmpAttrs}`
+						case tmpTag === 'button':
+							if (!content.trim()) tmpContent = 'click'
+							if (curAttrs.indexOf('type=') === -1)
+								tmpAttrs = `type="button" ${tmpAttrs}`
+
+							if (curAttrs.indexOf('aria-label=') !== -1) {
+								const ariaLabel =
+									/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g.exec(
+										curAttrs
+									)?.groups?.ariaLabel
+
+								tmpContent = ariaLabel
+							} else {
+								const tmpAriaLabel = tmpContent
+									.replace(/<[^>]*>|[\n]/g, '')
+									.trim()
+								tmpAttrs = `aria-label="${tmpAriaLabel}" ${tmpAttrs}`
+							}
 							break
 						case tmpTag === 'input' &&
 							/type=['"](button|submit)['"]/g.test(curAttrs) &&

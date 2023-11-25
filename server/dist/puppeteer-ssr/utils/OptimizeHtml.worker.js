@@ -23,21 +23,21 @@ function _optionalChain(ops) {
 	}
 	return value
 }
+var _htmlminifier = require('html-minifier')
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
-var _htmlminifier = require('html-minifier')
+var _constants = require('../../constants')
 
-var _constants = require('../constants')
-var _constants3 = require('../../constants')
+var _constants3 = require('../constants')
 
 const compressContent = (html) => {
 	if (!html) return ''
 	else if (
-		_constants.DISABLE_COMPRESS_HTML ||
-		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
+		_constants3.DISABLE_COMPRESS_HTML ||
+		_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.ONE
 	)
 		return html
-	else if (_constants3.ENV !== 'development') {
+	else if (_constants.ENV !== 'development') {
 		html = _htmlminifier.minify.call(void 0, html, {
 			collapseBooleanAttributes: true,
 			collapseInlineTagWhitespace: true,
@@ -55,17 +55,17 @@ const compressContent = (html) => {
 
 const optimizeContent = (html, isFullOptimize = false) => {
 	if (!html) return ''
-	html = html.replace(_constants.regexOptimizeForPerformanceNormally, '')
+	html = html.replace(_constants3.regexOptimizeForPerformanceNormally, '')
 
 	if (
-		_constants.DISABLE_DEEP_OPTIMIZE ||
-		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
+		_constants3.DISABLE_DEEP_OPTIMIZE ||
+		_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.ONE
 	)
 		return html
 	else if (isFullOptimize) {
 		html = html
-			.replace(_constants.regexOptimizeForPerformanceHardly, '')
-			.replace(_constants.regexHandleAttrsImageTag, (match, tag, curAttrs) => {
+			.replace(_constants3.regexOptimizeForPerformanceHardly, '')
+			.replace(_constants3.regexHandleAttrsImageTag, (match, tag, curAttrs) => {
 				let newAttrs = (
 					curAttrs.indexOf('seo-tag') !== -1
 						? curAttrs
@@ -76,21 +76,24 @@ const optimizeContent = (html, isFullOptimize = false) => {
 				).trim()
 
 				switch (true) {
-					case curAttrs.indexOf('alt=') === -1:
+					case newAttrs.indexOf('alt=') === -1:
 						newAttrs = `alt="text" ${newAttrs}`
-					case curAttrs.indexOf('height=') === -1:
+					case newAttrs.indexOf('height=') === -1:
 						newAttrs = `height="200" ${newAttrs}`
-					case curAttrs.indexOf('width=') === -1:
+					case newAttrs.indexOf('width=') === -1:
 						newAttrs = `width="150" ${newAttrs}`
-						break
 					default:
 						break
+				}
+
+				if (newAttrs.indexOf('height=') === -1) {
+					console.log(newAttrs)
 				}
 
 				return `<img ${newAttrs}>`
 			})
 			.replace(
-				_constants.regexHandleAttrsInteractiveTag,
+				_constants3.regexHandleAttrsInteractiveTag,
 				(math, tag, curAttrs, negative, content, endTag) => {
 					let tmpAttrs = `style="display: inline-block;min-width: 48px;min-height: 48px;" ${curAttrs.trim()}`
 					let tmpTag = tag
@@ -134,11 +137,35 @@ const optimizeContent = (html, isFullOptimize = false) => {
 								''
 							)
 							tmpContent = `welcome to ${tmpContent || href}`
+
+							// if (curAttrs.indexOf('aria-label=') === -1)
+							// 	tmpAttrs = `aria-label="welcome" ${tmpAttrs}`
 							break
-						case tmpTag === 'button' && !content:
-							tmpContent = 'click'
-						case tmpTag === 'button' && curAttrs.indexOf('type=') === -1:
-							tmpAttrs = `type="button" ${tmpAttrs}`
+						case tmpTag === 'button':
+							if (!content.trim()) tmpContent = 'click'
+							if (curAttrs.indexOf('type=') === -1)
+								tmpAttrs = `type="button" ${tmpAttrs}`
+
+							if (curAttrs.indexOf('aria-label=') !== -1) {
+								const ariaLabel = _optionalChain([
+									/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g,
+									'access',
+									(_5) => _5.exec,
+									'call',
+									(_6) => _6(curAttrs),
+									'optionalAccess',
+									(_7) => _7.groups,
+									'optionalAccess',
+									(_8) => _8.ariaLabel,
+								])
+
+								tmpContent = ariaLabel
+							} else {
+								const tmpAriaLabel = tmpContent
+									.replace(/<[^>]*>|[\n]/g, '')
+									.trim()
+								tmpAttrs = `aria-label="${tmpAriaLabel}" ${tmpAttrs}`
+							}
 							break
 						case tmpTag === 'input' &&
 							/type=['"](button|submit)['"]/g.test(curAttrs) &&
