@@ -75,6 +75,7 @@ export const regexOptimizeForPerformanceHardly: RegExp =
 // export const regexRemoveDivTag: RegExp =
 // 	/(<div(>|[\s\S]*?(>))|<\/div>)(?:[\s\S]*?|$)/g
 export const regexHandleAttrsImageTag: RegExp = /<(source|img)([^>]*)(\/|)>/g
+export const regexHandleAttrsHtmlTag: RegExp = /<(html)([^>]*)>/g
 // export const regexHandleAttrsInteractiveTag: RegExp =
 // 	/<(a|button|input)(?![^>]*rel="nofollow")([^>]*)(\/|)>([\s\S]*?)<\/(a|button)>/g
 export const regexHandleAttrsInteractiveTag: RegExp =

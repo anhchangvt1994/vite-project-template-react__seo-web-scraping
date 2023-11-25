@@ -82,6 +82,8 @@ exports.regexOptimizeForPerformanceHardly = regexOptimizeForPerformanceHardly
 // 	/(<div(>|[\s\S]*?(>))|<\/div>)(?:[\s\S]*?|$)/g
 const regexHandleAttrsImageTag = /<(source|img)([^>]*)(\/|)>/g
 exports.regexHandleAttrsImageTag = regexHandleAttrsImageTag
+const regexHandleAttrsHtmlTag = /<(html)([^>]*)>/g
+exports.regexHandleAttrsHtmlTag = regexHandleAttrsHtmlTag
 // export const regexHandleAttrsInteractiveTag: RegExp =
 // 	/<(a|button|input)(?![^>]*rel="nofollow")([^>]*)(\/|)>([\s\S]*?)<\/(a|button)>/g
 const regexHandleAttrsInteractiveTag =

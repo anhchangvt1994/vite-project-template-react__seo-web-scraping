@@ -65,6 +65,15 @@ const optimizeContent = (html, isFullOptimize = false) => {
 	else if (isFullOptimize) {
 		html = html
 			.replace(_constants3.regexOptimizeForPerformanceHardly, '')
+			.replace(_constants3.regexHandleAttrsHtmlTag, (match, tag, curAttrs) => {
+				let newAttrs = curAttrs
+
+				if (newAttrs.indexOf('lang') === -1) {
+					newAttrs = `lang="en"`
+				}
+
+				return `<html ${newAttrs}>`
+			})
 			.replace(_constants3.regexHandleAttrsImageTag, (match, tag, curAttrs) => {
 				let newAttrs = (
 					curAttrs.indexOf('seo-tag') !== -1
@@ -165,6 +174,7 @@ const optimizeContent = (html, isFullOptimize = false) => {
 									.replace(/<[^>]*>|[\n]/g, '')
 									.trim()
 								tmpAttrs = `aria-label="${tmpAriaLabel}" ${tmpAttrs}`
+								tmpContent = tmpAriaLabel
 							}
 							break
 						case tmpTag === 'input' &&

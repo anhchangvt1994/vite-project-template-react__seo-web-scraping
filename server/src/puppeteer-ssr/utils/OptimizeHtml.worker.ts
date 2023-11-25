@@ -6,6 +6,7 @@ import {
 	DISABLE_DEEP_OPTIMIZE,
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
+	regexHandleAttrsHtmlTag,
 	regexHandleAttrsImageTag,
 	regexHandleAttrsInteractiveTag,
 	regexOptimizeForPerformanceHardly,
@@ -40,6 +41,15 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 	else if (isFullOptimize) {
 		html = html
 			.replace(regexOptimizeForPerformanceHardly, '')
+			.replace(regexHandleAttrsHtmlTag, (match, tag, curAttrs) => {
+				let newAttrs = curAttrs
+
+				if (newAttrs.indexOf('lang') === -1) {
+					newAttrs = `lang="en"`
+				}
+
+				return `<html ${newAttrs}>`
+			})
 			.replace(regexHandleAttrsImageTag, (match, tag, curAttrs) => {
 				let newAttrs = (
 					curAttrs.indexOf('seo-tag') !== -1
@@ -125,6 +135,7 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 									.replace(/<[^>]*>|[\n]/g, '')
 									.trim()
 								tmpAttrs = `aria-label="${tmpAriaLabel}" ${tmpAttrs}`
+								tmpContent = tmpAriaLabel
 							}
 							break
 						case tmpTag === 'input' &&

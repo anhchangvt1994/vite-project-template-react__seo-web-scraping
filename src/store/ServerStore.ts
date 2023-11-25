@@ -35,39 +35,56 @@ export let DeviceInfo: IDeviceInfo
 
 export let LocaleInfo: ILocaleInfo
 
-export const ServerStore = {
-	init() {
-		if (!BotInfo)
-			BotInfo = (() => {
-				const strInfo = getCookie('BotInfo')
+export const ServerStore = (() => {
+	const html = document.documentElement
+	return {
+		init() {
+			if (!BotInfo)
+				BotInfo = (() => {
+					const strInfo = getCookie('BotInfo')
 
-				return strInfo ? JSON.parse(strInfo) : { isBot: false }
-			})()
-		if (!DeviceInfo)
-			DeviceInfo = (() => {
-				const strInfo = getCookie('DeviceInfo')
+					return strInfo ? JSON.parse(strInfo) : { isBot: false }
+				})()
+			if (!DeviceInfo)
+				DeviceInfo = (() => {
+					const strInfo = getCookie('DeviceInfo')
 
-				return strInfo ? JSON.parse(strInfo) : {}
-			})()
-		if (!LocaleInfo) {
-			LocaleInfo = (() => {
-				const strInfo = getCookie('LocaleInfo')
+					return strInfo ? JSON.parse(strInfo) : {}
+				})()
+			if (!LocaleInfo) {
+				LocaleInfo = (() => {
+					const strInfo = getCookie('LocaleInfo')
 
-				const info = strInfo ? JSON.parse(strInfo) : {}
+					const info = strInfo ? JSON.parse(strInfo) : {}
 
-				return info
-			})()
-		}
-	},
-	reInit: {
-		LocaleInfo: () => {
-			LocaleInfo = (() => {
-				const strInfo = getCookie('LocaleInfo')
+					return info
+				})()
+			}
 
-				const info = strInfo ? JSON.parse(strInfo) : {}
-
-				return info
-			})()
+			if (html) {
+				html.setAttribute(
+					'lang',
+					LocaleInfo.langSelected || LocaleInfo.clientLang
+				)
+			}
 		},
-	},
-}
+		reInit: {
+			LocaleInfo: () => {
+				LocaleInfo = (() => {
+					const strInfo = getCookie('LocaleInfo')
+
+					const info = strInfo ? JSON.parse(strInfo) : {}
+
+					return info
+				})()
+
+				if (html) {
+					html.setAttribute(
+						'lang',
+						LocaleInfo.langSelected || LocaleInfo.clientLang
+					)
+				}
+			},
+		},
+	}
+})()
