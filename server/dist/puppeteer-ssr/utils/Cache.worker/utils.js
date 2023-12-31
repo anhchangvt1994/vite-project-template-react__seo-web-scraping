@@ -33,6 +33,8 @@ function _optionalChain(ops) {
 }
 var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
+var _crypto = require('crypto')
+var _crypto2 = _interopRequireDefault(_crypto)
 var _ConsoleHandler = require('../../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _constants = require('../../../constants')
@@ -51,11 +53,15 @@ const getKey = (url) => {
 		return
 	}
 
-	return url
-		.replace(exports.regexKeyConverter, '')
-		.replace(/\//g, '|')
-		.replace('?|?&', '')
+	// return url
+	// 	.replace(regexKeyConverter, '')
+	// 	.replace(/\//g, '|')
+	// 	.replace('?|?&', '')
 	// return url.split('?')[0].replace(/^https?:\/\/(www\.)?|^www\.|\/$/, '')
+	return _crypto2.default
+		.createHash('md5')
+		.update(url.replace(exports.regexKeyConverter, ''))
+		.digest('hex')
 }
 exports.getKey = getKey // getKey
 

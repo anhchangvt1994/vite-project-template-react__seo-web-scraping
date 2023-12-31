@@ -51,6 +51,12 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 				return `<html ${newAttrs}>`
 			})
 			.replace(regexHandleAttrsImageTag, (match, tag, curAttrs) => {
+				const alt = /alt=("|'|)(?<alt>[^"']+)("|'|)+(\s|$)/g
+					.exec(curAttrs)
+					?.groups?.alt?.trim()
+
+				if (!alt) return ''
+
 				let newAttrs = (
 					curAttrs.indexOf('seo-tag') !== -1
 						? curAttrs
@@ -61,8 +67,6 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 				).trim()
 
 				switch (true) {
-					case newAttrs.indexOf('alt=') === -1:
-						newAttrs = `alt="text" ${newAttrs}`
 					case newAttrs.indexOf('height=') === -1:
 						newAttrs = `height="200" ${newAttrs}`
 					case newAttrs.indexOf('width=') === -1:
@@ -71,9 +75,9 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 						break
 				}
 
-				if (newAttrs.indexOf('height=') === -1) {
-					console.log(newAttrs)
-				}
+				// if (newAttrs.indexOf('height=') === -1) {
+				// 	console.log(newAttrs)
+				// }
 
 				return `<img ${newAttrs}>`
 			})
@@ -113,7 +117,6 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 								/[Cc]lick here|[Cc]lick this|[Gg]o|[Hh]ere|[Tt]his|[Ss]tart|[Rr]ight here|[Mm]ore|[Ll]earn more/g,
 								''
 							)
-							tmpContent = `welcome to ${tmpContent || href}`
 
 							if (curAttrs.indexOf('aria-label=') !== -1) {
 								const ariaLabel =
@@ -132,7 +135,10 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 							// 	newAttrs = `aria-label="welcome" ${newAttrs}`
 							break
 						case newTag === 'button':
-							if (!content.trim()) tmpContent = 'click'
+							const tmpContentWithoutHTMLTags = tmpContent
+								.replace(/<[^>]*>|[\n]/g, '')
+								.trim()
+							if (!tmpContentWithoutHTMLTags) return ''
 							if (curAttrs.indexOf('type=') === -1)
 								newAttrs = `type="button" ${newAttrs}`
 
@@ -144,20 +150,14 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 
 								tmpContent = ariaLabel
 							} else {
-								const tmpAriaLabel = tmpContent
-									.replace(/<[^>]*>|[\n]/g, '')
-									.trim()
-								newAttrs = `aria-label="${tmpAriaLabel}" ${newAttrs}`
-								tmpContent = tmpAriaLabel
+								newAttrs = `aria-label="${tmpContentWithoutHTMLTags}" ${newAttrs}`
+								tmpContent = tmpContentWithoutHTMLTags
 							}
 							break
 						case newTag === 'input' &&
 							/type=['"](button|submit)['"]/g.test(curAttrs) &&
 							!/value(\s|$)|value=['"]{2}/g.test(curAttrs):
-							newAttrs = `type="button" ${newAttrs.replace(
-								/value(\s|$)|value=['"]{2}/g,
-								'value="click"'
-							)}`
+							return ''
 						case newTag === 'input' &&
 							/id=("|'|)(.*?)("|'|)+(\s|$)/g.test(newAttrs):
 							const id = /id=("|'|)(?<id>.*?)("|'|)+(\s|$)/g.test(newAttrs)

@@ -75,6 +75,24 @@ const optimizeContent = (html, isFullOptimize = false) => {
 				return `<html ${newAttrs}>`
 			})
 			.replace(_constants3.regexHandleAttrsImageTag, (match, tag, curAttrs) => {
+				const alt = _optionalChain([
+					/alt=("|'|)(?<alt>[^"']+)("|'|)+(\s|$)/g,
+					'access',
+					(_) => _.exec,
+					'call',
+					(_2) => _2(curAttrs),
+					'optionalAccess',
+					(_3) => _3.groups,
+					'optionalAccess',
+					(_4) => _4.alt,
+					'optionalAccess',
+					(_5) => _5.trim,
+					'call',
+					(_6) => _6(),
+				])
+
+				if (!alt) return ''
+
 				let newAttrs = (
 					curAttrs.indexOf('seo-tag') !== -1
 						? curAttrs
@@ -85,8 +103,6 @@ const optimizeContent = (html, isFullOptimize = false) => {
 				).trim()
 
 				switch (true) {
-					case newAttrs.indexOf('alt=') === -1:
-						newAttrs = `alt="text" ${newAttrs}`
 					case newAttrs.indexOf('height=') === -1:
 						newAttrs = `height="200" ${newAttrs}`
 					case newAttrs.indexOf('width=') === -1:
@@ -95,9 +111,9 @@ const optimizeContent = (html, isFullOptimize = false) => {
 						break
 				}
 
-				if (newAttrs.indexOf('height=') === -1) {
-					console.log(newAttrs)
-				}
+				// if (newAttrs.indexOf('height=') === -1) {
+				// 	console.log(newAttrs)
+				// }
 
 				return `<img ${newAttrs}>`
 			})
@@ -133,31 +149,30 @@ const optimizeContent = (html, isFullOptimize = false) => {
 							const href = _optionalChain([
 								/href=("|'|)(?<href>.*?)("|'|)+(\s|$)/g,
 								'access',
-								(_) => _.exec,
+								(_7) => _7.exec,
 								'call',
-								(_2) => _2(curAttrs),
+								(_8) => _8(curAttrs),
 								'optionalAccess',
-								(_3) => _3.groups,
+								(_9) => _9.groups,
 								'optionalAccess',
-								(_4) => _4.href,
+								(_10) => _10.href,
 							])
 							tmpContent = tmpContent.replace(
 								/[Cc]lick here|[Cc]lick this|[Gg]o|[Hh]ere|[Tt]his|[Ss]tart|[Rr]ight here|[Mm]ore|[Ll]earn more/g,
 								''
 							)
-							tmpContent = `welcome to ${tmpContent || href}`
 
 							if (curAttrs.indexOf('aria-label=') !== -1) {
 								const ariaLabel = _optionalChain([
 									/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g,
 									'access',
-									(_5) => _5.exec,
+									(_11) => _11.exec,
 									'call',
-									(_6) => _6(curAttrs),
+									(_12) => _12(curAttrs),
 									'optionalAccess',
-									(_7) => _7.groups,
+									(_13) => _13.groups,
 									'optionalAccess',
-									(_8) => _8.ariaLabel,
+									(_14) => _14.ariaLabel,
 								])
 
 								if (ariaLabel !== tmpContent)
@@ -171,7 +186,10 @@ const optimizeContent = (html, isFullOptimize = false) => {
 							// 	newAttrs = `aria-label="welcome" ${newAttrs}`
 							break
 						case newTag === 'button':
-							if (!content.trim()) tmpContent = 'click'
+							const tmpContentWithoutHTMLTags = tmpContent
+								.replace(/<[^>]*>|[\n]/g, '')
+								.trim()
+							if (!tmpContentWithoutHTMLTags) return ''
 							if (curAttrs.indexOf('type=') === -1)
 								newAttrs = `type="button" ${newAttrs}`
 
@@ -179,31 +197,25 @@ const optimizeContent = (html, isFullOptimize = false) => {
 								const ariaLabel = _optionalChain([
 									/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g,
 									'access',
-									(_9) => _9.exec,
+									(_15) => _15.exec,
 									'call',
-									(_10) => _10(curAttrs),
+									(_16) => _16(curAttrs),
 									'optionalAccess',
-									(_11) => _11.groups,
+									(_17) => _17.groups,
 									'optionalAccess',
-									(_12) => _12.ariaLabel,
+									(_18) => _18.ariaLabel,
 								])
 
 								tmpContent = ariaLabel
 							} else {
-								const tmpAriaLabel = tmpContent
-									.replace(/<[^>]*>|[\n]/g, '')
-									.trim()
-								newAttrs = `aria-label="${tmpAriaLabel}" ${newAttrs}`
-								tmpContent = tmpAriaLabel
+								newAttrs = `aria-label="${tmpContentWithoutHTMLTags}" ${newAttrs}`
+								tmpContent = tmpContentWithoutHTMLTags
 							}
 							break
 						case newTag === 'input' &&
 							/type=['"](button|submit)['"]/g.test(curAttrs) &&
 							!/value(\s|$)|value=['"]{2}/g.test(curAttrs):
-							newAttrs = `type="button" ${newAttrs.replace(
-								/value(\s|$)|value=['"]{2}/g,
-								'value="click"'
-							)}`
+							return ''
 						case newTag === 'input' &&
 							/id=("|'|)(.*?)("|'|)+(\s|$)/g.test(newAttrs):
 							const id = /id=("|'|)(?<id>.*?)("|'|)+(\s|$)/g.test(newAttrs)

@@ -166,8 +166,9 @@ const puppeteerSSRService = (async () => {
 
 								// Add Server-Timing! See https://w3c.github.io/server-timing/.
 								if (
-									CACHEABLE_STATUS_CODE[result.status] ||
-									result.status === 503
+									(CACHEABLE_STATUS_CODE[result.status] ||
+										result.status === 503) &&
+									result.response
 								) {
 									try {
 										const body = fs.readFileSync(result.response)

@@ -1,4 +1,5 @@
 import fs from 'fs'
+import crypto from 'crypto'
 import Console from '../../../utils/ConsoleHandler'
 import { pagesPath } from '../../../constants'
 
@@ -30,11 +31,15 @@ export const getKey = (url) => {
 		return
 	}
 
-	return url
-		.replace(regexKeyConverter, '')
-		.replace(/\//g, '|')
-		.replace('?|?&', '')
+	// return url
+	// 	.replace(regexKeyConverter, '')
+	// 	.replace(/\//g, '|')
+	// 	.replace('?|?&', '')
 	// return url.split('?')[0].replace(/^https?:\/\/(www\.)?|^www\.|\/$/, '')
+	return crypto
+		.createHash('md5')
+		.update(url.replace(regexKeyConverter, ''))
+		.digest('hex')
 } // getKey
 
 export const getFileInfo = async (file: string): Promise<IFileInfo> => {

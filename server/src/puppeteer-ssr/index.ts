@@ -120,7 +120,10 @@ const puppeteerSSRService = (async () => {
 						}
 
 						// Add Server-Timing! See https://w3c.github.io/server-timing/.
-						if (CACHEABLE_STATUS_CODE[result.status] || result.status === 503)
+						if (
+							(CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
+							result.response
+						)
 							res.sendFile(result.response)
 						// Serve prerendered page as response.
 						else res.send(result.html || `${result.status} Error`) // Serve prerendered page as response.
