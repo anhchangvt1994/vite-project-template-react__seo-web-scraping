@@ -65,12 +65,13 @@ const get = async (
 				isRaw,
 			}
 		} catch (err) {
-			;(err) => {
-				if (err) {
-					Console.error(err)
-					Console.log(err)
-					return
-				}
+			if (err) {
+				Console.error(err)
+				return {
+					ttRenderMs: 200,
+					available: false,
+					isInit: true,
+				} as ISSRResult
 			}
 		}
 	}
@@ -142,9 +143,10 @@ const set = async ({
 		}
 	}
 
-	const result = await get(url, {
-		autoCreateIfEmpty: false,
-	})
+	const result =
+		(await get(url, {
+			autoCreateIfEmpty: false,
+		})) || ({ html, status: 200 } as ISSRResult)
 
 	return result
 } // set
