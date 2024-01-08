@@ -32,3 +32,8 @@ export interface ISetSeoTagOptionsParam {
 	[SeoTagsEnum.twitter_image]?: string
 	[SeoTagsEnum.twitter_card]?: string
 }
+
+export interface IGenerateSeoTagWrapperParams {
+	name?: string
+	generator: ((name: any, val: any) => void) | ((val: any) => void)
+}

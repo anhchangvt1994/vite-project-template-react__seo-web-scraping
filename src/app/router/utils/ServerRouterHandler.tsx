@@ -1,10 +1,10 @@
-import LoadingPageComponent from 'components/LoadingPageComponent'
+// import LoadingPageComponent from 'components/LoadingPageComponent'
 import { ServerStore } from 'store/ServerStore'
 import { resetSeoTag } from 'utils/SeoHelper'
-import {
-	INIT_LOADING_INFO,
-	useLoadingInfo,
-} from '../context/LoadingInfoContext'
+// import {
+// 	INIT_LOADING_INFO,
+// 	useLoadingInfo,
+// } from '../context/LoadingInfoContext'
 
 interface IFetchOnRouteResponse {
 	originPath: string
@@ -59,7 +59,7 @@ const validPathListCached = new Map<
 export default function ServerRouterHandler({ children }) {
 	const location = useLocation()
 	const { locale } = useParams()
-	const { loadingState, setLoadingState } = useLoadingInfo()
+	// const { loadingState, setLoadingState } = useLoadingInfo()
 	const { setLocaleState } = useLocaleInfo()
 	const [element, setElement] = useState<JSX.Element>()
 	const enableLocale = useMemo(
@@ -88,10 +88,10 @@ export default function ServerRouterHandler({ children }) {
 		})()
 
 		if (!BotInfo.isBot && !validPathInfo) {
-			setLoadingState({
-				isShow: true,
-				element: <LoadingPageComponent />,
-			})
+			// setLoadingState({
+			// 	isShow: true,
+			// 	element: <LoadingPageComponent />,
+			// })
 			// console.log('fetch')
 			const fullPath = `${location.pathname}${
 				location.search
@@ -165,7 +165,7 @@ export default function ServerRouterHandler({ children }) {
 					setElement(children)
 				}
 
-				setLoadingState(INIT_LOADING_INFO)
+				// setLoadingState(INIT_LOADING_INFO)
 			})
 		} else if (
 			enableLocale &&
@@ -230,5 +230,6 @@ export default function ServerRouterHandler({ children }) {
 		prevPath = location.pathname
 	}, [location.pathname])
 
-	return (loadingState.isShow && loadingState.element) || element
+	// return (loadingState.isShow && loadingState.element) || element
+	return element
 }

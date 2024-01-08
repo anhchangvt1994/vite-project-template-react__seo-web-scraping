@@ -37,46 +37,150 @@ export const enum SeoTagsEnum {
 	article_tag = 'article:tag',
 }
 
+export const INFO = {
+	curPath: location.pathname,
+	resetSeoTagTimeout: null,
+}
+
+const generateSeoTagWrapper = (params: IGenerateSeoTagWrapperParams) => {
+	if (!params.generator) return
+
+	return (val) => {
+		if (INFO.resetSeoTagTimeout) {
+			clearTimeout(INFO.resetSeoTagTimeout)
+			INFO.resetSeoTagTimeout = null
+		}
+		if (INFO.curPath !== location.pathname) {
+			INFO.curPath = location.pathname
+			for (const key in SeoTags) {
+				SeoTags[key]()
+			}
+		}
+
+		if (params.name) params.generator(params.name, val)
+		else (params.generator as (val: any) => void)(val)
+	}
+} // generateSeoTagWrapper
+
 export const SeoTags = {
-	[SeoTagsEnum.title]: generateTitleTag,
-	[SeoTagsEnum.description]: (val) =>
-		generateMetaTag(SeoTagsEnum.description, val),
-	[SeoTagsEnum.keywords]: (val) => generateMetaTag(SeoTagsEnum.keywords, val),
-	[SeoTagsEnum.robots]: (val) => generateMetaTag(SeoTagsEnum.robots, val),
-	[SeoTagsEnum.canonical]: (val) => generateLinkTag(SeoTagsEnum.canonical, val),
-	[SeoTagsEnum.viewport]: (val) => generateMetaTag(SeoTagsEnum.viewport, val),
-	[SeoTagsEnum.og_title]: (val) => generateMetaTag(SeoTagsEnum.og_title, val),
-	[SeoTagsEnum.og_description]: (val) =>
-		generateMetaTag(SeoTagsEnum.og_description, val),
-	[SeoTagsEnum.og_image]: (val) => generateMetaTag(SeoTagsEnum.og_image, val),
-	[SeoTagsEnum.og_image_width]: (val) =>
-		generateMetaTag(SeoTagsEnum.og_image_width, val),
-	[SeoTagsEnum.og_image_height]: (val) =>
-		generateMetaTag(SeoTagsEnum.og_image_height, val),
-	[SeoTagsEnum.og_url]: (val) => generateMetaTag(SeoTagsEnum.og_url, val),
-	[SeoTagsEnum.og_type]: (val) => generateMetaTag(SeoTagsEnum.og_type, val),
-	[SeoTagsEnum.og_site_name]: (val) =>
-		generateMetaTag(SeoTagsEnum.og_site_name, val),
-	[SeoTagsEnum.author]: (val) => generateMetaTag(SeoTagsEnum.author, val),
-	[SeoTagsEnum.googlebot]: (val) => generateMetaTag(SeoTagsEnum.googlebot, val),
-	[SeoTagsEnum.google_site_verification]: (val) =>
-		generateMetaTag(SeoTagsEnum.google_site_verification, val),
-	[SeoTagsEnum.alternate]: (val) => generateLinkTag(SeoTagsEnum.alternate, val),
-	[SeoTagsEnum.geo_region]: (val) =>
-		generateMetaTag(SeoTagsEnum.geo_region, val),
-	[SeoTagsEnum.geo_position]: (val) =>
-		generateMetaTag(SeoTagsEnum.geo_position, val),
-	[SeoTagsEnum.ICBM]: (val) => generateMetaTag(SeoTagsEnum.ICBM, val),
-	[SeoTagsEnum.next]: (val) => generateLinkTag(SeoTagsEnum.next, val),
-	[SeoTagsEnum.prev]: (val) => generateLinkTag(SeoTagsEnum.prev, val),
-	[SeoTagsEnum.author_link]: (val) => generateLinkTag(SeoTagsEnum.author, val),
-	[SeoTagsEnum.amphtml]: (val) => generateLinkTag(SeoTagsEnum.amphtml, val),
-	[SeoTagsEnum.twitter_title]: (val) =>
-		generateMetaTag(SeoTagsEnum.twitter_title, val),
-	[SeoTagsEnum.twitter_description]: (val) =>
-		generateMetaTag(SeoTagsEnum.twitter_description, val),
-	[SeoTagsEnum.twitter_image]: (val) =>
-		generateMetaTag(SeoTagsEnum.twitter_image, val),
-	[SeoTagsEnum.twitter_card]: (val) =>
-		generateMetaTag(SeoTagsEnum.twitter_card, val),
+	[SeoTagsEnum.title]: generateSeoTagWrapper({
+		generator: generateTitleTag,
+	}),
+	[SeoTagsEnum.description]: generateSeoTagWrapper({
+		name: SeoTagsEnum.description,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.keywords]: generateSeoTagWrapper({
+		name: SeoTagsEnum.keywords,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.robots]: generateSeoTagWrapper({
+		name: SeoTagsEnum.robots,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.canonical]: generateSeoTagWrapper({
+		name: SeoTagsEnum.canonical,
+		generator: generateLinkTag,
+	}),
+	[SeoTagsEnum.viewport]: generateSeoTagWrapper({
+		name: SeoTagsEnum.viewport,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.og_title]: generateSeoTagWrapper({
+		name: SeoTagsEnum.og_title,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.og_description]: generateSeoTagWrapper({
+		name: SeoTagsEnum.og_description,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.og_image]: generateSeoTagWrapper({
+		name: SeoTagsEnum.og_image,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.og_image_width]: generateSeoTagWrapper({
+		name: SeoTagsEnum.og_image_width,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.og_image_height]: generateSeoTagWrapper({
+		name: SeoTagsEnum.og_image_height,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.og_url]: generateSeoTagWrapper({
+		name: SeoTagsEnum.og_url,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.og_type]: generateSeoTagWrapper({
+		name: SeoTagsEnum.og_type,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.og_site_name]: generateSeoTagWrapper({
+		name: SeoTagsEnum.og_site_name,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.author]: generateSeoTagWrapper({
+		name: SeoTagsEnum.author,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.googlebot]: generateSeoTagWrapper({
+		name: SeoTagsEnum.googlebot,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.google_site_verification]: generateSeoTagWrapper({
+		name: SeoTagsEnum.google_site_verification,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.alternate]: generateSeoTagWrapper({
+		name: SeoTagsEnum.alternate,
+		generator: generateLinkTag,
+	}),
+	[SeoTagsEnum.geo_region]: generateSeoTagWrapper({
+		name: SeoTagsEnum.geo_region,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.geo_position]: generateSeoTagWrapper({
+		name: SeoTagsEnum.geo_position,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.ICBM]: generateSeoTagWrapper({
+		name: SeoTagsEnum.ICBM,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.next]: generateSeoTagWrapper({
+		name: SeoTagsEnum.next,
+		generator: generateLinkTag,
+	}),
+	[SeoTagsEnum.prev]: generateSeoTagWrapper({
+		name: SeoTagsEnum.prev,
+		generator: generateLinkTag,
+	}),
+	[SeoTagsEnum.author_link]: generateSeoTagWrapper({
+		name: SeoTagsEnum.author,
+		generator: generateLinkTag,
+	}),
+	[SeoTagsEnum.amphtml]: generateSeoTagWrapper({
+		name: SeoTagsEnum.amphtml,
+		generator: generateLinkTag,
+	}),
+	[SeoTagsEnum.twitter_title]: generateSeoTagWrapper({
+		name: SeoTagsEnum.twitter_title,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.twitter_description]: generateSeoTagWrapper({
+		name: SeoTagsEnum.twitter_description,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.twitter_image]: generateSeoTagWrapper({
+		name: SeoTagsEnum.twitter_image,
+		generator: generateMetaTag,
+	}),
+	[SeoTagsEnum.twitter_card]: generateSeoTagWrapper({
+		name: SeoTagsEnum.twitter_card,
+		generator: generateMetaTag,
+	}),
+}
+
+interface IGenerateSeoTagWrapperParams {
+	name?: string
+	generator: ((name: any, val: any) => void) | ((val: any) => void)
 }

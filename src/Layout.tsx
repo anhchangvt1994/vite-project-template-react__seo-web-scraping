@@ -81,7 +81,7 @@ function Layout() {
 				</Header>
 				<ErrorBoundary fallback={<ErrorLoadingPageComponent />}>
 					<LoadingBoundary
-						key={location.pathname}
+						// key={location.pathname}
 						delay={150}
 						fallback={<LoadingPageComponent />}
 					>

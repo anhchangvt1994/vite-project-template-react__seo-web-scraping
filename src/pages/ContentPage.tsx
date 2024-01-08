@@ -39,17 +39,18 @@ const Page = styled.div``
 // NOTE - End Styled Components Region
 
 export default function ContentPage() {
+	console.log('enter content page')
 	// const { slugs, id } = useParamsAdvance()
 	const route = useRoute()
 	setSeoTag({
 		title: 'Trang nội dung',
-		keywords: 'trang chủ, vue 3, wsc-seo',
-		description: 'Trang nội dung Vue 3.x and WSC-SEO',
+		keywords: 'Trang nội dung, react, wsc-seo',
+		description: 'Trang nội dung React and WSC-SEO',
 		'og:type': 'website',
 		'og:title': 'Trang nội dung',
-		'og:description': 'Trang nội dung Vue 3.x and WSC-SEO',
+		'og:description': 'Trang nội dung React and WSC-SEO',
 		'og:url': window.location.pathname,
-		'og:site_name': 'Vue 3.x and WSC-SEO',
+		'og:site_name': 'React and WSC-SEO',
 		'og:image': '',
 		'og:image:width': '1200',
 		'og:image:height': '628',
@@ -74,11 +75,7 @@ export default function ContentPage() {
 
 					<br />
 
-					<Link
-						to={generatePath('/:slugs/comment', {
-							slugs: route.params.slugs as string,
-						})}
-					>
+					<Link to={generatePath(import.meta.env.ROUTER_CONTENT_COMMENT_PATH)}>
 						{`> View Comment`}
 					</Link>
 

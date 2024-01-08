@@ -9,9 +9,9 @@ var _DetectDeviceuws2 = _interopRequireDefault(_DetectDeviceuws)
 const DetectDeviceMiddle = (res, req) => {
 	if (!res.cookies) res.cookies = {}
 	if (req.getHeader('service') === 'puppeteer') {
-		res.cookies.deviceInfo = req.getHeader('deviceInfo')
-			? JSON.parse(req.getHeader('deviceInfo'))
-			: {}
+		res.cookies.deviceInfo = JSON.parse(
+			req.getHeader('deviceinfo') || req.getHeader('deviceInfo') || '{}'
+		)
 	} else {
 		res.cookies.deviceInfo = _DetectDeviceuws2.default.call(void 0, req)
 	}
