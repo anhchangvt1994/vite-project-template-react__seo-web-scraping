@@ -153,6 +153,7 @@ const BrowserManager = (
 				_ConsoleHandler2.default.error(err)
 			} finally {
 				if (isError) return rej(undefined)
+				_ConsoleHandler2.default.log('Khởi động browser thành công!')
 				res(promiseBrowser)
 			}
 		})

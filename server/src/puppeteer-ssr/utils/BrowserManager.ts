@@ -93,6 +93,7 @@ const BrowserManager = (
 				Console.error(err)
 			} finally {
 				if (isError) return rej(undefined)
+				Console.log('Khởi động browser thành công!')
 				res(promiseBrowser)
 			}
 		})
