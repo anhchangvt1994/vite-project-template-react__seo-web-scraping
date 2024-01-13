@@ -124,7 +124,7 @@ const BrowserManager = (
 				if (canUseLinuxChromium && !executablePath) {
 					_ConsoleHandler2.default.log('Tạo executablePath')
 					executablePath = await _chromiummin2.default.executablePath(
-						'https://github.com/Sparticuz/chromium/releases/download/v119.0.0/chromium-v119.0.0-pack.tar'
+						'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
 					)
 				}
 
