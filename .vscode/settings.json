@@ -1,6 +1,29 @@
 {
 	"nuxt.isNuxtApp": false,
 
+	"editor.wordWrap": "on",
+	"editor.suggest.showModules": false,
+	"editor.formatOnSave": false,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.codeActionsOnSave": [
+		"source.formatDocument",
+		"source.fixAll.tslint",
+		"source.fixAll.eslint"
+	],
+	"editor.quickSuggestions": {
+		"other": true,
+		"comments": false,
+		"strings": true
+	},
+
+	"emmet.triggerExpansionOnTab": true,
+	"emmet.showSuggestionsAsSnippets": true,
+
+	"html.suggest.html5": true,
+	"scss.scannerDepth": 100,
+	"tailwindCSS.emmetCompletions": true,
+	"typescript.updateImportsOnFileMove.enabled": "always",
+
 	"path-autocomplete.extensionOnImport": true,
 	"path-autocomplete.includeExtension": true,
 	"path-autocomplete.excludedItems": {
@@ -15,12 +38,7 @@
 		"assets": "${workspace}/src/assets"
 	},
 	"path-autocomplete.pathSeparators": " \t({[",
-	"editor.suggest.showModules": false,
-	"editor.formatOnSave": false,
-	"editor.defaultFormatter": "esbenp.prettier-vscode",
-	"editor.codeActionsOnSave": [
-		"source.formatDocument",
-		"source.fixAll.tslint",
-		"source.fixAll.eslint"
-	]
+	"workbench.editor.empty.hint": "hidden",
+	"eslint.experimental.useFlatConfig": true,
+	"eslint.workingDirectories": [{ "mode": "auto" }]
 }

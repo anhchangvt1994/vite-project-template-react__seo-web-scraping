@@ -1,3 +1,4 @@
+import { IGenerateSeoTagWrapperParams } from './types'
 import { generateLinkTag, generateMetaTag, generateTitleTag } from './utils'
 
 export const enum SeoTagsEnum {
@@ -43,8 +44,6 @@ export const INFO = {
 }
 
 const generateSeoTagWrapper = (params: IGenerateSeoTagWrapperParams) => {
-	if (!params.generator) return
-
 	return (val) => {
 		if (INFO.resetSeoTagTimeout) {
 			clearTimeout(INFO.resetSeoTagTimeout)
@@ -178,9 +177,4 @@ export const SeoTags = {
 		name: SeoTagsEnum.twitter_card,
 		generator: generateMetaTag,
 	}),
-}
-
-interface IGenerateSeoTagWrapperParams {
-	name?: string
-	generator: ((name: any, val: any) => void) | ((val: any) => void)
 }

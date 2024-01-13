@@ -40,8 +40,11 @@ export const setSeoTag = (options?: ISetSeoTagOptionsParam) => {
 }
 
 export const resetSeoTag = (duration = 150) => {
-	if (INFO.curPath === location.pathname) return
+	const curPath = location.pathname
+
+	if (INFO.resetSeoTagTimeout) clearTimeout(INFO.resetSeoTagTimeout)
 	INFO.resetSeoTagTimeout = setTimeout(() => {
+		if (curPath === INFO.curPath && INFO.curPath === location.pathname) return
 		for (const key in SeoTags) {
 			SeoTags[key]()
 		}

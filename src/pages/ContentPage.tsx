@@ -39,7 +39,6 @@ const Page = styled.div``
 // NOTE - End Styled Components Region
 
 export default function ContentPage() {
-	console.log('enter content page')
 	// const { slugs, id } = useParamsAdvance()
 	const route = useRoute()
 	setSeoTag({
