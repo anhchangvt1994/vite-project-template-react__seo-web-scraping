@@ -64,6 +64,9 @@ const BrowserManager = (
 			let isError = false
 			let promiseBrowser
 			try {
+				Console.log('serverInfo: ', serverInfo)
+				Console.log('canUseLinuxChromium: ', canUseLinuxChromium)
+
 				if (canUseLinuxChromium && !executablePath) {
 					Console.log('Tạo executablePath')
 					executablePath = await Chromium.executablePath(
