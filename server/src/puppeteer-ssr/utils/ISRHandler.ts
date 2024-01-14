@@ -182,6 +182,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 				status = result.status
 				html = result.data
 			}
+			Console.log('External crawler status: ', status)
 		} catch (err) {
 			Console.log('Page mới đã bị lỗi')
 			Console.error(err)
@@ -203,7 +204,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 		let isGetHtmlProcessError = false
 
 		try {
-			await page.waitForNetworkIdle({ idleTime: 150 })
+			// await page.waitForNetworkIdle({ idleTime: 150 })
 			await page.setRequestInterception(true)
 			page.on('request', (req) => {
 				const resourceType = req.resourceType()
@@ -243,8 +244,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 					}
 				} finally {
 					status = response?.status?.() ?? status
-					Console.log('Crawl thành công!')
-					Console.log(`Response status là: ${status}`)
+					Console.log(`Internal crawler status: ${status}`)
 
 					res(true)
 				}
