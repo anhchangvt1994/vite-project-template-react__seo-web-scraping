@@ -139,6 +139,11 @@ const scanToCleanBrowsers = async (
 					(Date.now() - new Date(fs.statSync(absolutePath).mtime).getTime()) /
 					60000
 
+				console.log(
+					`dirExistDurationInMinutes of ${absolutePath}: `,
+					dirExistDurationInMinutes
+				)
+
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
 					const browser = await new Promise<Browser>(async (res) => {
 						let promiseBrowser

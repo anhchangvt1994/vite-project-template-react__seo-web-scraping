@@ -139,8 +139,6 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 
 	const cacheManager = CacheManager()
 
-	Console.log('Bắt đầu tạo page mới')
-
 	let restOfDuration = getRestOfDuration(startGenerating, gapDurationDefault)
 
 	if (restOfDuration <= 0) {
@@ -190,7 +188,9 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 	}
 
 	if (!ServerConfig.crawler || status === 500) {
+		Console.log('Create new page')
 		const page = await browserManager.newPage()
+		Console.log('Create new page success!')
 
 		if (!page) {
 			if (!page && !isFirstRequest) {
@@ -273,9 +273,6 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 
 		status = html && regexNotFoundPageID.test(html) ? 404 : 200
 	}
-
-	Console.log('Số giây còn lại là: ', restOfDuration / 1000)
-	Console.log('Tạo page mới thành công')
 
 	restOfDuration = getRestOfDuration(startGenerating)
 
