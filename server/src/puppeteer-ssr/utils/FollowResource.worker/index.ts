@@ -19,13 +19,6 @@ const puppeteer = (() => {
 	return require('puppeteer')
 })()
 
-if (canUseLinuxChromium && !executablePath) {
-	Console.log('Create executablePath')
-	executablePath = await Chromium.executablePath(
-		'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
-	)
-}
-
 type IFileInfo =
 	| {
 			size: number
@@ -126,6 +119,13 @@ const scanToCleanBrowsers = async (
 	dirPath: string,
 	durationValidToKeep = 1
 ) => {
+	if (canUseLinuxChromium && !executablePath) {
+		Console.log('Create executablePath')
+		executablePath = await Chromium.executablePath(
+			'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
+		)
+	}
+
 	await new Promise(async (res) => {
 		if (fs.existsSync(dirPath)) {
 			let counter = 0

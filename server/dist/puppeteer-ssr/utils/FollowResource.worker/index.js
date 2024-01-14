@@ -48,13 +48,6 @@ const puppeteer = (() => {
 	return require('puppeteer')
 })()
 
-if (canUseLinuxChromium && !executablePath) {
-	_ConsoleHandler2.default.log('Create executablePath')
-	executablePath = await _chromiummin2.default.executablePath(
-		'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
-	)
-}
-
 const deleteResource = (path) => {
 	return _utils.deleteResource.call(void 0, path, _workerpool2.default)
 } //  deleteResource
@@ -132,6 +125,13 @@ const checkToCleanFile = async (file, { schedule, validRequestAtDuration }) => {
 } // checkToCleanFile
 
 const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1) => {
+	if (canUseLinuxChromium && !executablePath) {
+		_ConsoleHandler2.default.log('Create executablePath')
+		executablePath = await _chromiummin2.default.executablePath(
+			'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
+		)
+	}
+
 	await new Promise(async (res) => {
 		if (_fs2.default.existsSync(dirPath)) {
 			let counter = 0
