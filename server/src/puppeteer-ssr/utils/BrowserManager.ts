@@ -49,7 +49,7 @@ export const deleteUserDataDir = async (dir: string) => {
 const BrowserManager = (
 	userDataDir: () => string = () => `${userDataPath}/user_data`
 ): IBrowser => {
-	let executablePath: string
+	let executablePath: string = ''
 
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0

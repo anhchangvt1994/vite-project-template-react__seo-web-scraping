@@ -106,7 +106,7 @@ exports.deleteUserDataDir = deleteUserDataDir // deleteUserDataDir
 const BrowserManager = (
 	userDataDir = () => `${_constants.userDataPath}/user_data`
 ) => {
-	let executablePath
+	let executablePath = ''
 
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0

@@ -23,6 +23,8 @@ function _optionalChain(ops) {
 	}
 	return value
 }
+var _chromiummin = require('@sparticuz/chromium-min')
+var _chromiummin2 = _interopRequireDefault(_chromiummin)
 var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
@@ -35,6 +37,7 @@ var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _constants3 = require('../../constants')
 var _utils = require('./utils')
 
+let executablePath = ''
 const canUseLinuxChromium =
 	_constants.serverInfo &&
 	_constants.serverInfo.isServer &&
@@ -44,6 +47,13 @@ const puppeteer = (() => {
 	if (canUseLinuxChromium) return require('puppeteer-core')
 	return require('puppeteer')
 })()
+
+if (canUseLinuxChromium && !executablePath) {
+	_ConsoleHandler2.default.log('Create executablePath')
+	executablePath = await _chromiummin2.default.executablePath(
+		'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
+	)
+}
 
 const deleteResource = (path) => {
 	return _utils.deleteResource.call(void 0, path, _workerpool2.default)
@@ -137,9 +147,23 @@ const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1) => {
 					60000
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
-					const browser = await puppeteer.launch({
-						..._constants3.defaultBrowserOptions,
-						userDataDir: absolutePath,
+					const browser = await new Promise(async (res) => {
+						let promiseBrowser
+						if (executablePath) {
+							promiseBrowser = await puppeteer.launch({
+								..._constants3.defaultBrowserOptions,
+								userDataDir: absolutePath,
+								args: _chromiummin2.default.args,
+								executablePath,
+							})
+						} else {
+							promiseBrowser = await puppeteer.launch({
+								..._constants3.defaultBrowserOptions,
+								userDataDir: absolutePath,
+							})
+						}
+
+						res(promiseBrowser)
 					})
 
 					const pages = await browser.pages()
