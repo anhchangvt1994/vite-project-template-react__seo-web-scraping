@@ -135,7 +135,7 @@ const BrowserManager = (
 				}
 
 				if (executablePath) {
-					_ConsoleHandler2.default.log('Khởi động browser với executablePath')
+					_ConsoleHandler2.default.log('Start browser with executablePath')
 					promiseBrowser = puppeteer.launch({
 						..._constants3.defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
@@ -143,6 +143,7 @@ const BrowserManager = (
 						executablePath,
 					})
 				} else {
+					_ConsoleHandler2.default.log('Start browser without executablePath')
 					promiseBrowser = puppeteer.launch({
 						..._constants3.defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
@@ -153,7 +154,7 @@ const BrowserManager = (
 				_ConsoleHandler2.default.error(err)
 			} finally {
 				if (isError) return rej(undefined)
-				_ConsoleHandler2.default.log('Khởi động browser thành công!')
+				_ConsoleHandler2.default.log('Start browser success!')
 				res(promiseBrowser)
 			}
 		})

@@ -204,7 +204,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 		let isGetHtmlProcessError = false
 
 		try {
-			// await page.waitForNetworkIdle({ idleTime: 150 })
+			await page.waitForNetworkIdle({ idleTime: 150 })
 			await page.setRequestInterception(true)
 			page.on('request', (req) => {
 				const resourceType = req.resourceType()
