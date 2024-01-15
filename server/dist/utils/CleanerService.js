@@ -36,7 +36,7 @@ const CleanerService = async () => {
 			if (!_constants.SERVER_LESS)
 				setTimeout(() => {
 					cleanBrowsers(5)
-				}, 60000)
+				}, 300000)
 		}
 	}
 
