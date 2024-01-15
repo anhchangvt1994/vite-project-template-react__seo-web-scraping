@@ -61,20 +61,11 @@ var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
 
 var _constants = require('../../constants')
+var _store = require('../../store')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _constants3 = require('../constants')
-
-const canUseLinuxChromium =
-	_constants.serverInfo &&
-	_constants.serverInfo.isServer &&
-	_constants.serverInfo.platform.toLowerCase() === 'linux'
-
-const puppeteer = (() => {
-	if (canUseLinuxChromium) return require('puppeteer-core')
-	return require('puppeteer')
-})()
 
 const deleteUserDataDir = async (dir) => {
 	if (dir) {
@@ -118,33 +109,40 @@ const BrowserManager = (
 		browserLaunch = new Promise(async (res, rej) => {
 			let isError = false
 			let promiseBrowser
+			const browserStore = (() => {
+				const tmpBrowserStore = _store.getStore.call(void 0, 'browser')
+				return tmpBrowserStore || {}
+			})()
+			const promiseStore = (() => {
+				const tmpPromiseStore = _store.getStore.call(void 0, 'promise')
+				return tmpPromiseStore || {}
+			})()
+
+			console.log('browserStore', browserStore)
+
 			try {
-				_ConsoleHandler2.default.log('serverInfo: ', _constants.serverInfo)
-				_ConsoleHandler2.default.log(
-					'canUseLinuxChromium: ',
-					canUseLinuxChromium
-				)
-
-				if (canUseLinuxChromium && !process.env.EXECUTABLE_PATH) {
-					_ConsoleHandler2.default.log('Tạo executablePath')
-					process.env.EXECUTABLE_PATH =
-						await _chromiummin2.default.executablePath(
-							'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
-						)
+				if (!promiseStore.executablePath) {
+					_ConsoleHandler2.default.log('Create executablePath')
+					promiseStore.executablePath = _chromiummin2.default.executablePath(
+						_constants3.chromiumPath
+					)
 				}
-				process.env.BROWSER_USER_DATA_IN_USED = selfUserDataDirPath
 
-				if (process.env.EXECUTABLE_PATH) {
+				browserStore.userDataPath = selfUserDataDirPath
+
+				_store.setStore.call(void 0, 'browser', browserStore)
+
+				if (promiseStore.executablePath && 1 === 2) {
 					_ConsoleHandler2.default.log('Start browser with executablePath')
-					promiseBrowser = puppeteer.launch({
+					promiseBrowser = _constants3.puppeteer.launch({
 						..._constants3.defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
 						args: _chromiummin2.default.args,
-						executablePath: process.env.EXECUTABLE_PATH,
+						executablePath: await promiseStore.executablePath,
 					})
 				} else {
 					_ConsoleHandler2.default.log('Start browser without executablePath')
-					promiseBrowser = puppeteer.launch({
+					promiseBrowser = _constants3.puppeteer.launch({
 						..._constants3.defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
 					})

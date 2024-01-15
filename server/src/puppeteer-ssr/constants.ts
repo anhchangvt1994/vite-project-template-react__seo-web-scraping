@@ -1,5 +1,5 @@
 import { PuppeteerLaunchOptions } from 'puppeteer-core'
-import { ENV, SERVER_LESS, userDataPath } from '../constants'
+import { ENV, SERVER_LESS, serverInfo, userDataPath } from '../constants'
 
 // NOTE - Browser Options
 export const optionArgs = [
@@ -118,3 +118,16 @@ export const COOKIE_EXPIRED =
 	BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO && ENV !== 'development'
 		? 2000
 		: 60000
+
+export const chromiumPath =
+	'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
+
+export const canUseLinuxChromium =
+	serverInfo &&
+	serverInfo.isServer &&
+	serverInfo.platform.toLowerCase() === 'linux'
+
+export const puppeteer = (() => {
+	if (canUseLinuxChromium) return require('puppeteer-core')
+	return require('puppeteer')
+})()

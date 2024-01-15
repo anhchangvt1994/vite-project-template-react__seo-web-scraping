@@ -149,3 +149,19 @@ const COOKIE_EXPIRED =
 		? 2000
 		: 60000
 exports.COOKIE_EXPIRED = COOKIE_EXPIRED
+
+const chromiumPath =
+	'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
+exports.chromiumPath = chromiumPath
+
+const canUseLinuxChromium =
+	_constants.serverInfo &&
+	_constants.serverInfo.isServer &&
+	_constants.serverInfo.platform.toLowerCase() === 'linux'
+exports.canUseLinuxChromium = canUseLinuxChromium
+
+const puppeteer = (() => {
+	if (exports.canUseLinuxChromium) return require('puppeteer-core')
+	return require('puppeteer')
+})()
+exports.puppeteer = puppeteer

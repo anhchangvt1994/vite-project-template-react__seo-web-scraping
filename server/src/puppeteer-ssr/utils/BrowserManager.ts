@@ -3,27 +3,21 @@ import path from 'path'
 import { Browser, Page } from 'puppeteer-core'
 import WorkerPool from 'workerpool'
 import {
-	resourceExtension,
-	userDataPath,
-	serverInfo,
 	SERVER_LESS,
+	resourceExtension,
+	serverInfo,
+	userDataPath,
 } from '../../constants'
+import { getStore, setStore } from '../../store'
 import Console from '../../utils/ConsoleHandler'
 import {
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
+	canUseLinuxChromium,
+	chromiumPath,
 	defaultBrowserOptions,
+	puppeteer,
 } from '../constants'
-
-const canUseLinuxChromium =
-	serverInfo &&
-	serverInfo.isServer &&
-	serverInfo.platform.toLowerCase() === 'linux'
-
-const puppeteer = (() => {
-	if (canUseLinuxChromium) return require('puppeteer-core')
-	return require('puppeteer')
-})()
 
 export interface IBrowser {
 	get: () => Promise<Browser | undefined>
@@ -61,25 +55,34 @@ const BrowserManager = (
 		browserLaunch = new Promise(async (res, rej) => {
 			let isError = false
 			let promiseBrowser
+			const browserStore = (() => {
+				const tmpBrowserStore = getStore('browser')
+				return tmpBrowserStore || {}
+			})()
+			const promiseStore = (() => {
+				const tmpPromiseStore = getStore('promise')
+				return tmpPromiseStore || {}
+			})()
+
+			console.log('browserStore', browserStore)
+
 			try {
-				Console.log('serverInfo: ', serverInfo)
-				Console.log('canUseLinuxChromium: ', canUseLinuxChromium)
-
-				if (canUseLinuxChromium && !process.env.EXECUTABLE_PATH) {
-					Console.log('Tạo executablePath')
-					process.env.EXECUTABLE_PATH = await Chromium.executablePath(
-						'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
-					)
+				if (!promiseStore.executablePath) {
+					Console.log('Create executablePath')
+					promiseStore.executablePath = Chromium.executablePath(chromiumPath)
 				}
-				process.env.BROWSER_USER_DATA_IN_USED = selfUserDataDirPath
 
-				if (process.env.EXECUTABLE_PATH) {
+				browserStore.userDataPath = selfUserDataDirPath
+
+				setStore('browser', browserStore)
+
+				if (promiseStore.executablePath && 1 === 2) {
 					Console.log('Start browser with executablePath')
 					promiseBrowser = puppeteer.launch({
 						...defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
 						args: Chromium.args,
-						executablePath: process.env.EXECUTABLE_PATH,
+						executablePath: await promiseStore.executablePath,
 					})
 				} else {
 					Console.log('Start browser without executablePath')
