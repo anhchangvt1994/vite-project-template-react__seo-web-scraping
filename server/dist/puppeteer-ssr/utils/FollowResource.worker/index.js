@@ -124,7 +124,7 @@ const checkToCleanFile = async (file, { schedule, validRequestAtDuration }) => {
 	// WorkerPool.pool().terminate()
 } // checkToCleanFile
 
-const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1) => {
+const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1, env) => {
 	if (canUseLinuxChromium && !executablePath) {
 		_ConsoleHandler2.default.log('Create executablePath')
 		executablePath = await _chromiummin2.default.executablePath(
@@ -139,17 +139,23 @@ const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1) => {
 
 			if (!browserList.length) return res(null)
 
+			const curUserDataPath = _path2.default.join(
+				'',
+				env.BROWSER_USER_DATA_IN_USED
+			)
+
 			for (const file of browserList) {
 				const absolutePath = _path2.default.join(dirPath, file)
+				if (absolutePath === curUserDataPath) {
+					counter++
+					if (counter === browserList.length) res(null)
+					continue
+				}
+
 				const dirExistDurationInMinutes =
 					(Date.now() -
 						new Date(_fs2.default.statSync(absolutePath).mtime).getTime()) /
 					60000
-
-				console.log(
-					`dirExistDurationInMinutes of ${absolutePath}: `,
-					dirExistDurationInMinutes
-				)
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
 					const browser = await new Promise(async (res) => {
@@ -176,7 +182,7 @@ const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1) => {
 					if (pages.length <= 1) {
 						await browser.close()
 						try {
-							_optionalChain([
+							await _optionalChain([
 								_workerpool2.default,
 								'access',
 								(_) => _.pool,

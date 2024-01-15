@@ -117,7 +117,8 @@ const checkToCleanFile = async (
 
 const scanToCleanBrowsers = async (
 	dirPath: string,
-	durationValidToKeep = 1
+	durationValidToKeep = 1,
+	env: { [key: string]: any }
 ) => {
 	if (canUseLinuxChromium && !executablePath) {
 		Console.log('Create executablePath')
@@ -133,16 +134,19 @@ const scanToCleanBrowsers = async (
 
 			if (!browserList.length) return res(null)
 
+			const curUserDataPath = path.join('', env.BROWSER_USER_DATA_IN_USED)
+
 			for (const file of browserList) {
 				const absolutePath = path.join(dirPath, file)
+				if (absolutePath === curUserDataPath) {
+					counter++
+					if (counter === browserList.length) res(null)
+					continue
+				}
+
 				const dirExistDurationInMinutes =
 					(Date.now() - new Date(fs.statSync(absolutePath).mtime).getTime()) /
 					60000
-
-				console.log(
-					`dirExistDurationInMinutes of ${absolutePath}: `,
-					dirExistDurationInMinutes
-				)
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
 					const browser = await new Promise<Browser>(async (res) => {
@@ -169,10 +173,9 @@ const scanToCleanBrowsers = async (
 					if (pages.length <= 1) {
 						await browser.close()
 						try {
-							WorkerPool.pool(path.resolve(__dirname, './index.ts'))?.exec(
-								'deleteResource',
-								[absolutePath]
-							)
+							await WorkerPool.pool(
+								path.resolve(__dirname, './index.ts')
+							)?.exec('deleteResource', [absolutePath])
 						} catch (err) {
 							Console.error(err)
 						} finally {

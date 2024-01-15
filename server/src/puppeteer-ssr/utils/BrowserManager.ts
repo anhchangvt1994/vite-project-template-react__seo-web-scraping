@@ -34,7 +34,7 @@ export interface IBrowser {
 export const deleteUserDataDir = async (dir: string) => {
 	if (dir) {
 		try {
-			WorkerPool.pool(
+			await WorkerPool.pool(
 				path.resolve(
 					__dirname,
 					`./FollowResource.worker/index.${resourceExtension}`
@@ -73,6 +73,7 @@ const BrowserManager = (
 						'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
 					)
 				}
+				process.env.BROWSER_USER_DATA_IN_USED = selfUserDataDirPath
 
 				if (executablePath) {
 					Console.log('Start browser with executablePath')

@@ -30,10 +30,10 @@ var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('../constants')
 var _path = require('path')
 
-const _deleteUserDataDir = (path) => {
+const _deleteUserDataDir = async (path) => {
 	if (path) {
 		try {
-			_optionalChain([
+			await _optionalChain([
 				_workerpool2.default,
 				'access',
 				(_) => _.pool,

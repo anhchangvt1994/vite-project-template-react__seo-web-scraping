@@ -57,7 +57,7 @@ export default (() => {
 		const deleteUserDataDir = async (path: string) => {
 			if (path) {
 				try {
-					WorkerPool.pool(
+					await WorkerPool.pool(
 						__dirname + `./FollowResource.worker/index.${resourceExtension}`
 					)?.exec('deleteResource', [path])
 				} catch (err) {

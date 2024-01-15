@@ -79,7 +79,7 @@ const puppeteer = (() => {
 const deleteUserDataDir = async (dir) => {
 	if (dir) {
 		try {
-			_optionalChain([
+			await _optionalChain([
 				_workerpool2.default,
 				'access',
 				(_) => _.pool,
@@ -133,6 +133,7 @@ const BrowserManager = (
 						'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
 					)
 				}
+				process.env.BROWSER_USER_DATA_IN_USED = selfUserDataDirPath
 
 				if (executablePath) {
 					_ConsoleHandler2.default.log('Start browser with executablePath')

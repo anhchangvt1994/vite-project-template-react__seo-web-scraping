@@ -26,6 +26,7 @@ const CleanerService = async () => {
 			await pool.exec('scanToCleanBrowsers', [
 				_constants.userDataPath,
 				durationValidToKeep,
+				process.env,
 			])
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
@@ -34,8 +35,8 @@ const CleanerService = async () => {
 
 			if (!_constants.SERVER_LESS)
 				setTimeout(() => {
-					cleanBrowsers(5)
-				}, 300000)
+					cleanBrowsers(0.1)
+				}, 5000)
 		}
 	}
 
