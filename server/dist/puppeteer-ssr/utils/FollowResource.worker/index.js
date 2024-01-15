@@ -125,9 +125,9 @@ const checkToCleanFile = async (file, { schedule, validRequestAtDuration }) => {
 } // checkToCleanFile
 
 const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1, env) => {
-	if (canUseLinuxChromium && !executablePath) {
+	if (canUseLinuxChromium && !env.EXECUTABLE_PATH) {
 		_ConsoleHandler2.default.log('Create executablePath')
-		executablePath = await _chromiummin2.default.executablePath(
+		env.EXECUTABLE_PATH = await _chromiummin2.default.executablePath(
 			'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
 		)
 	}
@@ -148,7 +148,7 @@ const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1, env) => {
 				const absolutePath = _path2.default.join(dirPath, file)
 				if (absolutePath === curUserDataPath) {
 					counter++
-					if (counter === browserList.length) res(null)
+					if (counter === browserList.length) return res(null)
 					continue
 				}
 
@@ -160,12 +160,12 @@ const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1, env) => {
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
 					const browser = await new Promise(async (res) => {
 						let promiseBrowser
-						if (executablePath) {
+						if (env.EXECUTABLE_PATH) {
 							promiseBrowser = await puppeteer.launch({
 								..._constants3.defaultBrowserOptions,
 								userDataDir: absolutePath,
 								args: _chromiummin2.default.args,
-								executablePath,
+								executablePath: env.EXECUTABLE_PATH,
 							})
 						} else {
 							promiseBrowser = await puppeteer.launch({

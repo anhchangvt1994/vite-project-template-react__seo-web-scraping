@@ -49,8 +49,6 @@ export const deleteUserDataDir = async (dir: string) => {
 const BrowserManager = (
 	userDataDir: () => string = () => `${userDataPath}/user_data`
 ): IBrowser => {
-	let executablePath: string = ''
-
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0
 	let browserLaunch: Promise<Browser | undefined>
@@ -67,21 +65,21 @@ const BrowserManager = (
 				Console.log('serverInfo: ', serverInfo)
 				Console.log('canUseLinuxChromium: ', canUseLinuxChromium)
 
-				if (canUseLinuxChromium && !executablePath) {
+				if (canUseLinuxChromium && !process.env.EXECUTABLE_PATH) {
 					Console.log('Tạo executablePath')
-					executablePath = await Chromium.executablePath(
+					process.env.EXECUTABLE_PATH = await Chromium.executablePath(
 						'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
 					)
 				}
 				process.env.BROWSER_USER_DATA_IN_USED = selfUserDataDirPath
 
-				if (executablePath) {
+				if (process.env.EXECUTABLE_PATH) {
 					Console.log('Start browser with executablePath')
 					promiseBrowser = puppeteer.launch({
 						...defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
 						args: Chromium.args,
-						executablePath,
+						executablePath: process.env.EXECUTABLE_PATH,
 					})
 				} else {
 					Console.log('Start browser without executablePath')
