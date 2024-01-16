@@ -14,7 +14,8 @@ if (serverInfoStringify) {
 	try {
 		serverInfo = JSON.parse(serverInfoStringify) || {}
 
-		if (process.env.IS_SERVER) serverInfo.isServer = process.env.IS_SERVER
+		if (process.env.IS_SERVER)
+			serverInfo.isServer = Boolean(process.env.IS_SERVER)
 	} catch (err) {
 		console.error(err)
 	}
