@@ -73,12 +73,14 @@ const TLDsMerged = new Array().concat(internationalTLDs).concat(countryTLDs)
 	})
 
 	serverInfo.address = address
-	serverInfo.isServer = !Boolean(
-		address === 'localhost' ||
-			address === '::1' ||
-			address.startsWith('fe80::') ||
-			/^(127)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/.test(address)
-	)
+	serverInfo.isServer =
+		Boolean(process.env.IS_SERVER) ||
+		!Boolean(
+			address === 'localhost' ||
+				address === '::1' ||
+				address.startsWith('fe80::') ||
+				/^(127)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/.test(address)
+		)
 	// const subfixDomain = address.split('.').slice(-1).join('.')
 	// serverInfo.isServer = (TLDsMerged.includes(subfixDomain))
 	// serverInfo.isServer = true
