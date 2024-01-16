@@ -233,7 +233,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 			})
 
 			await new Promise(async (res) => {
-				Console.log(`Bắt đầu crawl url: ${url}`)
+				Console.log(`Start to crawl: ${url}`)
 
 				let response
 

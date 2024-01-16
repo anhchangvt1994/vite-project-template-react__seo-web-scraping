@@ -59,8 +59,6 @@ const BrowserManager = (
 				return tmpPromiseStore || {}
 			})()
 
-			console.log('browserStore', browserStore)
-
 			try {
 				if (!promiseStore.executablePath) {
 					Console.log('Create executablePath')

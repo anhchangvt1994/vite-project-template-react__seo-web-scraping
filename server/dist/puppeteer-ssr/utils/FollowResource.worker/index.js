@@ -119,7 +119,6 @@ const scanToCleanBrowsers = async (
 	browserStore
 ) => {
 	await new Promise(async (res) => {
-		console.log('browserStore', browserStore)
 		if (_fs2.default.existsSync(dirPath)) {
 			let counter = 0
 			const browserList = _fs2.default.readdirSync(dirPath)

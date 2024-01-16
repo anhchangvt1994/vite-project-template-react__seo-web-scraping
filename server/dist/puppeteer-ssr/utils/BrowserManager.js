@@ -118,8 +118,6 @@ const BrowserManager = (
 				return tmpPromiseStore || {}
 			})()
 
-			console.log('browserStore', browserStore)
-
 			try {
 				if (!promiseStore.executablePath) {
 					_ConsoleHandler2.default.log('Create executablePath')
