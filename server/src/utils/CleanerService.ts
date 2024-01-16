@@ -7,7 +7,7 @@ import {
 	resourceExtension,
 	userDataPath,
 } from '../constants'
-import { chromiumPath } from '../puppeteer-ssr/constants'
+import { canUseLinuxChromium, chromiumPath } from '../puppeteer-ssr/constants'
 import { getStore, setStore } from '../store'
 import Console from './ConsoleHandler'
 
@@ -25,7 +25,7 @@ const CleanerService = async () => {
 				return tmpPromiseStore || {}
 			})()
 
-			if (!promiseStore.executablePath) {
+			if (canUseLinuxChromium && !promiseStore.executablePath) {
 				Console.log('Create executablePath')
 				promiseStore.executablePath = Chromium.executablePath(chromiumPath)
 			}

@@ -8,6 +8,7 @@ import Console from '../../utils/ConsoleHandler'
 import {
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
+	canUseLinuxChromium,
 	chromiumPath,
 	defaultBrowserOptions,
 	puppeteer,
@@ -60,7 +61,7 @@ const BrowserManager = (
 			})()
 
 			try {
-				if (!promiseStore.executablePath) {
+				if (canUseLinuxChromium && !promiseStore.executablePath) {
 					Console.log('Create executablePath')
 					promiseStore.executablePath = Chromium.executablePath(chromiumPath)
 				}

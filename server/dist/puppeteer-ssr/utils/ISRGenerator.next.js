@@ -272,7 +272,8 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 							res,
 							_constants.SERVER_LESS
 								? 5000
-								: _constants3.BANDWIDTH_LEVEL > 1
+								: _constants3.BANDWIDTH_LEVEL >
+								  _constants3.BANDWIDTH_LEVEL_LIST.ONE
 								? 10000
 								: 20000
 						)

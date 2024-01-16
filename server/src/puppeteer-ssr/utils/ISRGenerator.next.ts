@@ -239,7 +239,11 @@ const SSRGenerator = async ({
 					else
 						setTimeout(
 							res,
-							SERVER_LESS ? 5000 : BANDWIDTH_LEVEL > 1 ? 10000 : 20000
+							SERVER_LESS
+								? 5000
+								: BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE
+								? 10000
+								: 20000
 						)
 
 					const result = await (async () => {

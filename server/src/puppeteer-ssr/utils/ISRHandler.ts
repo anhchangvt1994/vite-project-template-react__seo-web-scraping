@@ -5,6 +5,7 @@ import ServerConfig from '../../server.config'
 import Console from '../../utils/ConsoleHandler'
 import {
 	BANDWIDTH_LEVEL,
+	BANDWIDTH_LEVEL_LIST,
 	CACHEABLE_STATUS_CODE,
 	DURATION_TIMEOUT,
 	MAX_WORKERS,
@@ -75,10 +76,14 @@ const fetchData = async (
 } // fetchData
 
 const waitResponse = (() => {
-	const firstWaitingDuration = BANDWIDTH_LEVEL > 1 ? 250 : 1000
-	const defaultRequestWaitingDuration = BANDWIDTH_LEVEL > 1 ? 250 : 1000
-	const requestServedFromCacheDuration = BANDWIDTH_LEVEL > 1 ? 100 : 250
-	const requestFailDuration = BANDWIDTH_LEVEL > 1 ? 100 : 250
+	const firstWaitingDuration =
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 250 : 1000
+	const defaultRequestWaitingDuration =
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 250 : 1000
+	const requestServedFromCacheDuration =
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 100 : 250
+	const requestFailDuration =
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 100 : 250
 
 	return async (page: Page, url: string, duration: number) => {
 		let response
@@ -186,7 +191,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 			}
 			Console.log('External crawler status: ', status)
 		} catch (err) {
-			Console.log('Page mới đã bị lỗi')
+			Console.log('Crawler is fail!')
 			Console.error(err)
 		}
 	}
@@ -254,7 +259,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 				}
 			})
 		} catch (err) {
-			Console.log('Page mới đã bị lỗi')
+			Console.log('Crawler is fail!')
 			Console.error(err)
 			await page.close()
 			return {

@@ -119,7 +119,7 @@ const BrowserManager = (
 			})()
 
 			try {
-				if (!promiseStore.executablePath) {
+				if (_constants3.canUseLinuxChromium && !promiseStore.executablePath) {
 					_ConsoleHandler2.default.log('Create executablePath')
 					promiseStore.executablePath = _chromiummin2.default.executablePath(
 						_constants3.chromiumPath
