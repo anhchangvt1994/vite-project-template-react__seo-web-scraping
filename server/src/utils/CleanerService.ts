@@ -37,6 +37,11 @@ const CleanerService = async () => {
 				executablePath = await promiseStore.executablePath
 			}
 
+			console.log(
+				'./FollowResource.worker/index. resourceExtension cleanBrowsers: ',
+				resourceExtension
+			)
+
 			const pool = WorkerPool.pool(
 				path.resolve(
 					__dirname,
@@ -69,6 +74,10 @@ const CleanerService = async () => {
 
 	// NOTE - Pages Cleaner
 	const cleanPages = async (durationValidToKeep = 1) => {
+		console.log(
+			'./FollowResource.worker/index. resourceExtension cleanPages: ',
+			resourceExtension
+		)
 		const pool = WorkerPool.pool(
 			path.resolve(
 				__dirname,

@@ -68,6 +68,10 @@ var _constants3 = require('../constants')
 
 const deleteUserDataDir = async (dir) => {
 	if (dir) {
+		console.log(
+			'./FollowResource.worker/index. resourceExtension deleUserDataDir: ',
+			_constants.resourceExtension
+		)
 		try {
 			await _optionalChain([
 				_workerpool2.default,

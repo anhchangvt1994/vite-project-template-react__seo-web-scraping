@@ -22,6 +22,10 @@ export interface IBrowser {
 
 export const deleteUserDataDir = async (dir: string) => {
 	if (dir) {
+		console.log(
+			'./FollowResource.worker/index. resourceExtension deleUserDataDir: ',
+			resourceExtension
+		)
 		try {
 			await WorkerPool.pool(
 				path.resolve(
