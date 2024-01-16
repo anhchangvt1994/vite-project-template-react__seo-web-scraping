@@ -76,8 +76,8 @@ const fetchData = async (
 
 const waitResponse = (() => {
 	const firstWaitingDuration = BANDWIDTH_LEVEL > 1 ? 250 : 1000
-	const defaultRequestWaitingDuration = BANDWIDTH_LEVEL > 1 ? 250 : 1500
-	const requestServedFromCacheDuration = BANDWIDTH_LEVEL > 1 ? 100 : 500
+	const defaultRequestWaitingDuration = BANDWIDTH_LEVEL > 1 ? 250 : 1000
+	const requestServedFromCacheDuration = BANDWIDTH_LEVEL > 1 ? 100 : 250
 	const requestFailDuration = BANDWIDTH_LEVEL > 1 ? 100 : 250
 
 	return async (page: Page, url: string, duration: number) => {
