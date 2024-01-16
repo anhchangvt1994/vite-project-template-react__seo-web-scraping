@@ -19,21 +19,30 @@ var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 const CleanerService = async () => {
 	// NOTE - Browsers Cleaner
 	const cleanBrowsers = (() => {
+		let executablePath
 		return async (durationValidToKeep = 1) => {
 			const browserStore = (() => {
 				const tmpBrowserStore = _store.getStore.call(void 0, 'browser')
 				return tmpBrowserStore || {}
 			})()
+			const promiseStore = (() => {
+				const tmpPromiseStore = _store.getStore.call(void 0, 'promise')
+				return tmpPromiseStore || {}
+			})()
 
-			if (!browserStore.executablePath) {
+			if (!promiseStore.executablePath) {
 				_ConsoleHandler2.default.log('Create executablePath')
-				browserStore.executablePath =
-					await _chromiummin2.default.executablePath(_constants3.chromiumPath)
+				promiseStore.executablePath = _chromiummin2.default.executablePath(
+					_constants3.chromiumPath
+				)
 			}
 
 			_store.setStore.call(void 0, 'browser', browserStore)
+			_store.setStore.call(void 0, 'promise', promiseStore)
 
-			console.log('browserStore_1', browserStore)
+			if (!executablePath && promiseStore.executablePath) {
+				executablePath = await promiseStore.executablePath
+			}
 
 			const pool = _workerpool2.default.pool(
 				_path2.default.resolve(
@@ -42,14 +51,13 @@ const CleanerService = async () => {
 				)
 			)
 
+			browserStore.executablePath = executablePath
+
 			try {
 				await pool.exec('scanToCleanBrowsers', [
 					_constants.userDataPath,
 					durationValidToKeep,
-					{
-						userDataPath: browserStore.userDataPath,
-						executablePath: await browserStore.executablePath,
-					},
+					browserStore,
 				])
 			} catch (err) {
 				_ConsoleHandler2.default.error(err)

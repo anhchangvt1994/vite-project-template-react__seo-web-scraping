@@ -5,32 +5,37 @@ import {
 	SERVER_LESS,
 	pagesPath,
 	resourceExtension,
-	serverInfo,
 	userDataPath,
 } from '../constants'
-import { canUseLinuxChromium, chromiumPath } from '../puppeteer-ssr/constants'
+import { chromiumPath } from '../puppeteer-ssr/constants'
 import { getStore, setStore } from '../store'
 import Console from './ConsoleHandler'
 
 const CleanerService = async () => {
 	// NOTE - Browsers Cleaner
 	const cleanBrowsers = (() => {
+		let executablePath: string
 		return async (durationValidToKeep = 1) => {
 			const browserStore = (() => {
 				const tmpBrowserStore = getStore('browser')
 				return tmpBrowserStore || {}
 			})()
+			const promiseStore = (() => {
+				const tmpPromiseStore = getStore('promise')
+				return tmpPromiseStore || {}
+			})()
 
-			if (!browserStore.executablePath) {
+			if (!promiseStore.executablePath) {
 				Console.log('Create executablePath')
-				browserStore.executablePath = await Chromium.executablePath(
-					chromiumPath
-				)
+				promiseStore.executablePath = Chromium.executablePath(chromiumPath)
 			}
 
 			setStore('browser', browserStore)
+			setStore('promise', promiseStore)
 
-			console.log('browserStore_1', browserStore)
+			if (!executablePath && promiseStore.executablePath) {
+				executablePath = await promiseStore.executablePath
+			}
 
 			const pool = WorkerPool.pool(
 				path.resolve(
@@ -39,14 +44,13 @@ const CleanerService = async () => {
 				)
 			)
 
+			browserStore.executablePath = executablePath
+
 			try {
 				await pool.exec('scanToCleanBrowsers', [
 					userDataPath,
 					durationValidToKeep,
-					{
-						userDataPath: browserStore.userDataPath,
-						executablePath: await browserStore.executablePath,
-					},
+					browserStore,
 				])
 			} catch (err) {
 				Console.error(err)

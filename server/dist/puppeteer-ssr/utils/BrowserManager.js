@@ -59,7 +59,6 @@ var _path2 = _interopRequireDefault(_path)
 
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
-
 var _constants = require('../../constants')
 var _store = require('../../store')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
@@ -100,6 +99,7 @@ const BrowserManager = (
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0
 	let browserLaunch
+	let executablePath
 
 	const __launch = async () => {
 		totalRequests = 0
@@ -131,14 +131,19 @@ const BrowserManager = (
 				browserStore.userDataPath = selfUserDataDirPath
 
 				_store.setStore.call(void 0, 'browser', browserStore)
+				_store.setStore.call(void 0, 'promise', promiseStore)
 
-				if (promiseStore.executablePath && 1 === 2) {
+				if (!executablePath && promiseStore.executablePath) {
+					executablePath = await promiseStore.executablePath
+				}
+
+				if (promiseStore.executablePath) {
 					_ConsoleHandler2.default.log('Start browser with executablePath')
 					promiseBrowser = _constants3.puppeteer.launch({
 						..._constants3.defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
 						args: _chromiummin2.default.args,
-						executablePath: await promiseStore.executablePath,
+						executablePath,
 					})
 				} else {
 					_ConsoleHandler2.default.log('Start browser without executablePath')

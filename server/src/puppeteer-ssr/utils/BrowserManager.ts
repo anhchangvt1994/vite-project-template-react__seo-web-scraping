@@ -2,18 +2,12 @@ import Chromium from '@sparticuz/chromium-min'
 import path from 'path'
 import { Browser, Page } from 'puppeteer-core'
 import WorkerPool from 'workerpool'
-import {
-	SERVER_LESS,
-	resourceExtension,
-	serverInfo,
-	userDataPath,
-} from '../../constants'
+import { SERVER_LESS, resourceExtension, userDataPath } from '../../constants'
 import { getStore, setStore } from '../../store'
 import Console from '../../utils/ConsoleHandler'
 import {
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
-	canUseLinuxChromium,
 	chromiumPath,
 	defaultBrowserOptions,
 	puppeteer,
@@ -46,6 +40,7 @@ const BrowserManager = (
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0
 	let browserLaunch: Promise<Browser | undefined>
+	let executablePath: string
 
 	const __launch = async () => {
 		totalRequests = 0
@@ -75,14 +70,19 @@ const BrowserManager = (
 				browserStore.userDataPath = selfUserDataDirPath
 
 				setStore('browser', browserStore)
+				setStore('promise', promiseStore)
 
-				if (promiseStore.executablePath && 1 === 2) {
+				if (!executablePath && promiseStore.executablePath) {
+					executablePath = await promiseStore.executablePath
+				}
+
+				if (promiseStore.executablePath) {
 					Console.log('Start browser with executablePath')
 					promiseBrowser = puppeteer.launch({
 						...defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
 						args: Chromium.args,
-						executablePath: await promiseStore.executablePath,
+						executablePath,
 					})
 				} else {
 					Console.log('Start browser without executablePath')
