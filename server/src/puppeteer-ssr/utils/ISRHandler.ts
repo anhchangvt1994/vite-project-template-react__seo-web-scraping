@@ -74,62 +74,66 @@ const fetchData = async (
 	}
 } // fetchData
 
-const waitResponse = async (page: Page, url: string, duration: number) => {
-	let response
-	try {
-		response = await new Promise(async (resolve, reject) => {
-			const result = await new Promise<any>((resolveAfterPageLoad) => {
-				page
-					.goto(url.split('?')[0], {
-						waitUntil: 'domcontentloaded',
-					})
-					.then((res) => {
-						setTimeout(
-							() => resolveAfterPageLoad(res),
-							BANDWIDTH_LEVEL > 1 ? 250 : 500
-						)
-					})
-					.catch((err) => {
-						reject(err)
-					})
-			})
+const waitResponse = (() => {
+	const firstWaitingDuration = BANDWIDTH_LEVEL > 1 ? 250 : 1000
+	const defaultRequestWaitingDuration = BANDWIDTH_LEVEL > 1 ? 250 : 1500
+	const requestServedFromCacheDuration = BANDWIDTH_LEVEL > 1 ? 100 : 500
+	const requestFailDuration = BANDWIDTH_LEVEL > 1 ? 100 : 250
 
-			const html = await page.content()
+	return async (page: Page, url: string, duration: number) => {
+		let response
+		try {
+			response = await new Promise(async (resolve, reject) => {
+				const result = await new Promise<any>((resolveAfterPageLoad) => {
+					page
+						.goto(url.split('?')[0], {
+							waitUntil: 'domcontentloaded',
+						})
+						.then((res) => {
+							setTimeout(() => resolveAfterPageLoad(res), firstWaitingDuration)
+						})
+						.catch((err) => {
+							reject(err)
+						})
+				})
 
-			if (regexNotFoundPageID.test(html)) return resolve(result)
+				const html = await page.content()
 
-			await new Promise((resolveAfterPageLoadInFewSecond) => {
-				const startTimeout = (() => {
-					let timeout
-					return (duration = BANDWIDTH_LEVEL > 1 ? 200 : 500) => {
-						if (timeout) clearTimeout(timeout)
-						timeout = setTimeout(resolveAfterPageLoadInFewSecond, duration)
-					}
-				})()
+				if (regexNotFoundPageID.test(html)) return resolve(result)
 
-				startTimeout()
+				await new Promise((resolveAfterPageLoadInFewSecond) => {
+					const startTimeout = (() => {
+						let timeout
+						return (duration = defaultRequestWaitingDuration) => {
+							if (timeout) clearTimeout(timeout)
+							timeout = setTimeout(resolveAfterPageLoadInFewSecond, duration)
+						}
+					})()
 
-				page.on('requestfinished', () => {
 					startTimeout()
-				})
-				page.on('requestservedfromcache', () => {
-					startTimeout(100)
-				})
-				page.on('requestfailed', () => {
-					startTimeout(100)
+
+					page.on('requestfinished', () => {
+						startTimeout()
+					})
+					page.on('requestservedfromcache', () => {
+						startTimeout(requestServedFromCacheDuration)
+					})
+					page.on('requestfailed', () => {
+						startTimeout(requestFailDuration)
+					})
+
+					setTimeout(resolveAfterPageLoadInFewSecond, 10000)
 				})
 
-				setTimeout(resolveAfterPageLoadInFewSecond, 10000)
+				resolve(result)
 			})
+		} catch (err) {
+			throw err
+		}
 
-			resolve(result)
-		})
-	} catch (err) {
-		throw err
+		return response
 	}
-
-	return response
-} // waitResponse
+})() // waitResponse
 
 const gapDurationDefault = 1500
 
