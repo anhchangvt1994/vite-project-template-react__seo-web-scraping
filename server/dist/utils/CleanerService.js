@@ -113,6 +113,6 @@ const CleanerService = async () => {
 	else await cleanPages()
 }
 
-if (!_constants.SERVER_LESS) CleanerService()
+// if (!SERVER_LESS) CleanerService()
 
 exports.default = CleanerService
