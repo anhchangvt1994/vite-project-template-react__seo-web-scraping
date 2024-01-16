@@ -33,7 +33,6 @@ function _optionalChain(ops) {
 var _middie = require('@fastify/middie')
 var _middie2 = _interopRequireDefault(_middie)
 var _child_process = require('child_process')
-
 var _cors = require('cors')
 var _cors2 = _interopRequireDefault(_cors)
 var _fastify = require('fastify')
@@ -49,7 +48,6 @@ var _indexfastify = require('./puppeteer-ssr/index.fastify')
 var _indexfastify2 = _interopRequireDefault(_indexfastify)
 var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
-
 var _CookieHandler = require('./utils/CookieHandler')
 var _DetectBot = require('./utils/DetectBot')
 var _DetectBot2 = _interopRequireDefault(_DetectBot)
@@ -73,7 +71,7 @@ const cleanResourceWithCondition = async () => {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
-		} = require('./puppeteer-ssr/utils/FollowResource.worker/utils.ts')
+		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${_constants.resourceExtension}`)
 		const browsersPath = _path2.default.resolve(
 			__dirname,
 			'./puppeteer-ssr/browsers'

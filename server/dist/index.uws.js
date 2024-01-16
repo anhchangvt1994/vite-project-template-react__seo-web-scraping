@@ -40,7 +40,7 @@ const cleanResourceWithCondition = async () => {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
-		} = require('./puppeteer-ssr/utils/FollowResource.worker/utils.ts')
+		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${_constants.resourceExtension}`)
 		const browsersPath = _path2.default.resolve(
 			__dirname,
 			'./puppeteer-ssr/browsers'

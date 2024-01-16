@@ -23,11 +23,11 @@ function _optionalChain(ops) {
 	}
 	return value
 }
+var _cors = require('@elysiajs/cors')
 var _child_process = require('child_process')
 var _chokidar = require('chokidar')
 var _chokidar2 = _interopRequireDefault(_chokidar)
 var _elysia = require('elysia')
-var _cors = require('@elysiajs/cors')
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _PortHandler = require('../../config/utils/PortHandler')
@@ -40,12 +40,12 @@ var _DetectBotbun = require('./utils/DetectBot.bun')
 var _DetectBotbun2 = _interopRequireDefault(_DetectBotbun)
 var _DetectDevicebun = require('./utils/DetectDevice.bun')
 var _DetectDevicebun2 = _interopRequireDefault(_DetectDevicebun)
+var _DetectRedirectbun = require('./utils/DetectRedirect.bun')
+var _DetectRedirectbun2 = _interopRequireDefault(_DetectRedirectbun)
 var _DetectStaticExtensionbun = require('./utils/DetectStaticExtension.bun')
 var _DetectStaticExtensionbun2 = _interopRequireDefault(
 	_DetectStaticExtensionbun
 )
-var _DetectRedirectbun = require('./utils/DetectRedirect.bun')
-var _DetectRedirectbun2 = _interopRequireDefault(_DetectRedirectbun)
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -54,7 +54,7 @@ const cleanResourceWithCondition = async () => {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
-		} = require('./puppeteer-ssr/utils/FollowResource.worker/utils.ts')
+		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${_constants.resourceExtension}`)
 		const browsersPath = _path2.default.resolve(
 			__dirname,
 			'./puppeteer-ssr/browsers'

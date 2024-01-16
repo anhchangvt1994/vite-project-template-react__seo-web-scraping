@@ -1,16 +1,14 @@
 import middie from '@fastify/middie'
 import { spawn } from 'child_process'
-import chokidar from 'chokidar'
 import cors from 'cors'
 import fastify from 'fastify'
 import path from 'path'
 import serveStatic from 'serve-static'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
-import { ENV, pagesPath, serverInfo } from './constants'
+import { ENV, pagesPath, resourceExtension, serverInfo } from './constants'
 import { COOKIE_EXPIRED } from './puppeteer-ssr/constants'
 import puppeteerSSRService from './puppeteer-ssr/index.fastify'
 import ServerConfig from './server.config'
-import Console from './utils/ConsoleHandler'
 import { setCookie } from './utils/CookieHandler'
 import detectBot from './utils/DetectBot'
 import detectDevice from './utils/DetectDevice'
@@ -28,7 +26,7 @@ const cleanResourceWithCondition = async () => {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
-		} = require('./puppeteer-ssr/utils/FollowResource.worker/utils.ts')
+		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
 
 		return Promise.all([

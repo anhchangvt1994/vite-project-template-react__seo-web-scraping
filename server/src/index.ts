@@ -3,7 +3,7 @@ import cors from 'cors'
 import express from 'express'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
-import { ENV, pagesPath, serverInfo } from './constants'
+import { ENV, pagesPath, resourceExtension, serverInfo } from './constants'
 import puppeteerSSRService from './puppeteer-ssr'
 import { COOKIE_EXPIRED } from './puppeteer-ssr/constants'
 import ServerConfig from './server.config'
@@ -23,7 +23,7 @@ const cleanResourceWithCondition = async () => {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
-		} = require('./puppeteer-ssr/utils/FollowResource.worker/utils.ts')
+		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
 
 		return Promise.all([
