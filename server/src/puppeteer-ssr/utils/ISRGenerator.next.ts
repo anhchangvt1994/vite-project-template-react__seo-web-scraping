@@ -187,7 +187,7 @@ const SSRGenerator = async ({
 	} else {
 		result = await cacheManager.get(ISRHandlerParams.url)
 
-		Console.log('Kiểm tra có đủ điều kiện tạo page mới không ?')
+		Console.log('Check for condition to create new page.')
 		Console.log('result.available', result?.available)
 
 		if (result) {
@@ -236,7 +236,15 @@ const SSRGenerator = async ({
 					})()
 
 					if (isSkipWaiting) return res(undefined)
-					else setTimeout(res, SERVER_LESS ? 5000 : 10000)
+					else
+						setTimeout(
+							res,
+							SERVER_LESS
+								? 5000
+								: BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE
+								? 10000
+								: 20000
+						)
 
 					const result = await (async () => {
 						return await handle

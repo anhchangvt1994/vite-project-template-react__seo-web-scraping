@@ -98,62 +98,82 @@ const fetchData = async (input, init, reqData) => {
 	}
 } // fetchData
 
-const waitResponse = async (page, url, duration) => {
-	let response
-	try {
-		response = await new Promise(async (resolve, reject) => {
-			const result = await new Promise((resolveAfterPageLoad) => {
-				page
-					.goto(url.split('?')[0], {
-						waitUntil: 'domcontentloaded',
-					})
-					.then((res) => {
-						setTimeout(
-							() => resolveAfterPageLoad(res),
-							_constants3.BANDWIDTH_LEVEL > 1 ? 250 : 500
-						)
-					})
-					.catch((err) => {
-						reject(err)
-					})
-			})
+const waitResponse = (() => {
+	const firstWaitingDuration =
+		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
+			? 200
+			: 500
+	const defaultRequestWaitingDuration =
+		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
+			? 200
+			: 500
+	const requestServedFromCacheDuration =
+		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
+			? 200
+			: 250
+	const requestFailDuration =
+		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
+			? 200
+			: 250
+	const maximumTimeout =
+		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
+			? 5000
+			: 5000
 
-			const html = await page.content()
+	return async (page, url, duration) => {
+		let response
+		try {
+			response = await new Promise(async (resolve, reject) => {
+				const result = await new Promise((resolveAfterPageLoad) => {
+					page
+						.goto(url.split('?')[0], {
+							waitUntil: 'domcontentloaded',
+						})
+						.then((res) => {
+							setTimeout(() => resolveAfterPageLoad(res), firstWaitingDuration)
+						})
+						.catch((err) => {
+							reject(err)
+						})
+				})
 
-			if (_constants3.regexNotFoundPageID.test(html)) return resolve(result)
+				const html = await page.content()
 
-			await new Promise((resolveAfterPageLoadInFewSecond) => {
-				const startTimeout = (() => {
-					let timeout
-					return (duration = _constants3.BANDWIDTH_LEVEL > 1 ? 200 : 500) => {
-						if (timeout) clearTimeout(timeout)
-						timeout = setTimeout(resolveAfterPageLoadInFewSecond, duration)
-					}
-				})()
+				if (_constants3.regexNotFoundPageID.test(html)) return resolve(result)
 
-				startTimeout()
+				await new Promise((resolveAfterPageLoadInFewSecond) => {
+					const startTimeout = (() => {
+						let timeout
+						return (duration = defaultRequestWaitingDuration) => {
+							if (timeout) clearTimeout(timeout)
+							timeout = setTimeout(resolveAfterPageLoadInFewSecond, duration)
+						}
+					})()
 
-				page.on('requestfinished', () => {
 					startTimeout()
-				})
-				page.on('requestservedfromcache', () => {
-					startTimeout(100)
-				})
-				page.on('requestfailed', () => {
-					startTimeout(100)
+
+					page.on('requestfinished', () => {
+						startTimeout()
+					})
+					page.on('requestservedfromcache', () => {
+						startTimeout(requestServedFromCacheDuration)
+					})
+					page.on('requestfailed', () => {
+						startTimeout(requestFailDuration)
+					})
+
+					setTimeout(resolveAfterPageLoadInFewSecond, maximumTimeout)
 				})
 
-				setTimeout(resolveAfterPageLoadInFewSecond, 10000)
+				resolve(result)
 			})
+		} catch (err) {
+			throw err
+		}
 
-			resolve(result)
-		})
-	} catch (err) {
-		throw err
+		return response
 	}
-
-	return response
-} // waitResponse
+})() // waitResponse
 
 const gapDurationDefault = 1500
 
@@ -162,8 +182,6 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 	if (getRestOfDuration(startGenerating, gapDurationDefault) <= 0) return
 
 	const cacheManager = _CacheManager2.default.call(void 0)
-
-	_ConsoleHandler2.default.log('Bắt đầu tạo page mới')
 
 	let restOfDuration = getRestOfDuration(startGenerating, gapDurationDefault)
 
@@ -207,14 +225,17 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 				status = result.status
 				html = result.data
 			}
+			_ConsoleHandler2.default.log('External crawler status: ', status)
 		} catch (err) {
-			_ConsoleHandler2.default.log('Page mới đã bị lỗi')
+			_ConsoleHandler2.default.log('Crawler is fail!')
 			_ConsoleHandler2.default.error(err)
 		}
 	}
 
 	if (!_serverconfig2.default.crawler || status === 500) {
+		_ConsoleHandler2.default.log('Create new page')
 		const page = await browserManager.newPage()
+		_ConsoleHandler2.default.log('Create new page success!')
 
 		if (!page) {
 			if (!page && !isFirstRequest) {
@@ -264,7 +285,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 			})
 
 			await new Promise(async (res) => {
-				_ConsoleHandler2.default.log(`Bắt đầu crawl url: ${url}`)
+				_ConsoleHandler2.default.log(`Start to crawl: ${url}`)
 
 				let response
 
@@ -288,14 +309,13 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 						]),
 						() => status
 					)
-					_ConsoleHandler2.default.log('Crawl thành công!')
-					_ConsoleHandler2.default.log(`Response status là: ${status}`)
+					_ConsoleHandler2.default.log(`Internal crawler status: ${status}`)
 
 					res(true)
 				}
 			})
 		} catch (err) {
-			_ConsoleHandler2.default.log('Page mới đã bị lỗi')
+			_ConsoleHandler2.default.log('Crawler is fail!')
 			_ConsoleHandler2.default.error(err)
 			await page.close()
 			return {
@@ -318,9 +338,6 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 
 		status = html && _constants3.regexNotFoundPageID.test(html) ? 404 : 200
 	}
-
-	_ConsoleHandler2.default.log('Số giây còn lại là: ', restOfDuration / 1000)
-	_ConsoleHandler2.default.log('Tạo page mới thành công')
 
 	restOfDuration = getRestOfDuration(startGenerating)
 

@@ -55,6 +55,11 @@ const compressContent = (html) => {
 
 const optimizeContent = (html, isFullOptimize = false) => {
 	if (!html) return ''
+
+	html = html.replace(_constants3.regexOptimizeForScriptBlockPerformance, '')
+
+	if (_constants3.DISABLE_OPTIMIZE) return html
+
 	html = html.replace(_constants3.regexOptimizeForPerformanceNormally, '')
 
 	if (
@@ -110,10 +115,6 @@ const optimizeContent = (html, isFullOptimize = false) => {
 					default:
 						break
 				}
-
-				// if (newAttrs.indexOf('height=') === -1) {
-				// 	console.log(newAttrs)
-				// }
 
 				return `<img ${newAttrs}>`
 			})

@@ -23,27 +23,20 @@ function _optionalChain(ops) {
 	}
 	return value
 }
+var _chromiummin = require('@sparticuz/chromium-min')
+var _chromiummin2 = _interopRequireDefault(_chromiummin)
 var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
+
 var _constants = require('../../../constants')
 var _ConsoleHandler = require('../../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _constants3 = require('../../constants')
 var _utils = require('./utils')
-
-const canUseLinuxChromium =
-	_constants.serverInfo &&
-	_constants.serverInfo.isServer &&
-	_constants.serverInfo.platform.toLowerCase() === 'linux'
-
-const puppeteer = (() => {
-	if (canUseLinuxChromium) return require('puppeteer-core')
-	return require('puppeteer')
-})()
 
 const deleteResource = (path) => {
 	return _utils.deleteResource.call(void 0, path, _workerpool2.default)
@@ -121,7 +114,11 @@ const checkToCleanFile = async (file, { schedule, validRequestAtDuration }) => {
 	// WorkerPool.pool().terminate()
 } // checkToCleanFile
 
-const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1) => {
+const scanToCleanBrowsers = async (
+	dirPath,
+	durationValidToKeep = 1,
+	browserStore
+) => {
 	await new Promise(async (res) => {
 		if (_fs2.default.existsSync(dirPath)) {
 			let counter = 0
@@ -129,17 +126,41 @@ const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1) => {
 
 			if (!browserList.length) return res(null)
 
+			const curUserDataPath = browserStore.userDataPath
+				? _path2.default.join('', browserStore.userDataPath)
+				: ''
+
 			for (const file of browserList) {
 				const absolutePath = _path2.default.join(dirPath, file)
+				if (absolutePath === curUserDataPath) {
+					counter++
+					if (counter === browserList.length) return res(null)
+					continue
+				}
+
 				const dirExistDurationInMinutes =
 					(Date.now() -
 						new Date(_fs2.default.statSync(absolutePath).mtime).getTime()) /
 					60000
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
-					const browser = await puppeteer.launch({
-						..._constants3.defaultBrowserOptions,
-						userDataDir: absolutePath,
+					const browser = await new Promise(async (res) => {
+						let promiseBrowser
+						if (browserStore.executablePath) {
+							promiseBrowser = await _constants3.puppeteer.launch({
+								..._constants3.defaultBrowserOptions,
+								userDataDir: absolutePath,
+								args: _chromiummin2.default.args,
+								executablePath: browserStore.executablePath,
+							})
+						} else {
+							promiseBrowser = await _constants3.puppeteer.launch({
+								..._constants3.defaultBrowserOptions,
+								userDataDir: absolutePath,
+							})
+						}
+
+						res(promiseBrowser)
 					})
 
 					const pages = await browser.pages()
@@ -147,12 +168,18 @@ const scanToCleanBrowsers = async (dirPath, durationValidToKeep = 1) => {
 					if (pages.length <= 1) {
 						await browser.close()
 						try {
-							_optionalChain([
+							await _optionalChain([
 								_workerpool2.default,
 								'access',
 								(_) => _.pool,
 								'call',
-								(_2) => _2(_path2.default.resolve(__dirname, './index.ts')),
+								(_2) =>
+									_2(
+										_path2.default.resolve(
+											__dirname,
+											`./index.${_constants.resourceExtension}`
+										)
+									),
 								'optionalAccess',
 								(_3) => _3.exec,
 								'call',

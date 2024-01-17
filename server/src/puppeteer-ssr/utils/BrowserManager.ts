@@ -2,28 +2,17 @@ import Chromium from '@sparticuz/chromium-min'
 import path from 'path'
 import { Browser, Page } from 'puppeteer-core'
 import WorkerPool from 'workerpool'
-import {
-	resourceExtension,
-	userDataPath,
-	serverInfo,
-	SERVER_LESS,
-} from '../../constants'
+import { SERVER_LESS, resourceExtension, userDataPath } from '../../constants'
+import { getStore, setStore } from '../../store'
 import Console from '../../utils/ConsoleHandler'
 import {
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
+	canUseLinuxChromium,
+	chromiumPath,
 	defaultBrowserOptions,
+	puppeteer,
 } from '../constants'
-
-const canUseLinuxChromium =
-	serverInfo &&
-	serverInfo.isServer &&
-	serverInfo.platform.toLowerCase() === 'linux'
-
-const puppeteer = (() => {
-	if (canUseLinuxChromium) return require('puppeteer-core')
-	return require('puppeteer')
-})()
 
 export interface IBrowser {
 	get: () => Promise<Browser | undefined>
@@ -34,7 +23,7 @@ export interface IBrowser {
 export const deleteUserDataDir = async (dir: string) => {
 	if (dir) {
 		try {
-			WorkerPool.pool(
+			await WorkerPool.pool(
 				path.resolve(
 					__dirname,
 					`./FollowResource.worker/index.${resourceExtension}`
@@ -49,11 +38,10 @@ export const deleteUserDataDir = async (dir: string) => {
 const BrowserManager = (
 	userDataDir: () => string = () => `${userDataPath}/user_data`
 ): IBrowser => {
-	let executablePath: string
-
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0
 	let browserLaunch: Promise<Browser | undefined>
+	let executablePath: string
 
 	const __launch = async () => {
 		totalRequests = 0
@@ -63,19 +51,32 @@ const BrowserManager = (
 		browserLaunch = new Promise(async (res, rej) => {
 			let isError = false
 			let promiseBrowser
-			try {
-				Console.log('serverInfo: ', serverInfo)
-				Console.log('canUseLinuxChromium: ', canUseLinuxChromium)
+			const browserStore = (() => {
+				const tmpBrowserStore = getStore('browser')
+				return tmpBrowserStore || {}
+			})()
+			const promiseStore = (() => {
+				const tmpPromiseStore = getStore('promise')
+				return tmpPromiseStore || {}
+			})()
 
-				if (canUseLinuxChromium && !executablePath) {
-					Console.log('Tạo executablePath')
-					executablePath = await Chromium.executablePath(
-						'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
-					)
+			try {
+				if (canUseLinuxChromium && !promiseStore.executablePath) {
+					Console.log('Create executablePath')
+					promiseStore.executablePath = Chromium.executablePath(chromiumPath)
 				}
 
-				if (executablePath) {
-					Console.log('Khởi động browser với executablePath')
+				browserStore.userDataPath = selfUserDataDirPath
+
+				setStore('browser', browserStore)
+				setStore('promise', promiseStore)
+
+				if (!executablePath && promiseStore.executablePath) {
+					executablePath = await promiseStore.executablePath
+				}
+
+				if (promiseStore.executablePath) {
+					Console.log('Start browser with executablePath')
 					promiseBrowser = puppeteer.launch({
 						...defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
@@ -83,6 +84,7 @@ const BrowserManager = (
 						executablePath,
 					})
 				} else {
+					Console.log('Start browser without executablePath')
 					promiseBrowser = puppeteer.launch({
 						...defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
@@ -93,7 +95,7 @@ const BrowserManager = (
 				Console.error(err)
 			} finally {
 				if (isError) return rej(undefined)
-				Console.log('Khởi động browser thành công!')
+				Console.log('Start browser success!')
 				res(promiseBrowser)
 			}
 		})

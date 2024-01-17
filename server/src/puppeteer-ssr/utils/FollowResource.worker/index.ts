@@ -1,20 +1,13 @@
+import Chromium from '@sparticuz/chromium-min'
 import fs from 'fs'
 import path from 'path'
 import WorkerPool from 'workerpool'
-import { serverInfo } from '../../../constants'
+
+import { Browser } from 'puppeteer-core'
+import { resourceExtension } from '../../../constants'
 import Console from '../../../utils/ConsoleHandler'
-import { defaultBrowserOptions } from '../../constants'
+import { defaultBrowserOptions, puppeteer } from '../../constants'
 import { deleteResource as deleteResourceWithWorker } from './utils'
-
-const canUseLinuxChromium =
-	serverInfo &&
-	serverInfo.isServer &&
-	serverInfo.platform.toLowerCase() === 'linux'
-
-const puppeteer = (() => {
-	if (canUseLinuxChromium) return require('puppeteer-core')
-	return require('puppeteer')
-})()
 
 type IFileInfo =
 	| {
@@ -114,7 +107,8 @@ const checkToCleanFile = async (
 
 const scanToCleanBrowsers = async (
 	dirPath: string,
-	durationValidToKeep = 1
+	durationValidToKeep = 1,
+	browserStore
 ) => {
 	await new Promise(async (res) => {
 		if (fs.existsSync(dirPath)) {
@@ -123,16 +117,40 @@ const scanToCleanBrowsers = async (
 
 			if (!browserList.length) return res(null)
 
+			const curUserDataPath = browserStore.userDataPath
+				? path.join('', browserStore.userDataPath)
+				: ''
+
 			for (const file of browserList) {
 				const absolutePath = path.join(dirPath, file)
+				if (absolutePath === curUserDataPath) {
+					counter++
+					if (counter === browserList.length) return res(null)
+					continue
+				}
+
 				const dirExistDurationInMinutes =
 					(Date.now() - new Date(fs.statSync(absolutePath).mtime).getTime()) /
 					60000
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
-					const browser = await puppeteer.launch({
-						...defaultBrowserOptions,
-						userDataDir: absolutePath,
+					const browser = await new Promise<Browser>(async (res) => {
+						let promiseBrowser
+						if (browserStore.executablePath) {
+							promiseBrowser = await puppeteer.launch({
+								...defaultBrowserOptions,
+								userDataDir: absolutePath,
+								args: Chromium.args,
+								executablePath: browserStore.executablePath,
+							})
+						} else {
+							promiseBrowser = await puppeteer.launch({
+								...defaultBrowserOptions,
+								userDataDir: absolutePath,
+							})
+						}
+
+						res(promiseBrowser)
 					})
 
 					const pages = await browser.pages()
@@ -140,10 +158,9 @@ const scanToCleanBrowsers = async (
 					if (pages.length <= 1) {
 						await browser.close()
 						try {
-							WorkerPool.pool(path.resolve(__dirname, './index.ts'))?.exec(
-								'deleteResource',
-								[absolutePath]
-							)
+							await WorkerPool.pool(
+								path.resolve(__dirname, `./index.${resourceExtension}`)
+							)?.exec('deleteResource', [absolutePath])
 						} catch (err) {
 							Console.error(err)
 						} finally {

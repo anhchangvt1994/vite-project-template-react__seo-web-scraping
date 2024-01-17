@@ -83,7 +83,7 @@ exports.default = (() => {
 		const deleteUserDataDir = async (path) => {
 			if (path) {
 				try {
-					_optionalChain([
+					await _optionalChain([
 						_workerpool2.default,
 						'access',
 						(_) => _.pool,

@@ -59,27 +59,17 @@ var _path2 = _interopRequireDefault(_path)
 
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
-
 var _constants = require('../../constants')
+var _store = require('../../store')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _constants3 = require('../constants')
 
-const canUseLinuxChromium =
-	_constants.serverInfo &&
-	_constants.serverInfo.isServer &&
-	_constants.serverInfo.platform.toLowerCase() === 'linux'
-
-const puppeteer = (() => {
-	if (canUseLinuxChromium) return require('puppeteer-core')
-	return require('puppeteer')
-})()
-
 const deleteUserDataDir = async (dir) => {
 	if (dir) {
 		try {
-			_optionalChain([
+			await _optionalChain([
 				_workerpool2.default,
 				'access',
 				(_) => _.pool,
@@ -106,11 +96,10 @@ exports.deleteUserDataDir = deleteUserDataDir // deleteUserDataDir
 const BrowserManager = (
 	userDataDir = () => `${_constants.userDataPath}/user_data`
 ) => {
-	let executablePath
-
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0
 	let browserLaunch
+	let executablePath
 
 	const __launch = async () => {
 		totalRequests = 0
@@ -120,30 +109,43 @@ const BrowserManager = (
 		browserLaunch = new Promise(async (res, rej) => {
 			let isError = false
 			let promiseBrowser
-			try {
-				_ConsoleHandler2.default.log('serverInfo: ', _constants.serverInfo)
-				_ConsoleHandler2.default.log(
-					'canUseLinuxChromium: ',
-					canUseLinuxChromium
-				)
+			const browserStore = (() => {
+				const tmpBrowserStore = _store.getStore.call(void 0, 'browser')
+				return tmpBrowserStore || {}
+			})()
+			const promiseStore = (() => {
+				const tmpPromiseStore = _store.getStore.call(void 0, 'promise')
+				return tmpPromiseStore || {}
+			})()
 
-				if (canUseLinuxChromium && !executablePath) {
-					_ConsoleHandler2.default.log('Tạo executablePath')
-					executablePath = await _chromiummin2.default.executablePath(
-						'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
+			try {
+				if (_constants3.canUseLinuxChromium && !promiseStore.executablePath) {
+					_ConsoleHandler2.default.log('Create executablePath')
+					promiseStore.executablePath = _chromiummin2.default.executablePath(
+						_constants3.chromiumPath
 					)
 				}
 
-				if (executablePath) {
-					_ConsoleHandler2.default.log('Khởi động browser với executablePath')
-					promiseBrowser = puppeteer.launch({
+				browserStore.userDataPath = selfUserDataDirPath
+
+				_store.setStore.call(void 0, 'browser', browserStore)
+				_store.setStore.call(void 0, 'promise', promiseStore)
+
+				if (!executablePath && promiseStore.executablePath) {
+					executablePath = await promiseStore.executablePath
+				}
+
+				if (promiseStore.executablePath) {
+					_ConsoleHandler2.default.log('Start browser with executablePath')
+					promiseBrowser = _constants3.puppeteer.launch({
 						..._constants3.defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
 						args: _chromiummin2.default.args,
 						executablePath,
 					})
 				} else {
-					promiseBrowser = puppeteer.launch({
+					_ConsoleHandler2.default.log('Start browser without executablePath')
+					promiseBrowser = _constants3.puppeteer.launch({
 						..._constants3.defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
 					})
@@ -153,7 +155,7 @@ const BrowserManager = (
 				_ConsoleHandler2.default.error(err)
 			} finally {
 				if (isError) return rej(undefined)
-				_ConsoleHandler2.default.log('Khởi động browser thành công!')
+				_ConsoleHandler2.default.log('Start browser success!')
 				res(promiseBrowser)
 			}
 		})

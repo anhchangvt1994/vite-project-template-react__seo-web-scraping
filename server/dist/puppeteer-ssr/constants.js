@@ -69,8 +69,12 @@ exports.defaultBrowserOptions = defaultBrowserOptions
 // NOTE - Regex Handler
 // export const regexRemoveSpecialHtmlTag: RegExp =
 // 	/<script(>|\s(?![\s\S]*only-dev)[\s\S]*?(\/>|>))[\s\S]*?<\/script>(?:[\s\S]*?|$)|<style(>|\s(?![\s\S]*only-dev)[\s\S]*?(\/>|>))[\s\S]*?<\/style>(?:[\s\S]*?|$)|<link[\s\S]*href="[\s\S]*\.(css)+(|\?v=.*)"[\s\S]*?(\/|)>(?:[\s\S]*?|$)|(\s+|)style="([\s\S].+|)"/g
+const regexOptimizeForScriptBlockPerformance =
+	/(<script(\s[^>]+)*>(.|[\r\n])*?<\/script>|<script(\s[^>]+)*\/>)/g
+exports.regexOptimizeForScriptBlockPerformance =
+	regexOptimizeForScriptBlockPerformance
 const regexOptimizeForPerformanceNormally =
-	/(<script(\s[^>]+)*>(.|[\r\n])*?<\/script>|<script(\s[^>]+)*\/>|<link\s+(?=.*(rel=["']?(modulepreload|preload|prefetch)["']?).*?(\/|)?)(?:.*?\/?>))|<iframe\s+(?:[^>]*?\s+)?((src|id)=["']?[^"]*\b((partytown|insider-worker)(?:-[a-z]+)?)\b[^"]*["']|\bvideo\b)?[^>]*>(?:[^<]*|<(?!\/iframe>))*<\/iframe>/g
+	/(<link\s+(?=.*(rel=["']?(modulepreload|preload|prefetch)["']?).*?(\/|)?)(?:.*?\/?>))|<iframe\s+(?:[^>]*?\s+)?((src|id)=["']?[^"]*\b((partytown|insider-worker)(?:-[a-z]+)?)\b[^"]*["']|\bvideo\b)?[^>]*>(?:[^<]*|<(?!\/iframe>))*<\/iframe>/g
 exports.regexOptimizeForPerformanceNormally =
 	regexOptimizeForPerformanceNormally
 const regexOptimizeForPerformanceHardly =
@@ -120,6 +124,8 @@ const DISABLE_COMPRESS_HTML = !!process.env.DISABLE_COMPRESS_HTML
 exports.DISABLE_COMPRESS_HTML = DISABLE_COMPRESS_HTML
 const DISABLE_DEEP_OPTIMIZE = !!process.env.DISABLE_DEEP_OPTIMIZE
 exports.DISABLE_DEEP_OPTIMIZE = DISABLE_DEEP_OPTIMIZE
+const DISABLE_OPTIMIZE = !!process.env.DISABLE_OPTIMIZE
+exports.DISABLE_OPTIMIZE = DISABLE_OPTIMIZE
 const BANDWIDTH_LEVEL = process.env.BANDWIDTH_LEVEL
 	? Number(process.env.BANDWIDTH_LEVEL)
 	: 2
@@ -149,3 +155,19 @@ const COOKIE_EXPIRED =
 		? 2000
 		: 60000
 exports.COOKIE_EXPIRED = COOKIE_EXPIRED
+
+const chromiumPath =
+	'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
+exports.chromiumPath = chromiumPath
+
+const canUseLinuxChromium =
+	_constants.serverInfo &&
+	_constants.serverInfo.isServer &&
+	_constants.serverInfo.platform.toLowerCase() === 'linux'
+exports.canUseLinuxChromium = canUseLinuxChromium
+
+const puppeteer = (() => {
+	if (exports.canUseLinuxChromium) return require('puppeteer-core')
+	return require('puppeteer')
+})()
+exports.puppeteer = puppeteer

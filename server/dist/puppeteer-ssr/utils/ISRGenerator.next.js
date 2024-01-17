@@ -213,9 +213,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 	} else {
 		result = await cacheManager.get(ISRHandlerParams.url)
 
-		_ConsoleHandler2.default.log(
-			'Kiểm tra có đủ điều kiện tạo page mới không ?'
-		)
+		_ConsoleHandler2.default.log('Check for condition to create new page.')
 		_ConsoleHandler2.default.log(
 			'result.available',
 			_optionalChain([result, 'optionalAccess', (_2) => _2.available])
@@ -269,7 +267,16 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 					})()
 
 					if (isSkipWaiting) return res(undefined)
-					else setTimeout(res, _constants.SERVER_LESS ? 5000 : 10000)
+					else
+						setTimeout(
+							res,
+							_constants.SERVER_LESS
+								? 5000
+								: _constants3.BANDWIDTH_LEVEL >
+								  _constants3.BANDWIDTH_LEVEL_LIST.ONE
+								? 10000
+								: 20000
+						)
 
 					const result = await (async () => {
 						return await handle

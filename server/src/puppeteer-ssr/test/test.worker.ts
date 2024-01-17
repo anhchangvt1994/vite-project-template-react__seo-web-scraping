@@ -3,10 +3,10 @@ import WorkerPool from 'workerpool'
 import { defaultBrowserOptions, optionArgs } from '../constants'
 import { resolve } from 'path'
 
-const _deleteUserDataDir = (path: string) => {
+const _deleteUserDataDir = async (path: string) => {
 	if (path) {
 		try {
-			WorkerPool.pool(
+			await WorkerPool.pool(
 				resolve(__dirname, '../utils/FollowResource.worker/index.ts')
 			)?.exec('deleteResource', [path])
 		} catch (err) {

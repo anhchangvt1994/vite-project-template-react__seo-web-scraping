@@ -19,7 +19,10 @@ if (_fs2.default.existsSync(serverInfoPath)) {
 let serverInfo
 if (serverInfoStringify) {
 	try {
-		serverInfo = exports.serverInfo = JSON.parse(serverInfoStringify)
+		serverInfo = exports.serverInfo = JSON.parse(serverInfoStringify) || {}
+
+		if (process.env.IS_SERVER)
+			serverInfo.isServer = Boolean(process.env.IS_SERVER)
 	} catch (err) {
 		console.error(err)
 	}

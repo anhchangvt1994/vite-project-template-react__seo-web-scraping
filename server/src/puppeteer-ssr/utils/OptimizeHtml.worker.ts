@@ -4,6 +4,7 @@ import { ENV } from '../../constants'
 import {
 	DISABLE_COMPRESS_HTML,
 	DISABLE_DEEP_OPTIMIZE,
+	DISABLE_OPTIMIZE,
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
 	regexHandleAttrsHtmlTag,
@@ -11,6 +12,7 @@ import {
 	regexHandleAttrsInteractiveTag,
 	regexOptimizeForPerformanceHardly,
 	regexOptimizeForPerformanceNormally,
+	regexOptimizeForScriptBlockPerformance,
 } from '../constants'
 
 const compressContent = (html: string): string => {
@@ -35,6 +37,11 @@ const compressContent = (html: string): string => {
 
 const optimizeContent = (html: string, isFullOptimize = false): string => {
 	if (!html) return ''
+
+	html = html.replace(regexOptimizeForScriptBlockPerformance, '')
+
+	if (DISABLE_OPTIMIZE) return html
+
 	html = html.replace(regexOptimizeForPerformanceNormally, '')
 
 	if (DISABLE_DEEP_OPTIMIZE || POWER_LEVEL === POWER_LEVEL_LIST.ONE) return html
@@ -74,10 +81,6 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 					default:
 						break
 				}
-
-				// if (newAttrs.indexOf('height=') === -1) {
-				// 	console.log(newAttrs)
-				// }
 
 				return `<img ${newAttrs}>`
 			})
