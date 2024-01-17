@@ -15,7 +15,7 @@ const CleanerService = async () => {
 	// NOTE - Browsers Cleaner
 	const cleanBrowsers = (() => {
 		let executablePath: string
-		return async (durationValidToKeep = 1) => {
+		return async (durationValidToKeep = process.env.RESET_RESOURCE ? 0 : 1) => {
 			const browserStore = (() => {
 				const tmpBrowserStore = getStore('browser')
 				return tmpBrowserStore || {}
@@ -68,7 +68,9 @@ const CleanerService = async () => {
 	if (!SERVER_LESS) cleanBrowsers()
 
 	// NOTE - Pages Cleaner
-	const cleanPages = async (durationValidToKeep = 1) => {
+	const cleanPages = async (
+		durationValidToKeep = process.env.RESET_RESOURCE ? 0 : 1
+	) => {
 		const pool = WorkerPool.pool(
 			path.resolve(
 				__dirname,
