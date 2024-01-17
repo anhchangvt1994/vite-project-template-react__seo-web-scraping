@@ -32,9 +32,10 @@ var _path2 = _interopRequireDefault(_path)
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
 
+var _constants = require('../../../constants')
 var _ConsoleHandler = require('../../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _constants = require('../../constants')
+var _constants3 = require('../../constants')
 var _utils = require('./utils')
 
 const deleteResource = (path) => {
@@ -146,15 +147,15 @@ const scanToCleanBrowsers = async (
 					const browser = await new Promise(async (res) => {
 						let promiseBrowser
 						if (browserStore.executablePath) {
-							promiseBrowser = await _constants.puppeteer.launch({
-								..._constants.defaultBrowserOptions,
+							promiseBrowser = await _constants3.puppeteer.launch({
+								..._constants3.defaultBrowserOptions,
 								userDataDir: absolutePath,
 								args: _chromiummin2.default.args,
 								executablePath: browserStore.executablePath,
 							})
 						} else {
-							promiseBrowser = await _constants.puppeteer.launch({
-								..._constants.defaultBrowserOptions,
+							promiseBrowser = await _constants3.puppeteer.launch({
+								..._constants3.defaultBrowserOptions,
 								userDataDir: absolutePath,
 							})
 						}
@@ -172,7 +173,13 @@ const scanToCleanBrowsers = async (
 								'access',
 								(_) => _.pool,
 								'call',
-								(_2) => _2(_path2.default.resolve(__dirname, './index.ts')),
+								(_2) =>
+									_2(
+										_path2.default.resolve(
+											__dirname,
+											`./index.${_constants.resourceExtension}`
+										)
+									),
 								'optionalAccess',
 								(_3) => _3.exec,
 								'call',

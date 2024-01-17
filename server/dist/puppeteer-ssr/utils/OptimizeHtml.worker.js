@@ -111,10 +111,6 @@ const optimizeContent = (html, isFullOptimize = false) => {
 						break
 				}
 
-				// if (newAttrs.indexOf('height=') === -1) {
-				// 	console.log(newAttrs)
-				// }
-
 				return `<img ${newAttrs}>`
 			})
 			.replace(

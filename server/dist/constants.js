@@ -28,8 +28,6 @@ if (serverInfoStringify) {
 	}
 }
 
-console.log('serverInfo in constant: ', serverInfo)
-
 exports.serverInfo = serverInfo
 
 const pagesPath =

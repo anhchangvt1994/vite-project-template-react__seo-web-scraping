@@ -4,6 +4,7 @@ import path from 'path'
 import WorkerPool from 'workerpool'
 
 import { Browser } from 'puppeteer-core'
+import { resourceExtension } from '../../../constants'
 import Console from '../../../utils/ConsoleHandler'
 import { defaultBrowserOptions, puppeteer } from '../../constants'
 import { deleteResource as deleteResourceWithWorker } from './utils'
@@ -158,7 +159,7 @@ const scanToCleanBrowsers = async (
 						await browser.close()
 						try {
 							await WorkerPool.pool(
-								path.resolve(__dirname, './index.ts')
+								path.resolve(__dirname, `./index.${resourceExtension}`)
 							)?.exec('deleteResource', [absolutePath])
 						} catch (err) {
 							Console.error(err)
