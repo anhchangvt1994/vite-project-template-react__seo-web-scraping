@@ -102,23 +102,23 @@ const waitResponse = (() => {
 	const firstWaitingDuration =
 		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
 			? 100
-			: 250
+			: 500
 	const defaultRequestWaitingDuration =
 		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
 			? 100
-			: 250
+			: 500
 	const requestServedFromCacheDuration =
 		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
 			? 100
-			: 150
+			: 250
 	const requestFailDuration =
 		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
 			? 100
-			: 150
+			: 250
 	const maximumTimeout =
 		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
 			? 5000
-			: 10000
+			: 5000
 
 	return async (page, url, duration) => {
 		let response
