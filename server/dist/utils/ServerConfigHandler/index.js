@@ -160,12 +160,12 @@ const defineServerConfig = (options) => {
 	}
 
 	serverConfigDefined.crawler =
-		_constants.ENV === 'development'
+		_constants.ENV_MODE === 'development'
 			? serverConfigDefined.crawler
 			: process.env.CRAWLER || serverConfigDefined.crawler
 
 	serverConfigDefined.crawlerSecretKey =
-		_constants.ENV === 'development'
+		_constants.ENV_MODE === 'development'
 			? serverConfigDefined.crawlerSecretKey
 			: process.env.CRAWLER_SECRET_KEY || undefined
 

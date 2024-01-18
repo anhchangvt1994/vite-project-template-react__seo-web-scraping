@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import path from 'path'
-import { ENV, SERVER_LESS } from '../constants'
+import { ENV_MODE, SERVER_LESS } from '../constants'
 import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
@@ -84,7 +84,7 @@ const puppeteerSSRService = (async () => {
 			)
 
 			if (
-				ENV !== 'development' &&
+				ENV_MODE !== 'development' &&
 				enableISR &&
 				headers.service !== 'puppeteer'
 			) {

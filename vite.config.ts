@@ -131,7 +131,12 @@ export default defineConfig(async ({ mode }) => {
 							'setMetaTwitterCardTag',
 							'setSeoTag',
 						],
-						'store/ServerStore.ts': ['BotInfo', 'DeviceInfo', 'LocaleInfo'],
+						'store/ServerStore.ts': [
+							'EnvironmentInfo',
+							'BotInfo',
+							'DeviceInfo',
+							'LocaleInfo',
+						],
 						'utils/CookieHelper.ts': ['getCookie', 'setCookie'],
 						'components/Link.tsx': [['default', 'Link']],
 					},

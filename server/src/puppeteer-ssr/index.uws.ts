@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
-import { TemplatedApp } from 'uWebSockets.js'
-import { ENV, SERVER_LESS } from '../constants'
+import { HttpResponse, TemplatedApp } from 'uWebSockets.js'
+import { ENV, MODE, ENV_MODE, SERVER_LESS } from '../constants'
 import ServerConfig from '../server.config'
 import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
@@ -17,11 +17,44 @@ import DetectBotMiddle from '../middlewares/uws/DetectBot'
 import DetectDeviceMiddle from '../middlewares/uws/DetectDevice'
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
+const ENVIRONMENT = JSON.stringify({
+	ENV,
+	MODE,
+	ENV_MODE,
+})
 
 const puppeteerSSRService = (async () => {
 	let _app: TemplatedApp
 	const webScrapingService = 'web-scraping-service'
 	const cleanerService = 'cleaner-service'
+
+	const _getResponseWithDefaultCookie = (res: HttpResponse) => {
+		res
+			.writeHeader(
+				'set-cookie',
+				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+			)
+			.writeHeader(
+				'set-cookie',
+				`BotInfo=${JSON.stringify(
+					res.cookies.botInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+			)
+			.writeHeader(
+				'set-cookie',
+				`DeviceInfo=${JSON.stringify(
+					res.cookies.deviceInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+			)
+			.writeHeader(
+				'set-cookie',
+				`LocaleInfo=${JSON.stringify(
+					res.cookies.localeInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+			)
+
+		return res
+	} // _getResponseWithDefaultCookie
 
 	const _allRequestHandler = () => {
 		if (SERVER_LESS) {
@@ -133,7 +166,7 @@ const puppeteerSSRService = (async () => {
 				)
 
 			if (
-				ENV !== 'development' &&
+				ENV_MODE !== 'development' &&
 				enableISR &&
 				req.getHeader('service') !== 'puppeteer'
 			) {
@@ -172,26 +205,8 @@ const puppeteerSSRService = (async () => {
 								) {
 									try {
 										const body = fs.readFileSync(result.response)
-										res
-											.writeHeader(
-												'set-cookie',
-												`BotInfo=${JSON.stringify(
-													res.cookies.botInfo
-												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-											)
-											.writeHeader(
-												'set-cookie',
-												`DeviceInfo=${JSON.stringify(
-													res.cookies.deviceInfo
-												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-											)
-											.writeHeader(
-												'set-cookie',
-												`LocaleInfo=${JSON.stringify(
-													res.cookies.localeInfo
-												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-											)
-											.end(body, true)
+										res = _getResponseWithDefaultCookie(res)
+										res.end(body, true)
 									} catch {
 										res.writeStatus('404').end('Page not found!', true)
 									}
@@ -248,36 +263,19 @@ const puppeteerSSRService = (async () => {
 				 * calc by using:
 				 * https://www.inchcalculator.com/convert/year-to-second/
 				 */
-				if (req.getHeader('accept') === 'application/json')
-					res
-						.writeStatus('200')
-						.writeHeader(
-							'set-cookie',
-							`BotInfo=${JSON.stringify(
-								res.cookies.botInfo
-							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-						)
-						.writeHeader(
-							'set-cookie',
-							`DeviceInfo=${JSON.stringify(
-								res.cookies.deviceInfo
-							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-						)
-						.writeHeader(
-							'set-cookie',
-							`LocaleInfo=${JSON.stringify(
-								res.cookies.localeInfo
-							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-						)
-						.end(
-							JSON.stringify({
-								status: 200,
-								originPath: req.getUrl(),
-								path: req.getUrl(),
-							}),
-							true
-						)
-				else {
+				if (req.getHeader('accept') === 'application/json') {
+					res.writeStatus('200')
+
+					res = _getResponseWithDefaultCookie(res)
+					res.end(
+						JSON.stringify({
+							status: 200,
+							originPath: req.getUrl(),
+							path: req.getUrl(),
+						}),
+						true
+					)
+				} else {
 					const filePath =
 						(req.getHeader('static-html-path') as string) ||
 						path.resolve(__dirname, '../../../dist/index.html')
@@ -292,24 +290,7 @@ const puppeteerSSRService = (async () => {
 									? 'application/json'
 									: 'text/html; charset=utf-8'
 							)
-							.writeHeader(
-								'set-cookie',
-								`BotInfo=${JSON.stringify(
-									res.cookies.botInfo
-								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-							)
-							.writeHeader(
-								'set-cookie',
-								`DeviceInfo=${JSON.stringify(
-									res.cookies.deviceInfo
-								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-							)
-							.writeHeader(
-								'set-cookie',
-								`LocaleInfo=${JSON.stringify(
-									res.cookies.localeInfo
-								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-							)
+						res = _getResponseWithDefaultCookie(res)
 						res
 							.writeHeader('Cache-Control', 'no-store')
 							.writeHeader('etag', 'false')

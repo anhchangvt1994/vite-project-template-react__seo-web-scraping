@@ -47,7 +47,7 @@ var _CacheManager = require('./CacheManager')
 var _CacheManager2 = _interopRequireDefault(_CacheManager)
 
 const browserManager = (() => {
-	if (_constants.ENV === 'development') return undefined
+	if (_constants.ENV_MODE === 'development') return undefined
 	if (_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.THREE)
 		return _BrowserManager2.default.call(
 			void 0,
@@ -225,7 +225,8 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 				status = result.status
 				html = result.data
 			}
-			_ConsoleHandler2.default.log('External crawler status: ', status)
+			console.log('External crawler status: ', status)
+			console.log('External crawler html  : ', html)
 		} catch (err) {
 			_ConsoleHandler2.default.log('Crawler is fail!')
 			_ConsoleHandler2.default.error(err)

@@ -1,3 +1,9 @@
+export interface IEnvironment {
+	ENV: 'development' | 'production'
+	MODE: 'development' | 'preview' | 'production'
+	ENV_MODE: 'development' | 'staging' | 'uat' | 'production'
+}
+
 export interface IBotInfo {
 	isBot: boolean
 	name: string
@@ -29,6 +35,8 @@ export interface ILocaleInfo {
 	area: number
 }
 
+export let EnvironmentInfo: IEnvironment
+
 export let BotInfo: IBotInfo
 
 export let DeviceInfo: IDeviceInfo
@@ -39,6 +47,18 @@ export const ServerStore = (() => {
 	const html = document.documentElement
 	return {
 		init() {
+			if (!EnvironmentInfo)
+				EnvironmentInfo = (() => {
+					const strInfo = getCookie('EnvironmentInfo')
+
+					return strInfo
+						? JSON.parse(strInfo)
+						: {
+								ENV: 'production',
+								MODE: 'production',
+								ENV_MODE: 'production',
+						  }
+				})()
 			if (!BotInfo)
 				BotInfo = (() => {
 					const strInfo = getCookie('BotInfo')

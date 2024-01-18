@@ -158,7 +158,7 @@ const puppeteerSSRService = (async () => {
 			)
 
 			if (
-				_constants.ENV !== 'development' &&
+				_constants.ENV_MODE !== 'development' &&
 				enableISR &&
 				headers.service !== 'puppeteer'
 			) {

@@ -8,6 +8,7 @@ declare global {
   const BotInfo: typeof import('store/ServerStore.ts')['BotInfo']
   const BrowserRouter: typeof import('react-router-dom')['BrowserRouter']
   const DeviceInfo: typeof import('store/ServerStore.ts')['DeviceInfo']
+  const EnvironmentInfo: typeof import('store/ServerStore.ts')['EnvironmentInfo']
   const Link: typeof import('components/Link.tsx')['default']
   const LocaleInfo: typeof import('store/ServerStore.ts')['LocaleInfo']
   const NavLink: typeof import('react-router-dom')['NavLink']

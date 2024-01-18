@@ -42,6 +42,7 @@ var _path2 = _interopRequireDefault(_path)
 var _servestatic = require('serve-static')
 var _servestatic2 = _interopRequireDefault(_servestatic)
 var _PortHandler = require('../../config/utils/PortHandler')
+
 var _constants = require('./constants')
 var _constants3 = require('./puppeteer-ssr/constants')
 var _indexfastify = require('./puppeteer-ssr/index.fastify')
@@ -63,11 +64,16 @@ var _SendFile = require('./utils/SendFile')
 var _SendFile2 = _interopRequireDefault(_SendFile)
 
 const COOKIE_EXPIRED_SECOND = _constants3.COOKIE_EXPIRED / 1000
+const ENVIRONMENT = JSON.stringify({
+	ENV: _constants.ENV,
+	MODE: _constants.MODE,
+	ENV_MODE: _constants.ENV_MODE,
+})
 
 require('events').EventEmitter.setMaxListeners(200)
 
 const cleanResourceWithCondition = async () => {
-	if (process.env.ENV === 'development') {
+	if (_constants.ENV_MODE === 'development') {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
@@ -233,6 +239,14 @@ const startServer = async () => {
 			next()
 		})
 		.use(function (req, res, next) {
+			_CookieHandler.setCookie.call(
+				void 0,
+				res,
+				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND}`
+			)
+			next()
+		})
+		.use(function (req, res, next) {
 			let deviceInfo
 			if (req.headers.service === 'puppeteer') {
 				deviceInfo =
@@ -271,7 +285,7 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (process.env.ENV === 'development') {
+	if (_constants.ENV === 'development') {
 		// NOTE - restart server onchange
 		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
 		// 	ignored: /$^/,

@@ -50,7 +50,7 @@ var _DetectStaticExtensionbun2 = _interopRequireDefault(
 require('events').EventEmitter.setMaxListeners(200)
 
 const cleanResourceWithCondition = async () => {
-	if (process.env.ENV === 'development') {
+	if (_constants.ENV_MODE === 'development') {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,

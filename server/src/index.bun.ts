@@ -4,7 +4,7 @@ import chokidar from 'chokidar'
 import { Elysia } from 'elysia'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
-import { ENV, pagesPath, resourceExtension } from './constants'
+import { ENV, ENV_MODE, pagesPath, resourceExtension } from './constants'
 import puppeteerSSRService from './puppeteer-ssr/index.bun'
 import Console from './utils/ConsoleHandler'
 import detectBot from './utils/DetectBot.bun'
@@ -15,7 +15,7 @@ import detectStaticExtension from './utils/DetectStaticExtension.bun'
 require('events').EventEmitter.setMaxListeners(200)
 
 const cleanResourceWithCondition = async () => {
-	if (process.env.ENV === 'development') {
+	if (ENV_MODE === 'development') {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,

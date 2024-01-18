@@ -29,6 +29,7 @@ var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _PortHandler = require('../../config/utils/PortHandler')
+
 var _constants = require('./constants')
 var _indexuws = require('./puppeteer-ssr/index.uws')
 var _indexuws2 = _interopRequireDefault(_indexuws)
@@ -36,7 +37,7 @@ var _indexuws2 = _interopRequireDefault(_indexuws)
 require('events').EventEmitter.setMaxListeners(200)
 
 const cleanResourceWithCondition = async () => {
-	if (process.env.ENV === 'development') {
+	if (_constants.ENV_MODE === 'development') {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
@@ -109,7 +110,7 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (process.env.ENV === 'development') {
+	if (_constants.ENV === 'development') {
 		const serverIndexFilePath = _path2.default.resolve(
 			__dirname,
 			'./index.uws.ts'

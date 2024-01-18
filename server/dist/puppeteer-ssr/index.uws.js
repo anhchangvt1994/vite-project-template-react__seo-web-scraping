@@ -55,11 +55,44 @@ var _DetectDevice = require('../middlewares/uws/DetectDevice')
 var _DetectDevice2 = _interopRequireDefault(_DetectDevice)
 
 const COOKIE_EXPIRED_SECOND = _constants3.COOKIE_EXPIRED / 1000
+const ENVIRONMENT = JSON.stringify({
+	ENV: _constants.ENV,
+	MODE: _constants.MODE,
+	ENV_MODE: _constants.ENV_MODE,
+})
 
 const puppeteerSSRService = (async () => {
 	let _app
 	const webScrapingService = 'web-scraping-service'
 	const cleanerService = 'cleaner-service'
+
+	const _getResponseWithDefaultCookie = (res) => {
+		res
+			.writeHeader(
+				'set-cookie',
+				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+			)
+			.writeHeader(
+				'set-cookie',
+				`BotInfo=${JSON.stringify(
+					res.cookies.botInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+			)
+			.writeHeader(
+				'set-cookie',
+				`DeviceInfo=${JSON.stringify(
+					res.cookies.deviceInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+			)
+			.writeHeader(
+				'set-cookie',
+				`LocaleInfo=${JSON.stringify(
+					res.cookies.localeInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+			)
+
+		return res
+	} // _getResponseWithDefaultCookie
 
 	const _allRequestHandler = () => {
 		if (_constants.SERVER_LESS) {
@@ -177,7 +210,7 @@ const puppeteerSSRService = (async () => {
 				)
 
 			if (
-				_constants.ENV !== 'development' &&
+				_constants.ENV_MODE !== 'development' &&
 				enableISR &&
 				req.getHeader('service') !== 'puppeteer'
 			) {
@@ -217,26 +250,8 @@ const puppeteerSSRService = (async () => {
 								) {
 									try {
 										const body = _fs2.default.readFileSync(result.response)
-										res
-											.writeHeader(
-												'set-cookie',
-												`BotInfo=${JSON.stringify(
-													res.cookies.botInfo
-												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-											)
-											.writeHeader(
-												'set-cookie',
-												`DeviceInfo=${JSON.stringify(
-													res.cookies.deviceInfo
-												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-											)
-											.writeHeader(
-												'set-cookie',
-												`LocaleInfo=${JSON.stringify(
-													res.cookies.localeInfo
-												)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-											)
-											.end(body, true)
+										res = _getResponseWithDefaultCookie(res)
+										res.end(body, true)
 									} catch (e) {
 										res.writeStatus('404').end('Page not found!', true)
 									}
@@ -293,36 +308,19 @@ const puppeteerSSRService = (async () => {
 				 * calc by using:
 				 * https://www.inchcalculator.com/convert/year-to-second/
 				 */
-				if (req.getHeader('accept') === 'application/json')
-					res
-						.writeStatus('200')
-						.writeHeader(
-							'set-cookie',
-							`BotInfo=${JSON.stringify(
-								res.cookies.botInfo
-							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-						)
-						.writeHeader(
-							'set-cookie',
-							`DeviceInfo=${JSON.stringify(
-								res.cookies.deviceInfo
-							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-						)
-						.writeHeader(
-							'set-cookie',
-							`LocaleInfo=${JSON.stringify(
-								res.cookies.localeInfo
-							)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-						)
-						.end(
-							JSON.stringify({
-								status: 200,
-								originPath: req.getUrl(),
-								path: req.getUrl(),
-							}),
-							true
-						)
-				else {
+				if (req.getHeader('accept') === 'application/json') {
+					res.writeStatus('200')
+
+					res = _getResponseWithDefaultCookie(res)
+					res.end(
+						JSON.stringify({
+							status: 200,
+							originPath: req.getUrl(),
+							path: req.getUrl(),
+						}),
+						true
+					)
+				} else {
 					const filePath =
 						req.getHeader('static-html-path') ||
 						_path2.default.resolve(__dirname, '../../../dist/index.html')
@@ -337,24 +335,7 @@ const puppeteerSSRService = (async () => {
 									? 'application/json'
 									: 'text/html; charset=utf-8'
 							)
-							.writeHeader(
-								'set-cookie',
-								`BotInfo=${JSON.stringify(
-									res.cookies.botInfo
-								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-							)
-							.writeHeader(
-								'set-cookie',
-								`DeviceInfo=${JSON.stringify(
-									res.cookies.deviceInfo
-								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-							)
-							.writeHeader(
-								'set-cookie',
-								`LocaleInfo=${JSON.stringify(
-									res.cookies.localeInfo
-								)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-							)
+						res = _getResponseWithDefaultCookie(res)
 						res
 							.writeHeader('Cache-Control', 'no-store')
 							.writeHeader('etag', 'false')

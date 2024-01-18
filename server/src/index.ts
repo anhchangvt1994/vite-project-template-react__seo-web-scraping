@@ -3,7 +3,14 @@ import cors from 'cors'
 import express from 'express'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
-import { ENV, pagesPath, resourceExtension, serverInfo } from './constants'
+import {
+	ENV,
+	MODE,
+	ENV_MODE,
+	pagesPath,
+	resourceExtension,
+	serverInfo,
+} from './constants'
 import puppeteerSSRService from './puppeteer-ssr'
 import { COOKIE_EXPIRED } from './puppeteer-ssr/constants'
 import ServerConfig from './server.config'
@@ -15,11 +22,16 @@ import DetectRedirect from './utils/DetectRedirect'
 import detectStaticExtension from './utils/DetectStaticExtension'
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
+const ENVIRONMENT = JSON.stringify({
+	ENV,
+	MODE,
+	ENV_MODE,
+})
 
 require('events').EventEmitter.setMaxListeners(200)
 
 const cleanResourceWithCondition = async () => {
-	if (process.env.ENV === 'development') {
+	if (ENV_MODE === 'development') {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
@@ -155,6 +167,13 @@ const startServer = async () => {
 			next()
 		})
 		.use(function (req, res, next) {
+			setCookie(
+				res,
+				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND}`
+			)
+			next()
+		})
+		.use(function (req, res, next) {
 			let deviceInfo
 			if (req.headers.service === 'puppeteer') {
 				deviceInfo =
@@ -181,7 +200,7 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (process.env.ENV === 'development') {
+	if (ENV === 'development') {
 		// NOTE - restart server onchange
 		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
 		// 	ignored: /$^/,
