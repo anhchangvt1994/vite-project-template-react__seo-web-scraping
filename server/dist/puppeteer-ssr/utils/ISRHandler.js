@@ -225,15 +225,14 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 				status = result.status
 				html = result.data
 			}
-			console.log('External crawler status: ', status)
-			console.log('External crawler html  : ', html)
+			_ConsoleHandler2.default.log('External crawler status: ', status)
 		} catch (err) {
 			_ConsoleHandler2.default.log('Crawler is fail!')
 			_ConsoleHandler2.default.error(err)
 		}
 	}
 
-	if (!_serverconfig2.default.crawler || status === 500) {
+	if (!_serverconfig2.default.crawler || [404, 500].includes(status)) {
 		_ConsoleHandler2.default.log('Create new page')
 		const page = await browserManager.newPage()
 		_ConsoleHandler2.default.log('Create new page success!')
