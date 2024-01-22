@@ -44,7 +44,6 @@ var _servestatic2 = _interopRequireDefault(_servestatic)
 var _PortHandler = require('../../config/utils/PortHandler')
 
 var _constants = require('./constants')
-var _constants3 = require('./puppeteer-ssr/constants')
 var _indexfastify = require('./puppeteer-ssr/index.fastify')
 var _indexfastify2 = _interopRequireDefault(_indexfastify)
 var _serverconfig = require('./server.config')
@@ -63,7 +62,7 @@ var _DetectStaticExtension2 = _interopRequireDefault(_DetectStaticExtension)
 var _SendFile = require('./utils/SendFile')
 var _SendFile2 = _interopRequireDefault(_SendFile)
 
-const COOKIE_EXPIRED_SECOND = _constants3.COOKIE_EXPIRED / 1000
+const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
 	ENV: _constants.ENV,
 	MODE: _constants.MODE,

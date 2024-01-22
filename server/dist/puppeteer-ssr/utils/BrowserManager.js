@@ -59,6 +59,7 @@ var _path2 = _interopRequireDefault(_path)
 
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
+
 var _constants = require('../../constants')
 var _store = require('../../store')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
@@ -194,7 +195,7 @@ const BrowserManager = (
 		}
 	} // __launch()
 
-	if (_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.THREE) {
+	if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE) {
 		__launch()
 	}
 

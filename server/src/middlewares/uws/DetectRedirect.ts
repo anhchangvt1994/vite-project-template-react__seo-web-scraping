@@ -1,6 +1,6 @@
 import { HttpRequest, HttpResponse } from 'uWebSockets.js'
+import { COOKIE_EXPIRED } from '../../constants'
 import DetectRedirect from '../../utils/DetectRedirect.uws'
-import { COOKIE_EXPIRED } from '../../puppeteer-ssr/constants'
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
 

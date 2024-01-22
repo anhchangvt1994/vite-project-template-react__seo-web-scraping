@@ -30,6 +30,16 @@ var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 
 var _constants = require('../constants')
+var _DetectBot = require('../middlewares/uws/DetectBot')
+var _DetectBot2 = _interopRequireDefault(_DetectBot)
+var _DetectDevice = require('../middlewares/uws/DetectDevice')
+var _DetectDevice2 = _interopRequireDefault(_DetectDevice)
+var _DetectLocale = require('../middlewares/uws/DetectLocale')
+var _DetectLocale2 = _interopRequireDefault(_DetectLocale)
+var _DetectRedirect = require('../middlewares/uws/DetectRedirect')
+var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect)
+var _DetectStatic = require('../middlewares/uws/DetectStatic')
+var _DetectStatic2 = _interopRequireDefault(_DetectStatic)
 var _serverconfig = require('../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
@@ -43,18 +53,8 @@ var _ISRGeneratornext = require('./utils/ISRGenerator.next')
 var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext)
 var _ISRHandler = require('./utils/ISRHandler')
 var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
-var _DetectLocale = require('../middlewares/uws/DetectLocale')
-var _DetectLocale2 = _interopRequireDefault(_DetectLocale)
-var _DetectRedirect = require('../middlewares/uws/DetectRedirect')
-var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect)
-var _DetectStatic = require('../middlewares/uws/DetectStatic')
-var _DetectStatic2 = _interopRequireDefault(_DetectStatic)
-var _DetectBot = require('../middlewares/uws/DetectBot')
-var _DetectBot2 = _interopRequireDefault(_DetectBot)
-var _DetectDevice = require('../middlewares/uws/DetectDevice')
-var _DetectDevice2 = _interopRequireDefault(_DetectDevice)
 
-const COOKIE_EXPIRED_SECOND = _constants3.COOKIE_EXPIRED / 1000
+const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
 	ENV: _constants.ENV,
 	MODE: _constants.MODE,

@@ -1,15 +1,15 @@
 import fs from 'fs'
 import WorkerPool from 'workerpool'
-import { SERVER_LESS, resourceExtension } from '../../constants'
-import Console from '../../utils/ConsoleHandler'
 import {
 	BANDWIDTH_LEVEL,
 	BANDWIDTH_LEVEL_LIST,
-	DURATION_TIMEOUT,
-	MAX_WORKERS,
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
-} from '../constants'
+	SERVER_LESS,
+	resourceExtension,
+} from '../../constants'
+import Console from '../../utils/ConsoleHandler'
+import { DURATION_TIMEOUT, MAX_WORKERS } from '../constants'
 import { ISSRResult } from '../types'
 import CacheManager from './CacheManager'
 import ISRHandler from './ISRHandler'

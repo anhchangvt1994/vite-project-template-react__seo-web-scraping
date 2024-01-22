@@ -6,14 +6,14 @@ import path from 'path'
 import serveStatic from 'serve-static'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
 import {
+	COOKIE_EXPIRED,
 	ENV,
-	MODE,
 	ENV_MODE,
+	MODE,
 	pagesPath,
 	resourceExtension,
 	serverInfo,
 } from './constants'
-import { COOKIE_EXPIRED } from './puppeteer-ssr/constants'
 import puppeteerSSRService from './puppeteer-ssr/index.fastify'
 import ServerConfig from './server.config'
 import { setCookie } from './utils/CookieHandler'

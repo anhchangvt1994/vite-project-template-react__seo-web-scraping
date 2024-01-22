@@ -40,9 +40,6 @@ var _path2 = _interopRequireDefault(_path)
 var _PortHandler = require('../../config/utils/PortHandler')
 
 var _constants = require('./constants')
-var _puppeteerssr = require('./puppeteer-ssr')
-var _puppeteerssr2 = _interopRequireDefault(_puppeteerssr)
-var _constants3 = require('./puppeteer-ssr/constants')
 var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _CookieHandler = require('./utils/CookieHandler')
@@ -57,7 +54,21 @@ var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect)
 var _DetectStaticExtension = require('./utils/DetectStaticExtension')
 var _DetectStaticExtension2 = _interopRequireDefault(_DetectStaticExtension)
 
-const COOKIE_EXPIRED_SECOND = _constants3.COOKIE_EXPIRED / 1000
+const dotenv = require('dotenv')
+dotenv.config({
+	path: _path2.default.resolve(__dirname, '../.env'),
+})
+
+if (_constants.ENV_MODE !== 'development') {
+	dotenv.config({
+		path: _path2.default.resolve(__dirname, '../.env.production'),
+		override: true,
+	})
+}
+
+console.log(process.env.DISABLE_SSR_CACHE)
+
+const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
 	ENV: _constants.ENV,
 	MODE: _constants.MODE,
@@ -254,7 +265,7 @@ const startServer = async () => {
 			)
 			next()
 		})
-	;(await _puppeteerssr2.default).init(app)
+	;(await require('./puppeteer-ssr').default).init(app)
 
 	server.listen(port, () => {
 		console.log(`Server started port ${port}. Press Ctrl+C to quit`)

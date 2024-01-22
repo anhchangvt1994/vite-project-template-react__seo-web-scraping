@@ -1,16 +1,20 @@
 import { Page } from 'puppeteer-core'
 import WorkerPool from 'workerpool'
-import { ENV_MODE, resourceExtension, userDataPath } from '../../constants'
-import ServerConfig from '../../server.config'
-import Console from '../../utils/ConsoleHandler'
 import {
 	BANDWIDTH_LEVEL,
 	BANDWIDTH_LEVEL_LIST,
+	ENV_MODE,
+	POWER_LEVEL,
+	POWER_LEVEL_LIST,
+	resourceExtension,
+	userDataPath,
+} from '../../constants'
+import ServerConfig from '../../server.config'
+import Console from '../../utils/ConsoleHandler'
+import {
 	CACHEABLE_STATUS_CODE,
 	DURATION_TIMEOUT,
 	MAX_WORKERS,
-	POWER_LEVEL,
-	POWER_LEVEL_LIST,
 	regexNotFoundPageID,
 	regexQueryStringSpecialInfo,
 } from '../constants'

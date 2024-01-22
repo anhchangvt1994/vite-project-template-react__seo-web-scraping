@@ -4,15 +4,14 @@ import express from 'express'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
 import {
+	COOKIE_EXPIRED,
 	ENV,
-	MODE,
 	ENV_MODE,
+	MODE,
 	pagesPath,
 	resourceExtension,
 	serverInfo,
 } from './constants'
-import puppeteerSSRService from './puppeteer-ssr'
-import { COOKIE_EXPIRED } from './puppeteer-ssr/constants'
 import ServerConfig from './server.config'
 import { setCookie } from './utils/CookieHandler'
 import detectBot from './utils/DetectBot'
@@ -20,6 +19,20 @@ import detectDevice from './utils/DetectDevice'
 import detectLocale from './utils/DetectLocale'
 import DetectRedirect from './utils/DetectRedirect'
 import detectStaticExtension from './utils/DetectStaticExtension'
+
+const dotenv = require('dotenv')
+dotenv.config({
+	path: path.resolve(__dirname, '../.env'),
+})
+
+if (ENV_MODE !== 'development') {
+	dotenv.config({
+		path: path.resolve(__dirname, '../.env.production'),
+		override: true,
+	})
+}
+
+console.log(process.env.DISABLE_SSR_CACHE)
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
@@ -188,7 +201,7 @@ const startServer = async () => {
 			)
 			next()
 		})
-	;(await puppeteerSSRService).init(app)
+	;(await require('./puppeteer-ssr').default).init(app)
 
 	server.listen(port, () => {
 		console.log(`Server started port ${port}. Press Ctrl+C to quit`)

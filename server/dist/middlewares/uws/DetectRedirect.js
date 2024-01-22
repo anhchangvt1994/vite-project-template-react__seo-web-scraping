@@ -3,9 +3,9 @@ Object.defineProperty(exports, '__esModule', { value: true })
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj }
 }
+var _constants = require('../../constants')
 var _DetectRedirectuws = require('../../utils/DetectRedirect.uws')
 var _DetectRedirectuws2 = _interopRequireDefault(_DetectRedirectuws)
-var _constants = require('../../puppeteer-ssr/constants')
 
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 

@@ -28,10 +28,10 @@ var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
+
 var _constants = require('../../constants')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-
 var _constants3 = require('../constants')
 
 var _CacheManager = require('./CacheManager')
@@ -86,7 +86,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 
 	if (
 		_constants.SERVER_LESS &&
-		_constants3.BANDWIDTH_LEVEL === _constants3.BANDWIDTH_LEVEL_LIST.TWO
+		_constants.BANDWIDTH_LEVEL === _constants.BANDWIDTH_LEVEL_LIST.TWO
 	)
 		fetchData(`${process.env.BASE_URL}/cleaner-service`, {
 			method: 'POST',
@@ -142,9 +142,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 						let tmpHTML = ''
 
 						try {
-							if (
-								_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.THREE
-							)
+							if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
 								tmpHTML = await optimizeHTMLContentPool.exec(
 									'compressContent',
 									[html]
@@ -230,8 +228,8 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 							!result.available &&
 							createTimeDuration >=
 								(_constants.SERVER_LESS &&
-								_constants3.BANDWIDTH_LEVEL ===
-									_constants3.BANDWIDTH_LEVEL_LIST.ONE
+								_constants.BANDWIDTH_LEVEL ===
+									_constants.BANDWIDTH_LEVEL_LIST.ONE
 									? 2000
 									: 10000)
 						)
@@ -272,8 +270,8 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 							res,
 							_constants.SERVER_LESS
 								? 5000
-								: _constants3.BANDWIDTH_LEVEL >
-								  _constants3.BANDWIDTH_LEVEL_LIST.ONE
+								: _constants.BANDWIDTH_LEVEL >
+								  _constants.BANDWIDTH_LEVEL_LIST.ONE
 								? 10000
 								: 20000
 						)
