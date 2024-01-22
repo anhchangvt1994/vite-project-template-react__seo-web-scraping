@@ -318,40 +318,42 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (_constants.ENV === 'development') {
-		// NOTE - restart server onchange
-		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
-		// 	ignored: /$^/,
-		// 	persistent: true,
-		// })
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		if (_constants.ENV === 'development') {
+			// NOTE - restart server onchange
+			// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
+			// 	ignored: /$^/,
+			// 	persistent: true,
+			// })
 
-		if (!process.env.REFRESH_SERVER) {
-			_child_process.spawn.call(void 0, 'vite', [], {
+			if (!process.env.REFRESH_SERVER) {
+				_child_process.spawn.call(void 0, 'vite', [], {
+					stdio: 'inherit',
+					shell: true,
+				})
+			}
+
+			// watcher.on('change', async (path) => {
+			// 	Console.log(`File ${path} has been changed`)
+			// 	await server.close()
+			// 	spawn(
+			// 		'node',
+			// 		[
+			// 			'cross-env REFRESH_SERVER=1 --require sucrase/register server/src/index.ts',
+			// 		],
+			// 		{
+			// 			stdio: 'inherit',
+			// 			shell: true,
+			// 		}
+			// 	)
+			// 	process.exit(0)
+			// })
+		} else if (!_constants.serverInfo.isServer) {
+			_child_process.spawn.call(void 0, 'vite', ['preview'], {
 				stdio: 'inherit',
 				shell: true,
 			})
 		}
-
-		// watcher.on('change', async (path) => {
-		// 	Console.log(`File ${path} has been changed`)
-		// 	await server.close()
-		// 	spawn(
-		// 		'node',
-		// 		[
-		// 			'cross-env REFRESH_SERVER=1 --require sucrase/register server/src/index.ts',
-		// 		],
-		// 		{
-		// 			stdio: 'inherit',
-		// 			shell: true,
-		// 		}
-		// 	)
-		// 	process.exit(0)
-		// })
-	} else if (!_constants.serverInfo.isServer) {
-		_child_process.spawn.call(void 0, 'vite', ['preview'], {
-			stdio: 'inherit',
-			shell: true,
-		})
 	}
 }
 

@@ -1,11 +1,11 @@
 import { Express } from 'express'
 import path from 'path'
-import { ENV_MODE, SERVER_LESS } from '../constants'
+import { ENV_MODE, IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
 import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
 import { getCookieFromResponse } from '../utils/CookieHandler'
-import { CACHEABLE_STATUS_CODE } from './constants'
+import { CACHEABLE_STATUS_CODE, DISABLE_SSR_CACHE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl'
 import ISRGenerator from './utils/ISRGenerator.next'
 import SSRHandler from './utils/ISRHandler'
@@ -82,6 +82,10 @@ const puppeteerSSRService = (async () => {
 						: 'text/html; charset=utf-8',
 			})
 
+			if (IS_REMOTE_CRAWLER && !botInfo.isBot && DISABLE_SSR_CACHE) {
+				return res.status(403).send('403 Forbidden')
+			}
+
 			if (
 				ENV_MODE !== 'development' &&
 				enableISR &&
@@ -136,7 +140,10 @@ const puppeteerSSRService = (async () => {
 					}
 
 					return
-				} else if (!botInfo.isBot) {
+				} else if (
+					!botInfo.isBot &&
+					(!DISABLE_SSR_CACHE || ServerConfig.crawler)
+				) {
 					try {
 						if (SERVER_LESS) {
 							await ISRGenerator({
