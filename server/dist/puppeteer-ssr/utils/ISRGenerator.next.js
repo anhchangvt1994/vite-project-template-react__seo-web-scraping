@@ -236,6 +236,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 					})()
 				)
 			})()
+
 			if (isValidToScraping) {
 				const tmpResult = await new Promise(async (res) => {
 					const handle = (() => {
@@ -287,6 +288,34 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 				else {
 					const tmpResult = await cacheManager.achieve(ISRHandlerParams.url)
 					result = tmpResult || result
+				}
+
+				if (
+					result.html &&
+					result.status === 200 &&
+					_constants3.DISABLE_SSR_CACHE
+				) {
+					const optimizeHTMLContentPool = _workerpool2.default.pool(
+						__dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`,
+						{
+							minWorkers: 1,
+							maxWorkers: _constants3.MAX_WORKERS,
+						}
+					)
+					let tmpHTML = result.html
+
+					try {
+						if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
+							tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
+								tmpHTML,
+							])
+					} catch (err) {
+						tmpHTML = result.html
+						// Console.error(err)
+					} finally {
+						optimizeHTMLContentPool.terminate()
+						result.html = tmpHTML
+					}
 				}
 			} else if (!isSkipWaiting) {
 				const restOfDuration = getRestOfDuration(startGenerating, 2000)

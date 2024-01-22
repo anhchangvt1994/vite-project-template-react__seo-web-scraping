@@ -31,8 +31,18 @@ var _path2 = _interopRequireDefault(_path)
 var _PortHandler = require('../../config/utils/PortHandler')
 
 var _constants = require('./constants')
-var _indexuws = require('./puppeteer-ssr/index.uws')
-var _indexuws2 = _interopRequireDefault(_indexuws)
+
+const dotenv = require('dotenv')
+dotenv.config({
+	path: _path2.default.resolve(__dirname, '../.env'),
+})
+
+if (_constants.ENV_MODE !== 'development') {
+	dotenv.config({
+		path: _path2.default.resolve(__dirname, '../.env.production'),
+		override: true,
+	})
+}
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -88,7 +98,7 @@ const startServer = async () => {
 			res.end('File not found')
 		}
 	})
-	;(await _indexuws2.default).init(app)
+	;(await require('./puppeteer-ssr/index.uws').default).init(app)
 
 	app.listen(Number(port), (token) => {
 		if (token) {

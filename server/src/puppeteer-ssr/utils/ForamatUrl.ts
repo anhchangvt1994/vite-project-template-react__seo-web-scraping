@@ -43,6 +43,7 @@ export const getUrl = (req) => {
 
 	return (
 		req.query.urlTesting ||
+		req.query.url ||
 		(process.env.BASE_URL
 			? process.env.BASE_URL + pathname
 			: req.protocol + '://' + req.get('host') + pathname)

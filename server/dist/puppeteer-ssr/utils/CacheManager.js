@@ -16,8 +16,6 @@ var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _utils = require('./Cache.worker/utils')
 var _constants3 = require('../constants')
 
-console.log(_constants3.DISABLE_SSR_CACHE)
-
 const MAX_WORKERS = process.env.MAX_WORKERS
 	? Number(process.env.MAX_WORKERS)
 	: 7
@@ -26,7 +24,18 @@ const maintainFile = _path2.default.resolve(__dirname, '../../../maintain.html')
 
 const CacheManager = () => {
 	const get = async (url) => {
-		if (_constants3.DISABLE_SSR_CACHE) return
+		if (_constants3.DISABLE_SSR_CACHE)
+			return {
+				response: maintainFile,
+				status: 503,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				requestedAt: new Date(),
+				ttRenderMs: 200,
+				available: false,
+				isInit: true,
+			}
+
 		const pool = _workerpool2.default.pool(
 			_path2.default.resolve(
 				__dirname,

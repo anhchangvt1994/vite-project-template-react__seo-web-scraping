@@ -21,6 +21,7 @@ import {
 import { ISSRResult } from '../types'
 import BrowserManager, { IBrowser } from './BrowserManager'
 import CacheManager from './CacheManager'
+import { getStore } from '../../store'
 
 const browserManager = (() => {
 	if (ENV_MODE === 'development') return undefined as unknown as IBrowser
@@ -179,6 +180,8 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 			requestParams['crawlerSecretKey'] = ServerConfig.crawlerSecretKey
 		}
 
+		const headersStore = getStore('headers')
+
 		try {
 			const result = await fetchData(
 				ServerConfig.crawler,
@@ -186,6 +189,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 					method: 'GET',
 					headers: new Headers({
 						Accept: 'text/html; charset=utf-8',
+						...headersStore,
 					}),
 				},
 				requestParams

@@ -3,11 +3,14 @@ Object.defineProperty(exports, '__esModule', { value: true })
 
 const BrowserStore = {}
 exports.BrowserStore = BrowserStore
+const HeadersStore = {}
+exports.HeadersStore = HeadersStore
 const PromiseStore = {}
 exports.PromiseStore = PromiseStore
 
 const store = {
 	browser: exports.BrowserStore,
+	headers: exports.HeadersStore,
 	promise: exports.PromiseStore,
 }
 exports.store = store

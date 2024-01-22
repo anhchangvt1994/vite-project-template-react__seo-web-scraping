@@ -9,7 +9,18 @@ import {
 	resourceExtension,
 	serverInfo,
 } from './constants'
-import puppeteerSSRService from './puppeteer-ssr/index.uws'
+
+const dotenv = require('dotenv')
+dotenv.config({
+	path: path.resolve(__dirname, '../.env'),
+})
+
+if (ENV_MODE !== 'development') {
+	dotenv.config({
+		path: path.resolve(__dirname, '../.env.production'),
+		override: true,
+	})
+}
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -56,7 +67,7 @@ const startServer = async () => {
 			res.end('File not found')
 		}
 	})
-	;(await puppeteerSSRService).init(app)
+	;(await require('./puppeteer-ssr/index.uws').default).init(app)
 
 	app.listen(Number(port), (token) => {
 		if (token) {

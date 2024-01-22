@@ -169,7 +169,9 @@ const puppeteerSSRService = (async () => {
 								result.status === 503) &&
 							result.response
 						)
-							res.sendFile(result.response)
+							result.html
+								? res.send(result.html)
+								: res.sendFile(result.response)
 						// Serve prerendered page as response.
 						else res.send(result.html || `${result.status} Error`) // Serve prerendered page as response.
 					} catch (err) {

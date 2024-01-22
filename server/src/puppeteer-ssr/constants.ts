@@ -118,6 +118,4 @@ export const puppeteer = (() => {
 	return require('puppeteer')
 })()
 
-console.log(process.env.DISABLE_SSR_CACHE)
-
 export const DISABLE_SSR_CACHE = Boolean(process.env.DISABLE_SSR_CACHE)

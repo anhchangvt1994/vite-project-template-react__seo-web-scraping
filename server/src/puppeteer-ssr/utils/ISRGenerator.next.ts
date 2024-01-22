@@ -9,7 +9,7 @@ import {
 	resourceExtension,
 } from '../../constants'
 import Console from '../../utils/ConsoleHandler'
-import { DURATION_TIMEOUT, MAX_WORKERS } from '../constants'
+import { DISABLE_SSR_CACHE, DURATION_TIMEOUT, MAX_WORKERS } from '../constants'
 import { ISSRResult } from '../types'
 import CacheManager from './CacheManager'
 import ISRHandler from './ISRHandler'
@@ -207,6 +207,7 @@ const SSRGenerator = async ({
 					})()
 				)
 			})()
+
 			if (isValidToScraping) {
 				const tmpResult: ISSRResult = await new Promise(async (res) => {
 					const handle = (() => {
@@ -257,6 +258,30 @@ const SSRGenerator = async ({
 				else {
 					const tmpResult = await cacheManager.achieve(ISRHandlerParams.url)
 					result = tmpResult || result
+				}
+
+				if (result.html && result.status === 200 && DISABLE_SSR_CACHE) {
+					const optimizeHTMLContentPool = WorkerPool.pool(
+						__dirname + `/OptimizeHtml.worker.${resourceExtension}`,
+						{
+							minWorkers: 1,
+							maxWorkers: MAX_WORKERS,
+						}
+					)
+					let tmpHTML = result.html
+
+					try {
+						if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
+							tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
+								tmpHTML,
+							])
+					} catch (err) {
+						tmpHTML = result.html
+						// Console.error(err)
+					} finally {
+						optimizeHTMLContentPool.terminate()
+						result.html = tmpHTML
+					}
 				}
 			} else if (!isSkipWaiting) {
 				const restOfDuration = getRestOfDuration(startGenerating, 2000)

@@ -12,8 +12,6 @@ import {
 } from './Cache.worker/utils'
 import { DISABLE_SSR_CACHE } from '../constants'
 
-console.log(DISABLE_SSR_CACHE)
-
 const MAX_WORKERS = process.env.MAX_WORKERS
 	? Number(process.env.MAX_WORKERS)
 	: 7
@@ -22,7 +20,18 @@ const maintainFile = path.resolve(__dirname, '../../../maintain.html')
 
 const CacheManager = () => {
 	const get = async (url: string) => {
-		if (DISABLE_SSR_CACHE) return
+		if (DISABLE_SSR_CACHE)
+			return {
+				response: maintainFile,
+				status: 503,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				requestedAt: new Date(),
+				ttRenderMs: 200,
+				available: false,
+				isInit: true,
+			}
+
 		const pool = WorkerPool.pool(
 			path.resolve(__dirname, `./Cache.worker/index.${resourceExtension}`),
 			{

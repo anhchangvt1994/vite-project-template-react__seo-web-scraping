@@ -141,7 +141,5 @@ const puppeteer = (() => {
 })()
 exports.puppeteer = puppeteer
 
-console.log(process.env.DISABLE_SSR_CACHE)
-
 const DISABLE_SSR_CACHE = Boolean(process.env.DISABLE_SSR_CACHE)
 exports.DISABLE_SSR_CACHE = DISABLE_SSR_CACHE

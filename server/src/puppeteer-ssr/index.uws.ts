@@ -204,8 +204,10 @@ const puppeteerSSRService = (async () => {
 									result.response
 								) {
 									try {
-										const body = fs.readFileSync(result.response)
 										res = _getResponseWithDefaultCookie(res)
+										const body = result.html
+											? result.html
+											: fs.readFileSync(result.response)
 										res.end(body, true)
 									} catch {
 										res.writeStatus('404').end('Page not found!', true)

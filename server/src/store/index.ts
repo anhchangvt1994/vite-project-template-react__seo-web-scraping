@@ -1,10 +1,12 @@
 import { IStores } from './types'
 
 export const BrowserStore: IStores['browser'] = {}
+export const HeadersStore: IStores['headers'] = {}
 export const PromiseStore: IStores['promise'] = {}
 
 export const store: IStores = {
 	browser: BrowserStore,
+	headers: HeadersStore,
 	promise: PromiseStore,
 }
 

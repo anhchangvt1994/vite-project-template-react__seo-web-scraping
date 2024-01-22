@@ -14,7 +14,6 @@ import {
 	resourceExtension,
 	serverInfo,
 } from './constants'
-import puppeteerSSRService from './puppeteer-ssr/index.fastify'
 import ServerConfig from './server.config'
 import { setCookie } from './utils/CookieHandler'
 import detectBot from './utils/DetectBot'
@@ -23,6 +22,18 @@ import detectLocale from './utils/DetectLocale'
 import DetectRedirect from './utils/DetectRedirect'
 import detectStaticExtension from './utils/DetectStaticExtension'
 import sendFile from './utils/SendFile'
+
+const dotenv = require('dotenv')
+dotenv.config({
+	path: path.resolve(__dirname, '../.env'),
+})
+
+if (ENV_MODE !== 'development') {
+	dotenv.config({
+		path: path.resolve(__dirname, '../.env.production'),
+		override: true,
+	})
+}
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
@@ -191,7 +202,7 @@ const startServer = async () => {
 			)
 			next()
 		})
-	;(await puppeteerSSRService).init(app)
+	;(await require('./puppeteer-ssr/index.fastify').default).init(app)
 
 	app.listen(
 		{

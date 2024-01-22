@@ -46,6 +46,7 @@ var _BrowserManager = require('./BrowserManager')
 var _BrowserManager2 = _interopRequireDefault(_BrowserManager)
 var _CacheManager = require('./CacheManager')
 var _CacheManager2 = _interopRequireDefault(_CacheManager)
+var _store = require('../../store')
 
 const browserManager = (() => {
 	if (_constants.ENV_MODE === 'development') return undefined
@@ -202,6 +203,8 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 				_serverconfig2.default.crawlerSecretKey
 		}
 
+		const headersStore = _store.getStore.call(void 0, 'headers')
+
 		try {
 			const result = await fetchData(
 				_serverconfig2.default.crawler,
@@ -209,6 +212,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 					method: 'GET',
 					headers: new Headers({
 						Accept: 'text/html; charset=utf-8',
+						...headersStore,
 					}),
 				},
 				requestParams

@@ -12,13 +12,13 @@ import {
 	resourceExtension,
 	serverInfo,
 } from './constants'
-import ServerConfig from './server.config'
 import { setCookie } from './utils/CookieHandler'
 import detectBot from './utils/DetectBot'
 import detectDevice from './utils/DetectDevice'
 import detectLocale from './utils/DetectLocale'
 import DetectRedirect from './utils/DetectRedirect'
 import detectStaticExtension from './utils/DetectStaticExtension'
+import { getStore, setStore } from './store'
 
 const dotenv = require('dotenv')
 dotenv.config({
@@ -32,7 +32,7 @@ if (ENV_MODE !== 'development') {
 	})
 }
 
-console.log(process.env.DISABLE_SSR_CACHE)
+const ServerConfig = require('./server.config')?.default ?? {}
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
@@ -74,54 +74,71 @@ const startServer = async () => {
 	const app = express()
 	const server = require('http').createServer(app)
 
-	app
-		.use(cors())
-		.use(
-			'/robots.txt',
-			express.static(path.resolve(__dirname, '../robots.txt'))
-		)
-		.use(function (req, res, next) {
-			const isStatic = detectStaticExtension(req)
-			/**
-			 * NOTE
-			 * Cache-Control max-age is 1 year
-			 * calc by using:
-			 * https://www.inchcalculator.com/convert/month-to-second/
-			 */
-			if (isStatic) {
-				if (ENV !== 'development') {
-					res.set('Cache-Control', 'public, max-age=31556952')
-				}
+	app.use(cors())
+	if (ServerConfig.crawler && !process.env.IS_REMOTE_CRAWLER) {
+		app
+			.use(
+				'/robots.txt',
+				express.static(path.resolve(__dirname, '../robots.txt'))
+			)
+			.use(function (req, res, next) {
+				const isStatic = detectStaticExtension(req)
+				/**
+				 * NOTE
+				 * Cache-Control max-age is 1 year
+				 * calc by using:
+				 * https://www.inchcalculator.com/convert/month-to-second/
+				 */
+				if (isStatic) {
+					if (ENV !== 'development') {
+						res.set('Cache-Control', 'public, max-age=31556952')
+					}
 
-				try {
-					res
-						.status(200)
-						.sendFile(path.resolve(__dirname, `../../dist/${req.url}`))
-				} catch (err) {
-					res.status(404).send('File not found')
+					try {
+						res
+							.status(200)
+							.sendFile(path.resolve(__dirname, `../../dist/${req.url}`))
+					} catch (err) {
+						res.status(404).send('File not found')
+					}
+				} else {
+					next()
 				}
-			} else {
-				next()
-			}
-		})
+			})
+	}
+
+	app
 		.use(function (req, res, next) {
 			if (!process.env.BASE_URL)
 				process.env.BASE_URL = `${req.protocol}://${req.get('host')}`
 			next()
 		})
 		.use(function (req, res, next) {
-			let botInfo
-			if (req.headers.service === 'puppeteer') {
-				botInfo = req.headers['botinfo'] || req.headers['botInfo'] || ''
-			} else {
-				botInfo = JSON.stringify(detectBot(req))
-			}
+			const botInfo =
+				req.headers['botinfo'] ||
+				req.headers['botInfo'] ||
+				JSON.stringify(detectBot(req))
 
 			setCookie(res, `BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`)
+
+			if (!process.env.IS_REMOTE_CRAWLER) {
+				const headersStore = getStore('headers')
+				headersStore.botInfo = botInfo
+				setStore('headers', headersStore)
+			}
+
 			next()
 		})
 		.use(function (req, res, next) {
-			const localeInfo = detectLocale(req)
+			const localeInfo = (() => {
+				let tmpLocaleInfo = req['localeinfo'] || req['localeInfo']
+
+				if (tmpLocaleInfo) JSON.parse(tmpLocaleInfo)
+				else tmpLocaleInfo = detectLocale(req)
+
+				return tmpLocaleInfo
+			})()
+
 			const enableLocale =
 				ServerConfig.locale.enable &&
 				Boolean(
@@ -136,6 +153,12 @@ const startServer = async () => {
 					localeInfo
 				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
+
+			if (!process.env.IS_REMOTE_CRAWLER) {
+				const headersStore = getStore('headers')
+				headersStore.localeInfo = JSON.stringify(localeInfo)
+				setStore('headers', headersStore)
+			}
 
 			if (enableLocale) {
 				setCookie(
@@ -187,18 +210,22 @@ const startServer = async () => {
 			next()
 		})
 		.use(function (req, res, next) {
-			let deviceInfo
-			if (req.headers.service === 'puppeteer') {
-				deviceInfo =
-					req.headers['deviceinfo'] || req.headers['deviceInfo'] || ''
-			} else {
-				deviceInfo = JSON.stringify(detectDevice(req))
-			}
+			const deviceInfo =
+				req.headers['deviceinfo'] ||
+				req.headers['deviceInfo'] ||
+				JSON.stringify(detectDevice(req))
 
 			setCookie(
 				res,
 				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
 			)
+
+			if (!process.env.IS_REMOTE_CRAWLER) {
+				const headersStore = getStore('headers')
+				headersStore.deviceInfo = deviceInfo
+				setStore('headers', headersStore)
+			}
+
 			next()
 		})
 	;(await require('./puppeteer-ssr').default).init(app)

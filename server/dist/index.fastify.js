@@ -44,8 +44,6 @@ var _servestatic2 = _interopRequireDefault(_servestatic)
 var _PortHandler = require('../../config/utils/PortHandler')
 
 var _constants = require('./constants')
-var _indexfastify = require('./puppeteer-ssr/index.fastify')
-var _indexfastify2 = _interopRequireDefault(_indexfastify)
 var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _CookieHandler = require('./utils/CookieHandler')
@@ -61,6 +59,18 @@ var _DetectStaticExtension = require('./utils/DetectStaticExtension')
 var _DetectStaticExtension2 = _interopRequireDefault(_DetectStaticExtension)
 var _SendFile = require('./utils/SendFile')
 var _SendFile2 = _interopRequireDefault(_SendFile)
+
+const dotenv = require('dotenv')
+dotenv.config({
+	path: _path2.default.resolve(__dirname, '../.env'),
+})
+
+if (_constants.ENV_MODE !== 'development') {
+	dotenv.config({
+		path: _path2.default.resolve(__dirname, '../.env.production'),
+		override: true,
+	})
+}
 
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
@@ -261,7 +271,7 @@ const startServer = async () => {
 			)
 			next()
 		})
-	;(await _indexfastify2.default).init(app)
+	;(await require('./puppeteer-ssr/index.fastify').default).init(app)
 
 	app.listen(
 		{
