@@ -1,12 +1,10 @@
 import { minify } from 'html-minifier'
 import workerpool from 'workerpool'
-import { ENV } from '../../constants'
+import { ENV, POWER_LEVEL, POWER_LEVEL_LIST } from '../../constants'
 import {
 	DISABLE_COMPRESS_HTML,
 	DISABLE_DEEP_OPTIMIZE,
 	DISABLE_OPTIMIZE,
-	POWER_LEVEL,
-	POWER_LEVEL_LIST,
 	regexHandleAttrsHtmlTag,
 	regexHandleAttrsImageTag,
 	regexHandleAttrsInteractiveTag,

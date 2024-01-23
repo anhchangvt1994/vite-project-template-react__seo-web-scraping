@@ -30,6 +30,16 @@ var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 
 var _constants = require('../constants')
+var _DetectBot = require('../middlewares/uws/DetectBot')
+var _DetectBot2 = _interopRequireDefault(_DetectBot)
+var _DetectDevice = require('../middlewares/uws/DetectDevice')
+var _DetectDevice2 = _interopRequireDefault(_DetectDevice)
+var _DetectLocale = require('../middlewares/uws/DetectLocale')
+var _DetectLocale2 = _interopRequireDefault(_DetectLocale)
+var _DetectRedirect = require('../middlewares/uws/DetectRedirect')
+var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect)
+var _DetectStatic = require('../middlewares/uws/DetectStatic')
+var _DetectStatic2 = _interopRequireDefault(_DetectStatic)
 var _serverconfig = require('../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
@@ -43,18 +53,8 @@ var _ISRGeneratornext = require('./utils/ISRGenerator.next')
 var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext)
 var _ISRHandler = require('./utils/ISRHandler')
 var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
-var _DetectLocale = require('../middlewares/uws/DetectLocale')
-var _DetectLocale2 = _interopRequireDefault(_DetectLocale)
-var _DetectRedirect = require('../middlewares/uws/DetectRedirect')
-var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect)
-var _DetectStatic = require('../middlewares/uws/DetectStatic')
-var _DetectStatic2 = _interopRequireDefault(_DetectStatic)
-var _DetectBot = require('../middlewares/uws/DetectBot')
-var _DetectBot2 = _interopRequireDefault(_DetectBot)
-var _DetectDevice = require('../middlewares/uws/DetectDevice')
-var _DetectDevice2 = _interopRequireDefault(_DetectDevice)
 
-const COOKIE_EXPIRED_SECOND = _constants3.COOKIE_EXPIRED / 1000
+const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
 	ENV: _constants.ENV,
 	MODE: _constants.MODE,
@@ -182,6 +182,16 @@ const puppeteerSSRService = (async () => {
 				(_2) => _2.botInfo,
 			])
 
+			if (
+				_constants.IS_REMOTE_CRAWLER &&
+				((_serverconfig2.default.crawlerSecretKey &&
+					req.getQuery('crawlerSecretKey') !==
+						_serverconfig2.default.crawlerSecretKey) ||
+					(!botInfo.isBot && _constants3.DISABLE_SSR_CACHE))
+			) {
+				return res.writeStatus('403').end('403 Forbidden', true)
+			}
+
 			// NOTE - Check redirect or not
 			const isRedirect = _DetectRedirect2.default.call(void 0, res, req)
 
@@ -249,8 +259,10 @@ const puppeteerSSRService = (async () => {
 									result.response
 								) {
 									try {
-										const body = _fs2.default.readFileSync(result.response)
 										res = _getResponseWithDefaultCookie(res)
+										const body = result.html
+											? result.html
+											: _fs2.default.readFileSync(result.response)
 										res.end(body, true)
 									} catch (e) {
 										res.writeStatus('404').end('Page not found!', true)
@@ -281,7 +293,10 @@ const puppeteerSSRService = (async () => {
 					}
 
 					res.writableEnded = true
-				} else {
+				} else if (
+					!botInfo.isBot &&
+					(!_constants3.DISABLE_SSR_CACHE || _serverconfig2.default.crawler)
+				) {
 					try {
 						if (_constants.SERVER_LESS) {
 							await _ISRGeneratornext2.default.call(void 0, {

@@ -34,7 +34,7 @@ const compressContent = (html) => {
 	if (!html) return ''
 	else if (
 		_constants3.DISABLE_COMPRESS_HTML ||
-		_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.ONE
+		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
 	)
 		return html
 	else if (_constants.ENV !== 'development') {
@@ -64,7 +64,7 @@ const optimizeContent = (html, isFullOptimize = false) => {
 
 	if (
 		_constants3.DISABLE_DEEP_OPTIMIZE ||
-		_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.ONE
+		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
 	)
 		return html
 	else if (isFullOptimize) {

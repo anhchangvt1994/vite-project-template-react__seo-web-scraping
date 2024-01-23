@@ -126,6 +126,16 @@ const puppeteerSSRService = (async () => {
 			})
 
 			if (
+				_constants.IS_REMOTE_CRAWLER &&
+				((_serverconfig2.default.crawlerSecretKey &&
+					req.query.crawlerSecretKey !==
+						_serverconfig2.default.crawlerSecretKey) ||
+					(!botInfo.isBot && _constants3.DISABLE_SSR_CACHE))
+			) {
+				return res.status(403).send('403 Forbidden')
+			}
+
+			if (
 				_constants.ENV_MODE !== 'development' &&
 				enableISR &&
 				req.headers.service !== 'puppeteer'
@@ -169,7 +179,9 @@ const puppeteerSSRService = (async () => {
 								result.status === 503) &&
 							result.response
 						)
-							res.sendFile(result.response)
+							result.html
+								? res.send(result.html)
+								: res.sendFile(result.response)
 						// Serve prerendered page as response.
 						else res.send(result.html || `${result.status} Error`) // Serve prerendered page as response.
 					} catch (err) {
@@ -179,7 +191,10 @@ const puppeteerSSRService = (async () => {
 					}
 
 					return
-				} else if (!botInfo.isBot) {
+				} else if (
+					!botInfo.isBot &&
+					(!_constants3.DISABLE_SSR_CACHE || _serverconfig2.default.crawler)
+				) {
 					try {
 						if (_constants.SERVER_LESS) {
 							await _ISRGeneratornext2.default.call(void 0, {

@@ -40,11 +40,6 @@ var _path2 = _interopRequireDefault(_path)
 var _PortHandler = require('../../config/utils/PortHandler')
 
 var _constants = require('./constants')
-var _puppeteerssr = require('./puppeteer-ssr')
-var _puppeteerssr2 = _interopRequireDefault(_puppeteerssr)
-var _constants3 = require('./puppeteer-ssr/constants')
-var _serverconfig = require('./server.config')
-var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _CookieHandler = require('./utils/CookieHandler')
 var _DetectBot = require('./utils/DetectBot')
 var _DetectBot2 = _interopRequireDefault(_DetectBot)
@@ -56,8 +51,32 @@ var _DetectRedirect = require('./utils/DetectRedirect')
 var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect)
 var _DetectStaticExtension = require('./utils/DetectStaticExtension')
 var _DetectStaticExtension2 = _interopRequireDefault(_DetectStaticExtension)
+var _store = require('./store')
 
-const COOKIE_EXPIRED_SECOND = _constants3.COOKIE_EXPIRED / 1000
+const dotenv = require('dotenv')
+dotenv.config({
+	path: _path2.default.resolve(__dirname, '../.env'),
+})
+
+if (_constants.ENV_MODE !== 'development') {
+	dotenv.config({
+		path: _path2.default.resolve(__dirname, '../.env.production'),
+		override: true,
+	})
+}
+
+const ServerConfig = _nullishCoalesce(
+	_optionalChain([
+		require,
+		'call',
+		(_) => _('./server.config'),
+		'optionalAccess',
+		(_2) => _2.default,
+	]),
+	() => ({})
+)
+
+const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
 	ENV: _constants.ENV,
 	MODE: _constants.MODE,
@@ -104,68 +123,85 @@ const startServer = async () => {
 	const app = _express2.default.call(void 0)
 	const server = require('http').createServer(app)
 
-	app
-		.use(_cors2.default.call(void 0))
-		.use(
-			'/robots.txt',
-			_express2.default.static(
-				_path2.default.resolve(__dirname, '../robots.txt')
+	app.use(_cors2.default.call(void 0))
+	if (ServerConfig.crawler && !process.env.IS_REMOTE_CRAWLER) {
+		app
+			.use(
+				'/robots.txt',
+				_express2.default.static(
+					_path2.default.resolve(__dirname, '../robots.txt')
+				)
 			)
-		)
-		.use(function (req, res, next) {
-			const isStatic = _DetectStaticExtension2.default.call(void 0, req)
-			/**
-			 * NOTE
-			 * Cache-Control max-age is 1 year
-			 * calc by using:
-			 * https://www.inchcalculator.com/convert/month-to-second/
-			 */
-			if (isStatic) {
-				if (_constants.ENV !== 'development') {
-					res.set('Cache-Control', 'public, max-age=31556952')
-				}
+			.use(function (req, res, next) {
+				const isStatic = _DetectStaticExtension2.default.call(void 0, req)
+				/**
+				 * NOTE
+				 * Cache-Control max-age is 1 year
+				 * calc by using:
+				 * https://www.inchcalculator.com/convert/month-to-second/
+				 */
+				if (isStatic) {
+					if (_constants.ENV !== 'development') {
+						res.set('Cache-Control', 'public, max-age=31556952')
+					}
 
-				try {
-					res
-						.status(200)
-						.sendFile(
-							_path2.default.resolve(__dirname, `../../dist/${req.url}`)
-						)
-				} catch (err) {
-					res.status(404).send('File not found')
+					try {
+						res
+							.status(200)
+							.sendFile(
+								_path2.default.resolve(__dirname, `../../dist/${req.url}`)
+							)
+					} catch (err) {
+						res.status(404).send('File not found')
+					}
+				} else {
+					next()
 				}
-			} else {
-				next()
-			}
-		})
+			})
+	}
+
+	app
 		.use(function (req, res, next) {
 			if (!process.env.BASE_URL)
 				process.env.BASE_URL = `${req.protocol}://${req.get('host')}`
 			next()
 		})
 		.use(function (req, res, next) {
-			let botInfo
-			if (req.headers.service === 'puppeteer') {
-				botInfo = req.headers['botinfo'] || req.headers['botInfo'] || ''
-			} else {
-				botInfo = JSON.stringify(_DetectBot2.default.call(void 0, req))
-			}
+			const botInfo =
+				req.headers['botinfo'] ||
+				req.headers['botInfo'] ||
+				JSON.stringify(_DetectBot2.default.call(void 0, req))
 
 			_CookieHandler.setCookie.call(
 				void 0,
 				res,
 				`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
 			)
+
+			if (!process.env.IS_REMOTE_CRAWLER) {
+				const headersStore = _store.getStore.call(void 0, 'headers')
+				headersStore.botInfo = botInfo
+				_store.setStore.call(void 0, 'headers', headersStore)
+			}
+
 			next()
 		})
 		.use(function (req, res, next) {
-			const localeInfo = _DetectLocale2.default.call(void 0, req)
+			const localeInfo = (() => {
+				let tmpLocaleInfo = req['localeinfo'] || req['localeInfo']
+
+				if (tmpLocaleInfo) JSON.parse(tmpLocaleInfo)
+				else tmpLocaleInfo = _DetectLocale2.default.call(void 0, req)
+
+				return tmpLocaleInfo
+			})()
+
 			const enableLocale =
-				_serverconfig2.default.locale.enable &&
+				ServerConfig.locale.enable &&
 				Boolean(
-					!_serverconfig2.default.locale.routes ||
-						!_serverconfig2.default.locale.routes[req.url] ||
-						_serverconfig2.default.locale.routes[req.url].enable
+					!ServerConfig.locale.routes ||
+						!ServerConfig.locale.routes[req.url] ||
+						ServerConfig.locale.routes[req.url].enable
 				)
 
 			_CookieHandler.setCookie.call(
@@ -176,6 +212,12 @@ const startServer = async () => {
 				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 
+			if (!process.env.IS_REMOTE_CRAWLER) {
+				const headersStore = _store.getStore.call(void 0, 'headers')
+				headersStore.localeInfo = JSON.stringify(localeInfo)
+				_store.setStore.call(void 0, 'headers', headersStore)
+			}
+
 			if (enableLocale) {
 				_CookieHandler.setCookie.call(
 					void 0,
@@ -184,13 +226,13 @@ const startServer = async () => {
 						_optionalChain([
 							localeInfo,
 							'optionalAccess',
-							(_) => _.langSelected,
+							(_3) => _3.langSelected,
 						]),
-						() => _serverconfig2.default.locale.defaultLang
+						() => ServerConfig.locale.defaultLang
 					)};Path=/`
 				)
 
-				if (_serverconfig2.default.locale.defaultCountry) {
+				if (ServerConfig.locale.defaultCountry) {
 					_CookieHandler.setCookie.call(
 						void 0,
 						res,
@@ -198,16 +240,17 @@ const startServer = async () => {
 							_optionalChain([
 								localeInfo,
 								'optionalAccess',
-								(_2) => _2.countrySelected,
+								(_4) => _4.countrySelected,
 							]),
-							() => _serverconfig2.default.locale.defaultCountry
+							() => ServerConfig.locale.defaultCountry
 						)};Path=/`
 					)
 				}
 			}
 			next()
 		})
-		.use(function (req, res, next) {
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		app.use(function (req, res, next) {
 			const redirectResult = _DetectRedirect2.default.call(void 0, req, res)
 
 			if (redirectResult.status !== 200) {
@@ -230,6 +273,8 @@ const startServer = async () => {
 			}
 			next()
 		})
+	}
+	app
 		.use(function (req, res, next) {
 			_CookieHandler.setCookie.call(
 				void 0,
@@ -239,31 +284,35 @@ const startServer = async () => {
 			next()
 		})
 		.use(function (req, res, next) {
-			let deviceInfo
-			if (req.headers.service === 'puppeteer') {
-				deviceInfo =
-					req.headers['deviceinfo'] || req.headers['deviceInfo'] || ''
-			} else {
-				deviceInfo = JSON.stringify(_DetectDevice2.default.call(void 0, req))
-			}
+			const deviceInfo =
+				req.headers['deviceinfo'] ||
+				req.headers['deviceInfo'] ||
+				JSON.stringify(_DetectDevice2.default.call(void 0, req))
 
 			_CookieHandler.setCookie.call(
 				void 0,
 				res,
 				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
 			)
+
+			if (!process.env.IS_REMOTE_CRAWLER) {
+				const headersStore = _store.getStore.call(void 0, 'headers')
+				headersStore.deviceInfo = deviceInfo
+				_store.setStore.call(void 0, 'headers', headersStore)
+			}
+
 			next()
 		})
-	;(await _puppeteerssr2.default).init(app)
+	;(await require('./puppeteer-ssr').default).init(app)
 
 	server.listen(port, () => {
 		console.log(`Server started port ${port}. Press Ctrl+C to quit`)
 		_optionalChain([
 			process,
 			'access',
-			(_3) => _3.send,
+			(_5) => _5.send,
 			'optionalCall',
-			(_4) => _4('ready'),
+			(_6) => _6('ready'),
 		])
 	})
 
@@ -272,40 +321,42 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (_constants.ENV === 'development') {
-		// NOTE - restart server onchange
-		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
-		// 	ignored: /$^/,
-		// 	persistent: true,
-		// })
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		if (_constants.ENV === 'development') {
+			// NOTE - restart server onchange
+			// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
+			// 	ignored: /$^/,
+			// 	persistent: true,
+			// })
 
-		if (!process.env.REFRESH_SERVER) {
-			_child_process.spawn.call(void 0, 'vite', [], {
+			if (!process.env.REFRESH_SERVER) {
+				_child_process.spawn.call(void 0, 'vite', [], {
+					stdio: 'inherit',
+					shell: true,
+				})
+			}
+
+			// watcher.on('change', async (path) => {
+			// 	Console.log(`File ${path} has been changed`)
+			// 	await server.close()
+			// 	spawn(
+			// 		'node',
+			// 		[
+			// 			'cross-env REFRESH_SERVER=1 --require sucrase/register server/src/index.ts',
+			// 		],
+			// 		{
+			// 			stdio: 'inherit',
+			// 			shell: true,
+			// 		}
+			// 	)
+			// 	process.exit(0)
+			// })
+		} else if (!_constants.serverInfo.isServer) {
+			_child_process.spawn.call(void 0, 'vite', ['preview'], {
 				stdio: 'inherit',
 				shell: true,
 			})
 		}
-
-		// watcher.on('change', async (path) => {
-		// 	Console.log(`File ${path} has been changed`)
-		// 	await server.close()
-		// 	spawn(
-		// 		'node',
-		// 		[
-		// 			'cross-env REFRESH_SERVER=1 --require sucrase/register server/src/index.ts',
-		// 		],
-		// 		{
-		// 			stdio: 'inherit',
-		// 			shell: true,
-		// 		}
-		// 	)
-		// 	process.exit(0)
-		// })
-	} else if (!_constants.serverInfo.isServer) {
-		_child_process.spawn.call(void 0, 'vite', ['preview'], {
-			stdio: 'inherit',
-			shell: true,
-		})
 	}
 }
 

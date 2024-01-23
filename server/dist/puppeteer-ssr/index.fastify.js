@@ -198,7 +198,9 @@ const puppeteerSSRService = (async () => {
 								result.status === 503) &&
 							result.response
 						)
-							return _SendFile2.default.call(void 0, result.response, res.raw)
+							return result.html
+								? res.send(result.html)
+								: _SendFile2.default.call(void 0, result.response, res.raw)
 						// Serve prerendered page as response.
 						else return res.send(result.html || `${result.status} Error`) // Serve prerendered page as response.
 					} catch (err) {

@@ -67,6 +67,10 @@ const getUrl = (res, req) => {
 
 	const pathname = res.urlForCrawler
 
-	return (req.getQuery('urlTesting') || process.env.BASE_URL + pathname).trim()
+	return (
+		req.getQuery('urlTesting') ||
+		req.getQuery('url') ||
+		process.env.BASE_URL + pathname
+	).trim()
 }
 exports.getUrl = getUrl // getUrl

@@ -33,6 +33,7 @@ function _optionalChain(ops) {
 }
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
+
 var _constants = require('../../constants')
 var _serverconfig = require('../../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
@@ -45,10 +46,11 @@ var _BrowserManager = require('./BrowserManager')
 var _BrowserManager2 = _interopRequireDefault(_BrowserManager)
 var _CacheManager = require('./CacheManager')
 var _CacheManager2 = _interopRequireDefault(_CacheManager)
+var _store = require('../../store')
 
 const browserManager = (() => {
 	if (_constants.ENV_MODE === 'development') return undefined
-	if (_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.THREE)
+	if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
 		return _BrowserManager2.default.call(
 			void 0,
 			() => `${_constants.userDataPath}/user_data_${Date.now()}`
@@ -100,23 +102,15 @@ const fetchData = async (input, init, reqData) => {
 
 const waitResponse = (() => {
 	const firstWaitingDuration =
-		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
-			? 200
-			: 500
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 200 : 500
 	const defaultRequestWaitingDuration =
-		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
-			? 200
-			: 500
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 200 : 500
 	const requestServedFromCacheDuration =
-		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
-			? 200
-			: 250
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250
 	const requestFailDuration =
-		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
-			? 200
-			: 250
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250
 	const maximumTimeout =
-		_constants3.BANDWIDTH_LEVEL > _constants3.BANDWIDTH_LEVEL_LIST.ONE
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE
 			? 5000
 			: 5000
 
@@ -209,6 +203,8 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 				_serverconfig2.default.crawlerSecretKey
 		}
 
+		const headersStore = _store.getStore.call(void 0, 'headers')
+
 		try {
 			const result = await fetchData(
 				_serverconfig2.default.crawler,
@@ -216,6 +212,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 					method: 'GET',
 					headers: new Headers({
 						Accept: 'text/html; charset=utf-8',
+						...headersStore,
 					}),
 				},
 				requestParams

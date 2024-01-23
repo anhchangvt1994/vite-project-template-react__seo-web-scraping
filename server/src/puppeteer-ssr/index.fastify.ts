@@ -122,7 +122,9 @@ const puppeteerSSRService = (async () => {
 							(CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
 							result.response
 						)
-							return sendFile(result.response, res.raw)
+							return result.html
+								? res.send(result.html)
+								: sendFile(result.response, res.raw)
 						// Serve prerendered page as response.
 						else return res.send(result.html || `${result.status} Error`) // Serve prerendered page as response.
 					} catch (err) {

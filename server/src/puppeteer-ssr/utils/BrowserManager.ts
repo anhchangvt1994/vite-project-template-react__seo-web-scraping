@@ -2,12 +2,16 @@ import Chromium from '@sparticuz/chromium-min'
 import path from 'path'
 import { Browser, Page } from 'puppeteer-core'
 import WorkerPool from 'workerpool'
-import { SERVER_LESS, resourceExtension, userDataPath } from '../../constants'
-import { getStore, setStore } from '../../store'
-import Console from '../../utils/ConsoleHandler'
 import {
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
+	SERVER_LESS,
+	resourceExtension,
+	userDataPath,
+} from '../../constants'
+import { getStore, setStore } from '../../store'
+import Console from '../../utils/ConsoleHandler'
+import {
 	canUseLinuxChromium,
 	chromiumPath,
 	defaultBrowserOptions,

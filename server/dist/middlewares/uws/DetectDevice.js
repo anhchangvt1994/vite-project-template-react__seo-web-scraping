@@ -5,15 +5,24 @@ function _interopRequireDefault(obj) {
 }
 var _DetectDeviceuws = require('../../utils/DetectDevice.uws')
 var _DetectDeviceuws2 = _interopRequireDefault(_DetectDeviceuws)
+var _store = require('../../store')
 
 const DetectDeviceMiddle = (res, req) => {
 	if (!res.cookies) res.cookies = {}
-	if (req.getHeader('service') === 'puppeteer') {
-		res.cookies.deviceInfo = JSON.parse(
-			req.getHeader('deviceinfo') || req.getHeader('deviceInfo') || '{}'
-		)
-	} else {
-		res.cookies.deviceInfo = _DetectDeviceuws2.default.call(void 0, req)
+
+	res.cookies.deviceInfo = (() => {
+		const tmpDeviceInfo =
+			req.getHeader('deviceinfo') || req.getHeader('deviceInfo')
+
+		if (tmpDeviceInfo) return JSON.parse(tmpDeviceInfo)
+
+		return _DetectDeviceuws2.default.call(void 0, req)
+	})()
+
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		const headersStore = _store.getStore.call(void 0, 'headers')
+		headersStore.deviceInfo = JSON.stringify(res.cookies.deviceInfo)
+		_store.setStore.call(void 0, 'headers', headersStore)
 	}
 }
 

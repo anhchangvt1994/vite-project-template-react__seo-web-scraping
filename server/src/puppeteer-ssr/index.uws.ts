@@ -1,20 +1,27 @@
 import fs from 'fs'
 import path from 'path'
 import { HttpResponse, TemplatedApp } from 'uWebSockets.js'
-import { ENV, MODE, ENV_MODE, SERVER_LESS } from '../constants'
+import {
+	COOKIE_EXPIRED,
+	ENV,
+	ENV_MODE,
+	IS_REMOTE_CRAWLER,
+	MODE,
+	SERVER_LESS,
+} from '../constants'
+import DetectBotMiddle from '../middlewares/uws/DetectBot'
+import DetectDeviceMiddle from '../middlewares/uws/DetectDevice'
+import DetectLocaleMiddle from '../middlewares/uws/DetectLocale'
+import DetectRedirectMiddle from '../middlewares/uws/DetectRedirect'
+import DetectStaticMiddle from '../middlewares/uws/DetectStatic'
 import ServerConfig from '../server.config'
 import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
-import { CACHEABLE_STATUS_CODE, COOKIE_EXPIRED } from './constants'
+import { CACHEABLE_STATUS_CODE, DISABLE_SSR_CACHE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl.uws'
 import ISRGenerator from './utils/ISRGenerator.next'
 import SSRHandler from './utils/ISRHandler'
-import DetectLocaleMiddle from '../middlewares/uws/DetectLocale'
-import DetectRedirectMiddle from '../middlewares/uws/DetectRedirect'
-import DetectStaticMiddle from '../middlewares/uws/DetectStatic'
-import DetectBotMiddle from '../middlewares/uws/DetectBot'
-import DetectDeviceMiddle from '../middlewares/uws/DetectDevice'
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
@@ -138,6 +145,15 @@ const puppeteerSSRService = (async () => {
 
 			const botInfo: IBotInfo = res.cookies?.botInfo
 
+			if (
+				IS_REMOTE_CRAWLER &&
+				((ServerConfig.crawlerSecretKey &&
+					req.getQuery('crawlerSecretKey') !== ServerConfig.crawlerSecretKey) ||
+					(!botInfo.isBot && DISABLE_SSR_CACHE))
+			) {
+				return res.writeStatus('403').end('403 Forbidden', true)
+			}
+
 			// NOTE - Check redirect or not
 			const isRedirect = DetectRedirectMiddle(res, req)
 
@@ -204,8 +220,10 @@ const puppeteerSSRService = (async () => {
 									result.response
 								) {
 									try {
-										const body = fs.readFileSync(result.response)
 										res = _getResponseWithDefaultCookie(res)
+										const body = result.html
+											? result.html
+											: fs.readFileSync(result.response)
 										res.end(body, true)
 									} catch {
 										res.writeStatus('404').end('Page not found!', true)
@@ -236,7 +254,10 @@ const puppeteerSSRService = (async () => {
 					}
 
 					res.writableEnded = true
-				} else {
+				} else if (
+					!botInfo.isBot &&
+					(!DISABLE_SSR_CACHE || ServerConfig.crawler)
+				) {
 					try {
 						if (SERVER_LESS) {
 							await ISRGenerator({

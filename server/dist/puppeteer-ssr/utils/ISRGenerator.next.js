@@ -28,10 +28,10 @@ var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
+
 var _constants = require('../../constants')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-
 var _constants3 = require('../constants')
 
 var _CacheManager = require('./CacheManager')
@@ -86,7 +86,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 
 	if (
 		_constants.SERVER_LESS &&
-		_constants3.BANDWIDTH_LEVEL === _constants3.BANDWIDTH_LEVEL_LIST.TWO
+		_constants.BANDWIDTH_LEVEL === _constants.BANDWIDTH_LEVEL_LIST.TWO
 	)
 		fetchData(`${process.env.BASE_URL}/cleaner-service`, {
 			method: 'POST',
@@ -142,9 +142,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 						let tmpHTML = ''
 
 						try {
-							if (
-								_constants3.POWER_LEVEL === _constants3.POWER_LEVEL_LIST.THREE
-							)
+							if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
 								tmpHTML = await optimizeHTMLContentPool.exec(
 									'compressContent',
 									[html]
@@ -230,14 +228,15 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 							!result.available &&
 							createTimeDuration >=
 								(_constants.SERVER_LESS &&
-								_constants3.BANDWIDTH_LEVEL ===
-									_constants3.BANDWIDTH_LEVEL_LIST.ONE
+								_constants.BANDWIDTH_LEVEL ===
+									_constants.BANDWIDTH_LEVEL_LIST.ONE
 									? 2000
 									: 10000)
 						)
 					})()
 				)
 			})()
+
 			if (isValidToScraping) {
 				const tmpResult = await new Promise(async (res) => {
 					const handle = (() => {
@@ -272,8 +271,8 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 							res,
 							_constants.SERVER_LESS
 								? 5000
-								: _constants3.BANDWIDTH_LEVEL >
-								  _constants3.BANDWIDTH_LEVEL_LIST.ONE
+								: _constants.BANDWIDTH_LEVEL >
+								  _constants.BANDWIDTH_LEVEL_LIST.ONE
 								? 10000
 								: 20000
 						)
@@ -289,6 +288,34 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 				else {
 					const tmpResult = await cacheManager.achieve(ISRHandlerParams.url)
 					result = tmpResult || result
+				}
+
+				if (
+					result.html &&
+					result.status === 200 &&
+					_constants3.DISABLE_SSR_CACHE
+				) {
+					const optimizeHTMLContentPool = _workerpool2.default.pool(
+						__dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`,
+						{
+							minWorkers: 1,
+							maxWorkers: _constants3.MAX_WORKERS,
+						}
+					)
+					let tmpHTML = result.html
+
+					try {
+						if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
+							tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
+								tmpHTML,
+							])
+					} catch (err) {
+						tmpHTML = result.html
+						// Console.error(err)
+					} finally {
+						optimizeHTMLContentPool.terminate()
+						result.html = tmpHTML
+					}
 				}
 			} else if (!isSkipWaiting) {
 				const restOfDuration = getRestOfDuration(startGenerating, 2000)

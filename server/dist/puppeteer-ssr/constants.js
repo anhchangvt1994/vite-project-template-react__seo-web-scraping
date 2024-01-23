@@ -107,39 +107,14 @@ const DURATION_TIMEOUT = _constants.SERVER_LESS
 	? Number(process.env.DURATION_TIMEOUT)
 	: 20000
 exports.DURATION_TIMEOUT = DURATION_TIMEOUT
-const POWER_LEVEL = process.env.POWER_LEVEL
-	? Number(process.env.POWER_LEVEL)
-	: 3
-exports.POWER_LEVEL = POWER_LEVEL
-var POWER_LEVEL_LIST
-;(function (POWER_LEVEL_LIST) {
-	const ONE = 1
-	POWER_LEVEL_LIST[(POWER_LEVEL_LIST['ONE'] = ONE)] = 'ONE' // low of scraping power
-	const TWO = 2
-	POWER_LEVEL_LIST[(POWER_LEVEL_LIST['TWO'] = TWO)] = 'TWO' // medium of scraping power
-	const THREE = 3
-	POWER_LEVEL_LIST[(POWER_LEVEL_LIST['THREE'] = THREE)] = 'THREE' // hight of scraping power
-})(POWER_LEVEL_LIST || (exports.POWER_LEVEL_LIST = POWER_LEVEL_LIST = {}))
+
 const DISABLE_COMPRESS_HTML = !!process.env.DISABLE_COMPRESS_HTML
 exports.DISABLE_COMPRESS_HTML = DISABLE_COMPRESS_HTML
 const DISABLE_DEEP_OPTIMIZE = !!process.env.DISABLE_DEEP_OPTIMIZE
 exports.DISABLE_DEEP_OPTIMIZE = DISABLE_DEEP_OPTIMIZE
 const DISABLE_OPTIMIZE = !!process.env.DISABLE_OPTIMIZE
 exports.DISABLE_OPTIMIZE = DISABLE_OPTIMIZE
-const BANDWIDTH_LEVEL = process.env.BANDWIDTH_LEVEL
-	? Number(process.env.BANDWIDTH_LEVEL)
-	: 2
-exports.BANDWIDTH_LEVEL = BANDWIDTH_LEVEL
-var BANDWIDTH_LEVEL_LIST
-;(function (BANDWIDTH_LEVEL_LIST) {
-	const ONE = 1
-	BANDWIDTH_LEVEL_LIST[(BANDWIDTH_LEVEL_LIST['ONE'] = ONE)] = 'ONE' // low
-	const TWO = 2
-	BANDWIDTH_LEVEL_LIST[(BANDWIDTH_LEVEL_LIST['TWO'] = TWO)] = 'TWO' // hight
-})(
-	BANDWIDTH_LEVEL_LIST ||
-		(exports.BANDWIDTH_LEVEL_LIST = BANDWIDTH_LEVEL_LIST = {})
-)
+
 const NOT_FOUND_PAGE_ID = process.env.NOT_FOUND_PAGE_ID || '404-page'
 exports.NOT_FOUND_PAGE_ID = NOT_FOUND_PAGE_ID
 const regexNotFoundPageID = new RegExp(
@@ -149,12 +124,6 @@ exports.regexNotFoundPageID = regexNotFoundPageID
 
 const CACHEABLE_STATUS_CODE = { 200: true, 302: true }
 exports.CACHEABLE_STATUS_CODE = CACHEABLE_STATUS_CODE
-const COOKIE_EXPIRED =
-	exports.BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO &&
-	_constants.ENV !== 'development'
-		? 2000
-		: 60000
-exports.COOKIE_EXPIRED = COOKIE_EXPIRED
 
 const chromiumPath =
 	'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
@@ -171,3 +140,6 @@ const puppeteer = (() => {
 	return require('puppeteer')
 })()
 exports.puppeteer = puppeteer
+
+const DISABLE_SSR_CACHE = Boolean(process.env.DISABLE_SSR_CACHE)
+exports.DISABLE_SSR_CACHE = DISABLE_SSR_CACHE

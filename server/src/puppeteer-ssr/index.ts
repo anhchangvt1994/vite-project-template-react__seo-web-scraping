@@ -1,11 +1,11 @@
 import { Express } from 'express'
 import path from 'path'
-import { ENV_MODE, SERVER_LESS } from '../constants'
+import { ENV_MODE, IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
 import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
 import { getCookieFromResponse } from '../utils/CookieHandler'
-import { CACHEABLE_STATUS_CODE } from './constants'
+import { CACHEABLE_STATUS_CODE, DISABLE_SSR_CACHE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl'
 import ISRGenerator from './utils/ISRGenerator.next'
 import SSRHandler from './utils/ISRHandler'
@@ -83,6 +83,15 @@ const puppeteerSSRService = (async () => {
 			})
 
 			if (
+				IS_REMOTE_CRAWLER &&
+				((ServerConfig.crawlerSecretKey &&
+					req.query.crawlerSecretKey !== ServerConfig.crawlerSecretKey) ||
+					(!botInfo.isBot && DISABLE_SSR_CACHE))
+			) {
+				return res.status(403).send('403 Forbidden')
+			}
+
+			if (
 				ENV_MODE !== 'development' &&
 				enableISR &&
 				req.headers.service !== 'puppeteer'
@@ -124,7 +133,9 @@ const puppeteerSSRService = (async () => {
 							(CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
 							result.response
 						)
-							res.sendFile(result.response)
+							result.html
+								? res.send(result.html)
+								: res.sendFile(result.response)
 						// Serve prerendered page as response.
 						else res.send(result.html || `${result.status} Error`) // Serve prerendered page as response.
 					} catch (err) {
@@ -134,7 +145,10 @@ const puppeteerSSRService = (async () => {
 					}
 
 					return
-				} else if (!botInfo.isBot) {
+				} else if (
+					!botInfo.isBot &&
+					(!DISABLE_SSR_CACHE || ServerConfig.crawler)
+				) {
 					try {
 						if (SERVER_LESS) {
 							await ISRGenerator({

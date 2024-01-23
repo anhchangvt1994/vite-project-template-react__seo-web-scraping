@@ -93,34 +93,17 @@ export const DURATION_TIMEOUT = SERVER_LESS
 	: process.env.DURATION_TIMEOUT
 	? Number(process.env.DURATION_TIMEOUT)
 	: 20000
-export const POWER_LEVEL = process.env.POWER_LEVEL
-	? Number(process.env.POWER_LEVEL)
-	: 3
-export const enum POWER_LEVEL_LIST {
-	ONE = 1, // low of scraping power
-	TWO = 2, // medium of scraping power
-	THREE = 3, // hight of scraping power
-}
+
 export const DISABLE_COMPRESS_HTML = !!process.env.DISABLE_COMPRESS_HTML
 export const DISABLE_DEEP_OPTIMIZE = !!process.env.DISABLE_DEEP_OPTIMIZE
 export const DISABLE_OPTIMIZE = !!process.env.DISABLE_OPTIMIZE
-export const BANDWIDTH_LEVEL = process.env.BANDWIDTH_LEVEL
-	? Number(process.env.BANDWIDTH_LEVEL)
-	: 2
-export const enum BANDWIDTH_LEVEL_LIST {
-	ONE = 1, // low
-	TWO = 2, // hight
-}
+
 export const NOT_FOUND_PAGE_ID = process.env.NOT_FOUND_PAGE_ID || '404-page'
 export const regexNotFoundPageID = new RegExp(
 	`id=["']?${NOT_FOUND_PAGE_ID}["']?`
 )
 
 export const CACHEABLE_STATUS_CODE = { 200: true, 302: true }
-export const COOKIE_EXPIRED =
-	BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO && ENV !== 'development'
-		? 2000
-		: 60000
 
 export const chromiumPath =
 	'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
@@ -134,3 +117,5 @@ export const puppeteer = (() => {
 	if (canUseLinuxChromium) return require('puppeteer-core')
 	return require('puppeteer')
 })()
+
+export const DISABLE_SSR_CACHE = Boolean(process.env.DISABLE_SSR_CACHE)

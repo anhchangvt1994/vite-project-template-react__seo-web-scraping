@@ -15,6 +15,8 @@ var _DetectStaticExtensionuws = require('../../utils/DetectStaticExtension.uws')
 var _DetectStaticExtensionuws2 = _interopRequireDefault(
 	_DetectStaticExtensionuws
 )
+var _serverconfig = require('../../server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
 const DetectStaticMiddle = (res, req) => {
 	const isStatic = _DetectStaticExtensionuws2.default.call(void 0, req)
@@ -25,7 +27,11 @@ const DetectStaticMiddle = (res, req) => {
 	 * https://www.inchcalculator.com/convert/month-to-second/
 	 */
 
-	if (isStatic) {
+	if (
+		isStatic &&
+		_serverconfig2.default.crawler &&
+		!process.env.IS_REMOTE_CRAWLER
+	) {
 		const filePath = _path2.default.resolve(
 			__dirname,
 			`../../../../dist/${req.getUrl()}`

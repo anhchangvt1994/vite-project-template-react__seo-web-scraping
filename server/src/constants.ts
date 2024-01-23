@@ -447,3 +447,23 @@ export const LANGUAGE_CODE_DEFAULT = 'en'
 export const ENABLE_CONSOLE_DEBUGGER = Boolean(
 	process.env.ENABLE_CONSOLE_DEBUGGER
 )
+export const POWER_LEVEL = process.env.POWER_LEVEL
+	? Number(process.env.POWER_LEVEL)
+	: 3
+export const enum POWER_LEVEL_LIST {
+	ONE = 1, // low of scraping power
+	TWO = 2, // medium of scraping power
+	THREE = 3, // hight of scraping power
+}
+export const BANDWIDTH_LEVEL = process.env.BANDWIDTH_LEVEL
+	? Number(process.env.BANDWIDTH_LEVEL)
+	: 2
+export const enum BANDWIDTH_LEVEL_LIST {
+	ONE = 1, // low
+	TWO = 2, // hight
+}
+export const COOKIE_EXPIRED =
+	BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO && ENV !== 'development'
+		? 2000
+		: 60000
+export const IS_REMOTE_CRAWLER = Boolean(process.env.IS_REMOTE_CRAWLER)

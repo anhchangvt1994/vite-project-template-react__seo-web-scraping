@@ -14,13 +14,28 @@ var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _utils = require('./Cache.worker/utils')
+var _constants3 = require('../constants')
 
 const MAX_WORKERS = process.env.MAX_WORKERS
 	? Number(process.env.MAX_WORKERS)
 	: 7
 
+const maintainFile = _path2.default.resolve(__dirname, '../../../maintain.html')
+
 const CacheManager = () => {
 	const get = async (url) => {
+		if (_constants3.DISABLE_SSR_CACHE)
+			return {
+				response: maintainFile,
+				status: 503,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				requestedAt: new Date(),
+				ttRenderMs: 200,
+				available: false,
+				isInit: true,
+			}
+
 		const pool = _workerpool2.default.pool(
 			_path2.default.resolve(
 				__dirname,
@@ -44,6 +59,7 @@ const CacheManager = () => {
 	} // get
 
 	const achieve = async (url) => {
+		if (_constants3.DISABLE_SSR_CACHE) return
 		if (!url) {
 			_ConsoleHandler2.default.error('Need provide "url" param!')
 			return
@@ -81,6 +97,13 @@ const CacheManager = () => {
 	} // achieve
 
 	const set = async (params) => {
+		if (_constants3.DISABLE_SSR_CACHE)
+			return {
+				html: params.html,
+				response: maintainFile,
+				status: params.html ? 200 : 503,
+			}
+
 		const pool = _workerpool2.default.pool(
 			_path2.default.resolve(
 				__dirname,
@@ -104,6 +127,7 @@ const CacheManager = () => {
 	} // set
 
 	const remove = async (url) => {
+		if (_constants3.DISABLE_SSR_CACHE) return
 		const pool = _workerpool2.default.pool(
 			_path2.default.resolve(
 				__dirname,

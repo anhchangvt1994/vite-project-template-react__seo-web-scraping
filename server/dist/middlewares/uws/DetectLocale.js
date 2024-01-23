@@ -35,11 +35,25 @@ var _DetectLocaleuws = require('../../utils/DetectLocale.uws')
 var _DetectLocaleuws2 = _interopRequireDefault(_DetectLocaleuws)
 var _serverconfig = require('../../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
+var _store = require('../../store')
 
 const DetectLocaleMiddle = (res, req) => {
 	if (!res.cookies) res.cookies = {}
 
-	res.cookies.localeInfo = _DetectLocaleuws2.default.call(void 0, req)
+	res.cookies.localeInfo = (() => {
+		const tmpLocaleInfo =
+			req.getHeader('localeinfo') || req.getHeader('localeInfo')
+
+		if (tmpLocaleInfo) return JSON.parse(tmpLocaleInfo)
+		return _DetectLocaleuws2.default.call(void 0, req)
+	})()
+
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		const headersStore = _store.getStore.call(void 0, 'headers')
+		headersStore.localeInfo = JSON.stringify(res.cookies.localeInfo)
+		_store.setStore.call(void 0, 'headers', headersStore)
+	}
+
 	const enableLocale =
 		_serverconfig2.default.locale.enable &&
 		Boolean(

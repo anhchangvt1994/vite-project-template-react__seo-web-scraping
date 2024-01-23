@@ -44,9 +44,6 @@ var _servestatic2 = _interopRequireDefault(_servestatic)
 var _PortHandler = require('../../config/utils/PortHandler')
 
 var _constants = require('./constants')
-var _constants3 = require('./puppeteer-ssr/constants')
-var _indexfastify = require('./puppeteer-ssr/index.fastify')
-var _indexfastify2 = _interopRequireDefault(_indexfastify)
 var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _CookieHandler = require('./utils/CookieHandler')
@@ -62,8 +59,21 @@ var _DetectStaticExtension = require('./utils/DetectStaticExtension')
 var _DetectStaticExtension2 = _interopRequireDefault(_DetectStaticExtension)
 var _SendFile = require('./utils/SendFile')
 var _SendFile2 = _interopRequireDefault(_SendFile)
+var _store = require('./store')
 
-const COOKIE_EXPIRED_SECOND = _constants3.COOKIE_EXPIRED / 1000
+const dotenv = require('dotenv')
+dotenv.config({
+	path: _path2.default.resolve(__dirname, '../.env'),
+})
+
+if (_constants.ENV_MODE !== 'development') {
+	dotenv.config({
+		path: _path2.default.resolve(__dirname, '../.env.production'),
+		override: true,
+	})
+}
+
+const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
 	ENV: _constants.ENV,
 	MODE: _constants.MODE,
@@ -113,61 +123,79 @@ const startServer = async () => {
 		hook: 'onRequest', // default
 	})
 
-	app
-		.use(_cors2.default.call(void 0))
-		.use(
-			'/robots.txt',
-			_servestatic2.default.call(
-				void 0,
-				_path2.default.resolve(__dirname, '../robots.txt')
-			)
-		)
-		.use(function (req, res, next) {
-			const isStatic = _DetectStaticExtension2.default.call(void 0, req)
-			/**
-			 * NOTE
-			 * Cache-Control max-age is 1 year
-			 * calc by using:
-			 * https://www.inchcalculator.com/convert/month-to-second/
-			 */
+	app.use(_cors2.default.call(void 0))
 
-			if (isStatic) {
-				const filePath = _path2.default.resolve(
-					__dirname,
-					`../../dist/${req.url}`
+	if (_serverconfig2.default.crawler && !process.env.IS_REMOTE_CRAWLER) {
+		app
+			.use(
+				'/robots.txt',
+				_servestatic2.default.call(
+					void 0,
+					_path2.default.resolve(__dirname, '../robots.txt')
 				)
+			)
+			.use(function (req, res, next) {
+				const isStatic = _DetectStaticExtension2.default.call(void 0, req)
+				/**
+				 * NOTE
+				 * Cache-Control max-age is 1 year
+				 * calc by using:
+				 * https://www.inchcalculator.com/convert/month-to-second/
+				 */
 
-				if (_constants.ENV !== 'development') {
-					res.setHeader('Cache-Control', 'public, max-age=31556952')
+				if (isStatic) {
+					const filePath = _path2.default.resolve(
+						__dirname,
+						`../../dist/${req.url}`
+					)
+
+					if (_constants.ENV !== 'development') {
+						res.setHeader('Cache-Control', 'public, max-age=31556952')
+					}
+
+					_SendFile2.default.call(void 0, filePath, res)
+				} else {
+					next()
 				}
+			})
+	}
 
-				_SendFile2.default.call(void 0, filePath, res)
-			} else {
-				next()
-			}
-		})
+	app
 		.use(function (req, res, next) {
 			if (!process.env.BASE_URL)
 				process.env.BASE_URL = `${req.protocol}://${req.hostname}`
 			next()
 		})
 		.use(function (req, res, next) {
-			let botInfo
-			if (req.headers.service === 'puppeteer') {
-				botInfo = req.headers['botinfo'] || req.headers['botInfo'] || ''
-			} else {
-				botInfo = JSON.stringify(_DetectBot2.default.call(void 0, req))
-			}
+			const botInfo =
+				req.headers['botinfo'] ||
+				req.headers['botInfo'] ||
+				JSON.stringify(_DetectBot2.default.call(void 0, req))
 
 			_CookieHandler.setCookie.call(
 				void 0,
 				res,
 				`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
+
+			if (!process.env.IS_REMOTE_CRAWLER) {
+				const headersStore = _store.getStore.call(void 0, 'headers')
+				headersStore.botInfo = botInfo
+				_store.setStore.call(void 0, 'headers', headersStore)
+			}
+
 			next()
 		})
 		.use(function (req, res, next) {
-			const localeInfo = _DetectLocale2.default.call(void 0, req)
+			const localeInfo = (() => {
+				let tmpLocaleInfo = req['localeinfo'] || req['localeInfo']
+
+				if (tmpLocaleInfo) JSON.parse(tmpLocaleInfo)
+				else tmpLocaleInfo = _DetectLocale2.default.call(void 0, req)
+
+				return tmpLocaleInfo
+			})()
+
 			const enableLocale =
 				_serverconfig2.default.locale.enable &&
 				Boolean(
@@ -183,6 +211,12 @@ const startServer = async () => {
 					localeInfo
 				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
+
+			if (!process.env.IS_REMOTE_CRAWLER) {
+				const headersStore = _store.getStore.call(void 0, 'headers')
+				headersStore.localeInfo = JSON.stringify(localeInfo)
+				_store.setStore.call(void 0, 'headers', headersStore)
+			}
 
 			if (enableLocale) {
 				_CookieHandler.setCookie.call(
@@ -215,7 +249,8 @@ const startServer = async () => {
 			}
 			next()
 		})
-		.use(function (req, res, next) {
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		app.use(function (req, res, next) {
 			const redirectResult = _DetectRedirect2.default.call(void 0, req, res)
 
 			if (redirectResult.status !== 200) {
@@ -238,6 +273,8 @@ const startServer = async () => {
 			}
 			next()
 		})
+	}
+	app
 		.use(function (req, res, next) {
 			_CookieHandler.setCookie.call(
 				void 0,
@@ -247,22 +284,26 @@ const startServer = async () => {
 			next()
 		})
 		.use(function (req, res, next) {
-			let deviceInfo
-			if (req.headers.service === 'puppeteer') {
-				deviceInfo =
-					req.headers['deviceinfo'] || req.headers['deviceInfo'] || ''
-			} else {
-				deviceInfo = JSON.stringify(_DetectDevice2.default.call(void 0, req))
-			}
+			const deviceInfo =
+				req.headers['deviceinfo'] ||
+				req.headers['deviceInfo'] ||
+				JSON.stringify(_DetectDevice2.default.call(void 0, req))
 
 			_CookieHandler.setCookie.call(
 				void 0,
 				res,
 				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
+
+			if (!process.env.IS_REMOTE_CRAWLER) {
+				const headersStore = _store.getStore.call(void 0, 'headers')
+				headersStore.deviceInfo = deviceInfo
+				_store.setStore.call(void 0, 'headers', headersStore)
+			}
+
 			next()
 		})
-	;(await _indexfastify2.default).init(app)
+	;(await require('./puppeteer-ssr/index.fastify').default).init(app)
 
 	app.listen(
 		{
@@ -285,42 +326,44 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (_constants.ENV === 'development') {
-		// NOTE - restart server onchange
-		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
-		// 	ignored: /$^/,
-		// 	persistent: true,
-		// })
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		if (_constants.ENV === 'development') {
+			// NOTE - restart server onchange
+			// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
+			// 	ignored: /$^/,
+			// 	persistent: true,
+			// })
 
-		if (!process.env.REFRESH_SERVER) {
-			_child_process.spawn.call(void 0, 'vite', [], {
+			if (!process.env.REFRESH_SERVER) {
+				_child_process.spawn.call(void 0, 'vite', [], {
+					stdio: 'inherit',
+					shell: true,
+				})
+			}
+
+			// watcher.on('change', async (path) => {
+			// 	Console.log(`File ${path} has been changed`)
+			// 	await app.close()
+			// 	setTimeout(() => {
+			// 		spawn(
+			// 			'node',
+			// 			[
+			// 				'cross-env REFRESH_SERVER=1 --require sucrase/register server/src/index.ts',
+			// 			],
+			// 			{
+			// 				stdio: 'inherit',
+			// 				shell: true,
+			// 			}
+			// 		)
+			// 	})
+			// 	process.exit(0)
+			// })
+		} else if (!_constants.serverInfo.isServer) {
+			_child_process.spawn.call(void 0, 'vite', ['preview'], {
 				stdio: 'inherit',
 				shell: true,
 			})
 		}
-
-		// watcher.on('change', async (path) => {
-		// 	Console.log(`File ${path} has been changed`)
-		// 	await app.close()
-		// 	setTimeout(() => {
-		// 		spawn(
-		// 			'node',
-		// 			[
-		// 				'cross-env REFRESH_SERVER=1 --require sucrase/register server/src/index.ts',
-		// 			],
-		// 			{
-		// 				stdio: 'inherit',
-		// 				shell: true,
-		// 			}
-		// 		)
-		// 	})
-		// 	process.exit(0)
-		// })
-	} else if (!_constants.serverInfo.isServer) {
-		_child_process.spawn.call(void 0, 'vite', ['preview'], {
-			stdio: 'inherit',
-			shell: true,
-		})
 	}
 }
 

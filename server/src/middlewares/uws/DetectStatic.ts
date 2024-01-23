@@ -4,6 +4,7 @@ import serveStatic from 'serve-static'
 import { HttpRequest, HttpResponse } from 'uWebSockets.js'
 import { ENV } from '../../constants'
 import detectStaticExtension from '../../utils/DetectStaticExtension.uws'
+import ServerConfig from '../../server.config'
 
 const DetectStaticMiddle = (res: HttpResponse, req: HttpRequest) => {
 	const isStatic = detectStaticExtension(req)
@@ -14,7 +15,7 @@ const DetectStaticMiddle = (res: HttpResponse, req: HttpRequest) => {
 	 * https://www.inchcalculator.com/convert/month-to-second/
 	 */
 
-	if (isStatic) {
+	if (isStatic && ServerConfig.crawler && !process.env.IS_REMOTE_CRAWLER) {
 		const filePath = path.resolve(__dirname, `../../../../dist/${req.getUrl()}`)
 
 		if (ENV !== 'development') {

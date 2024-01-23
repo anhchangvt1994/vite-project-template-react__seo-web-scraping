@@ -31,8 +31,20 @@ var _path2 = _interopRequireDefault(_path)
 var _PortHandler = require('../../config/utils/PortHandler')
 
 var _constants = require('./constants')
-var _indexuws = require('./puppeteer-ssr/index.uws')
-var _indexuws2 = _interopRequireDefault(_indexuws)
+var _serverconfig = require('./server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
+
+const dotenv = require('dotenv')
+dotenv.config({
+	path: _path2.default.resolve(__dirname, '../.env'),
+})
+
+if (_constants.ENV_MODE !== 'development') {
+	dotenv.config({
+		path: _path2.default.resolve(__dirname, '../.env.production'),
+		override: true,
+	})
+}
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -77,18 +89,20 @@ const startServer = async () => {
 		passphrase: '1234',
 	})
 
-	app.get('/robots.txt', (res, req) => {
-		try {
-			const body = _fs2.default.readFileSync(
-				_path2.default.resolve(__dirname, '../robots.txt')
-			)
-			res.end(body)
-		} catch (e) {
-			res.writeStatus('404')
-			res.end('File not found')
-		}
-	})
-	;(await _indexuws2.default).init(app)
+	if (_serverconfig2.default.crawler && !process.env.IS_REMOTE_CRAWLER) {
+		app.get('/robots.txt', (res, req) => {
+			try {
+				const body = _fs2.default.readFileSync(
+					_path2.default.resolve(__dirname, '../robots.txt')
+				)
+				res.end(body)
+			} catch (e) {
+				res.writeStatus('404')
+				res.end('File not found')
+			}
+		})
+	}
+	;(await require('./puppeteer-ssr/index.uws').default).init(app)
 
 	app.listen(Number(port), (token) => {
 		if (token) {
@@ -110,46 +124,48 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (_constants.ENV === 'development') {
-		const serverIndexFilePath = _path2.default.resolve(
-			__dirname,
-			'./index.uws.ts'
-		)
-		// NOTE - restart server onchange
-		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
-		// 	ignored: /$^/,
-		// 	persistent: true,
-		// })
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		if (_constants.ENV === 'development') {
+			const serverIndexFilePath = _path2.default.resolve(
+				__dirname,
+				'./index.uws.ts'
+			)
+			// NOTE - restart server onchange
+			// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
+			// 	ignored: /$^/,
+			// 	persistent: true,
+			// })
 
-		if (!process.env.REFRESH_SERVER) {
-			_child_process.spawn.call(void 0, 'vite', [], {
+			if (!process.env.REFRESH_SERVER) {
+				_child_process.spawn.call(void 0, 'vite', [], {
+					stdio: 'inherit',
+					shell: true,
+				})
+			}
+
+			// watcher.on('change', async (path) => {
+			// 	Console.log(`File ${path} has been changed`)
+			// 	await app.close()
+			// 	setTimeout(() => {
+			// 		spawn(
+			// 			'node',
+			// 			[
+			// 				`cross-env REFRESH_SERVER=1 --require sucrase/register ${serverIndexFilePath}`,
+			// 			],
+			// 			{
+			// 				stdio: 'inherit',
+			// 				shell: true,
+			// 			}
+			// 		)
+			// 	})
+			// 	process.exit(0)
+			// })
+		} else if (!_constants.serverInfo.isServer) {
+			_child_process.spawn.call(void 0, 'vite', ['preview'], {
 				stdio: 'inherit',
 				shell: true,
 			})
 		}
-
-		// watcher.on('change', async (path) => {
-		// 	Console.log(`File ${path} has been changed`)
-		// 	await app.close()
-		// 	setTimeout(() => {
-		// 		spawn(
-		// 			'node',
-		// 			[
-		// 				`cross-env REFRESH_SERVER=1 --require sucrase/register ${serverIndexFilePath}`,
-		// 			],
-		// 			{
-		// 				stdio: 'inherit',
-		// 				shell: true,
-		// 			}
-		// 		)
-		// 	})
-		// 	process.exit(0)
-		// })
-	} else if (!_constants.serverInfo.isServer) {
-		_child_process.spawn.call(void 0, 'vite', ['preview'], {
-			stdio: 'inherit',
-			shell: true,
-		})
 	}
 }
 

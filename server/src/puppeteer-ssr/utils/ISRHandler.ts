@@ -1,22 +1,27 @@
 import { Page } from 'puppeteer-core'
 import WorkerPool from 'workerpool'
-import { ENV_MODE, resourceExtension, userDataPath } from '../../constants'
-import ServerConfig from '../../server.config'
-import Console from '../../utils/ConsoleHandler'
 import {
 	BANDWIDTH_LEVEL,
 	BANDWIDTH_LEVEL_LIST,
+	ENV_MODE,
+	POWER_LEVEL,
+	POWER_LEVEL_LIST,
+	resourceExtension,
+	userDataPath,
+} from '../../constants'
+import ServerConfig from '../../server.config'
+import Console from '../../utils/ConsoleHandler'
+import {
 	CACHEABLE_STATUS_CODE,
 	DURATION_TIMEOUT,
 	MAX_WORKERS,
-	POWER_LEVEL,
-	POWER_LEVEL_LIST,
 	regexNotFoundPageID,
 	regexQueryStringSpecialInfo,
 } from '../constants'
 import { ISSRResult } from '../types'
 import BrowserManager, { IBrowser } from './BrowserManager'
 import CacheManager from './CacheManager'
+import { getStore } from '../../store'
 
 const browserManager = (() => {
 	if (ENV_MODE === 'development') return undefined as unknown as IBrowser
@@ -175,6 +180,8 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 			requestParams['crawlerSecretKey'] = ServerConfig.crawlerSecretKey
 		}
 
+		const headersStore = getStore('headers')
+
 		try {
 			const result = await fetchData(
 				ServerConfig.crawler,
@@ -182,6 +189,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 					method: 'GET',
 					headers: new Headers({
 						Accept: 'text/html; charset=utf-8',
+						...headersStore,
 					}),
 				},
 				requestParams
