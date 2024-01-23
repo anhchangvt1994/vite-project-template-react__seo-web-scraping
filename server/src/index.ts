@@ -179,7 +179,8 @@ const startServer = async () => {
 			}
 			next()
 		})
-		.use(function (req, res, next) {
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		app.use(function (req, res, next) {
 			const redirectResult = DetectRedirect(req, res)
 
 			if (redirectResult.status !== 200) {
@@ -202,6 +203,8 @@ const startServer = async () => {
 			}
 			next()
 		})
+	}
+	app
 		.use(function (req, res, next) {
 			setCookie(
 				res,

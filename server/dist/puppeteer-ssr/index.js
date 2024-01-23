@@ -127,8 +127,10 @@ const puppeteerSSRService = (async () => {
 
 			if (
 				_constants.IS_REMOTE_CRAWLER &&
-				!botInfo.isBot &&
-				_constants3.DISABLE_SSR_CACHE
+				((_serverconfig2.default.crawlerSecretKey &&
+					req.query.crawlerSecretKey !==
+						_serverconfig2.default.crawlerSecretKey) ||
+					(!botInfo.isBot && _constants3.DISABLE_SSR_CACHE))
 			) {
 				return res.status(403).send('403 Forbidden')
 			}

@@ -9,6 +9,7 @@ import {
 	resourceExtension,
 	serverInfo,
 } from './constants'
+import ServerConfig from './server.config'
 
 const dotenv = require('dotenv')
 dotenv.config({
@@ -58,15 +59,17 @@ const startServer = async () => {
 		passphrase: '1234',
 	})
 
-	app.get('/robots.txt', (res, req) => {
-		try {
-			const body = fs.readFileSync(path.resolve(__dirname, '../robots.txt'))
-			res.end(body)
-		} catch {
-			res.writeStatus('404')
-			res.end('File not found')
-		}
-	})
+	if (ServerConfig.crawler && !process.env.IS_REMOTE_CRAWLER) {
+		app.get('/robots.txt', (res, req) => {
+			try {
+				const body = fs.readFileSync(path.resolve(__dirname, '../robots.txt'))
+				res.end(body)
+			} catch {
+				res.writeStatus('404')
+				res.end('File not found')
+			}
+		})
+	}
 	;(await require('./puppeteer-ssr/index.uws').default).init(app)
 
 	app.listen(Number(port), (token) => {
@@ -83,43 +86,45 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (ENV === 'development') {
-		const serverIndexFilePath = path.resolve(__dirname, './index.uws.ts')
-		// NOTE - restart server onchange
-		// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
-		// 	ignored: /$^/,
-		// 	persistent: true,
-		// })
+	if (!process.env.IS_REMOTE_CRAWLER) {
+		if (ENV === 'development') {
+			const serverIndexFilePath = path.resolve(__dirname, './index.uws.ts')
+			// NOTE - restart server onchange
+			// const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
+			// 	ignored: /$^/,
+			// 	persistent: true,
+			// })
 
-		if (!process.env.REFRESH_SERVER) {
-			spawn('vite', [], {
+			if (!process.env.REFRESH_SERVER) {
+				spawn('vite', [], {
+					stdio: 'inherit',
+					shell: true,
+				})
+			}
+
+			// watcher.on('change', async (path) => {
+			// 	Console.log(`File ${path} has been changed`)
+			// 	await app.close()
+			// 	setTimeout(() => {
+			// 		spawn(
+			// 			'node',
+			// 			[
+			// 				`cross-env REFRESH_SERVER=1 --require sucrase/register ${serverIndexFilePath}`,
+			// 			],
+			// 			{
+			// 				stdio: 'inherit',
+			// 				shell: true,
+			// 			}
+			// 		)
+			// 	})
+			// 	process.exit(0)
+			// })
+		} else if (!serverInfo.isServer) {
+			spawn('vite', ['preview'], {
 				stdio: 'inherit',
 				shell: true,
 			})
 		}
-
-		// watcher.on('change', async (path) => {
-		// 	Console.log(`File ${path} has been changed`)
-		// 	await app.close()
-		// 	setTimeout(() => {
-		// 		spawn(
-		// 			'node',
-		// 			[
-		// 				`cross-env REFRESH_SERVER=1 --require sucrase/register ${serverIndexFilePath}`,
-		// 			],
-		// 			{
-		// 				stdio: 'inherit',
-		// 				shell: true,
-		// 			}
-		// 		)
-		// 	})
-		// 	process.exit(0)
-		// })
-	} else if (!serverInfo.isServer) {
-		spawn('vite', ['preview'], {
-			stdio: 'inherit',
-			shell: true,
-		})
 	}
 }
 

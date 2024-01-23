@@ -182,6 +182,16 @@ const puppeteerSSRService = (async () => {
 				(_2) => _2.botInfo,
 			])
 
+			if (
+				_constants.IS_REMOTE_CRAWLER &&
+				((_serverconfig2.default.crawlerSecretKey &&
+					req.getQuery('crawlerSecretKey') !==
+						_serverconfig2.default.crawlerSecretKey) ||
+					(!botInfo.isBot && _constants3.DISABLE_SSR_CACHE))
+			) {
+				return res.writeStatus('403').end('403 Forbidden', true)
+			}
+
 			// NOTE - Check redirect or not
 			const isRedirect = _DetectRedirect2.default.call(void 0, res, req)
 
@@ -283,7 +293,10 @@ const puppeteerSSRService = (async () => {
 					}
 
 					res.writableEnded = true
-				} else {
+				} else if (
+					!botInfo.isBot &&
+					(!_constants3.DISABLE_SSR_CACHE || _serverconfig2.default.crawler)
+				) {
 					try {
 						if (_constants.SERVER_LESS) {
 							await _ISRGeneratornext2.default.call(void 0, {
