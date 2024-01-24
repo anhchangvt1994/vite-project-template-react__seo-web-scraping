@@ -1,5 +1,6 @@
 import { HttpRequest, HttpResponse } from 'uWebSockets.js'
 import { IBotInfo } from '../../types'
+import { PROCESS_ENV } from '../../utils/InitEnv'
 
 export const convertUrlHeaderToQueryString = (
 	url: string,
@@ -36,6 +37,6 @@ export const getUrl = (res: HttpResponse, req: HttpRequest) => {
 	return (
 		req.getQuery('urlTesting') ||
 		req.getQuery('url') ||
-		process.env.BASE_URL + pathname
+		PROCESS_ENV.BASE_URL + pathname
 	).trim()
 } // getUrl

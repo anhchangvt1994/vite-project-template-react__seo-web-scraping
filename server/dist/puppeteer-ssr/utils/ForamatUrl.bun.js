@@ -1,5 +1,6 @@
 'use strict'
 Object.defineProperty(exports, '__esModule', { value: true })
+var _InitEnv = require('../../utils/InitEnv')
 
 const convertUrlHeaderToQueryString = (
 	url,
@@ -28,7 +29,9 @@ const getUrl = (url) => {
 
 	return (
 		url.searchParams.urlTesting ||
-		(process.env.BASE_URL ? process.env.BASE_URL + url.pathname : url.href)
+		(_InitEnv.PROCESS_ENV.BASE_URL
+			? _InitEnv.PROCESS_ENV.BASE_URL + url.pathname
+			: url.href)
 	).trim()
 }
 exports.getUrl = getUrl // getUrl

@@ -15,12 +15,15 @@ var _constants3 = require('../puppeteer-ssr/constants')
 var _store = require('../store')
 var _ConsoleHandler = require('./ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _InitEnv = require('./InitEnv')
 
 const CleanerService = async () => {
 	// NOTE - Browsers Cleaner
 	const cleanBrowsers = (() => {
 		let executablePath
-		return async (durationValidToKeep = process.env.RESET_RESOURCE ? 0 : 1) => {
+		return async (
+			durationValidToKeep = _InitEnv.PROCESS_ENV.RESET_RESOURCE ? 0 : 1
+		) => {
 			const browserStore = (() => {
 				const tmpBrowserStore = _store.getStore.call(void 0, 'browser')
 				return tmpBrowserStore || {}
@@ -76,7 +79,7 @@ const CleanerService = async () => {
 
 	// NOTE - Pages Cleaner
 	const cleanPages = async (
-		durationValidToKeep = process.env.RESET_RESOURCE ? 0 : 1
+		durationValidToKeep = _InitEnv.PROCESS_ENV.RESET_RESOURCE ? 0 : 1
 	) => {
 		const pool = _workerpool2.default.pool(
 			_path2.default.resolve(

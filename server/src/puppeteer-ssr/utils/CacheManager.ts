@@ -3,6 +3,8 @@ import path from 'path'
 import WorkerPool from 'workerpool'
 import { pagesPath, resourceExtension } from '../../constants'
 import Console from '../../utils/ConsoleHandler'
+import { PROCESS_ENV } from '../../utils/InitEnv'
+import { DISABLE_SSR_CACHE } from '../constants'
 import { ISSRResult } from '../types'
 import {
 	ICacheSetParams,
@@ -10,10 +12,9 @@ import {
 	getFileInfo,
 	setRequestTimeInfo,
 } from './Cache.worker/utils'
-import { DISABLE_SSR_CACHE } from '../constants'
 
-const MAX_WORKERS = process.env.MAX_WORKERS
-	? Number(process.env.MAX_WORKERS)
+const MAX_WORKERS = PROCESS_ENV.MAX_WORKERS
+	? Number(PROCESS_ENV.MAX_WORKERS)
 	: 7
 
 const maintainFile = path.resolve(__dirname, '../../../maintain.html')

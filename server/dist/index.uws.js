@@ -29,27 +29,15 @@ var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _PortHandler = require('../../config/utils/PortHandler')
-
 var _constants = require('./constants')
 var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
-
-const dotenv = require('dotenv')
-dotenv.config({
-	path: _path2.default.resolve(__dirname, '../.env'),
-})
-
-if (_constants.ENV_MODE !== 'development') {
-	dotenv.config({
-		path: _path2.default.resolve(__dirname, '../.env.production'),
-		override: true,
-	})
-}
+var _InitEnv = require('./utils/InitEnv')
 
 require('events').EventEmitter.setMaxListeners(200)
 
 const cleanResourceWithCondition = async () => {
-	if (_constants.ENV_MODE === 'development') {
+	if (_InitEnv.ENV_MODE === 'development') {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
@@ -69,18 +57,18 @@ const cleanResourceWithCondition = async () => {
 const startServer = async () => {
 	await cleanResourceWithCondition()
 	let port =
-		_constants.ENV !== 'development'
-			? process.env.PORT ||
+		_InitEnv.ENV !== 'development'
+			? _InitEnv.PROCESS_ENV.PORT ||
 			  _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
 			: _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
 	port = await _PortHandler.findFreePort.call(
 		void 0,
-		port || process.env.PUPPETEER_SSR_PORT || 8080
+		port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
 	)
 	_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 
-	if (_constants.ENV !== 'development') {
-		process.env.PORT = port
+	if (_InitEnv.ENV !== 'development') {
+		_InitEnv.PROCESS_ENV.PORT = port
 	}
 
 	const app = require('uWebSockets.js')./*SSL*/ App({
@@ -89,7 +77,10 @@ const startServer = async () => {
 		passphrase: '1234',
 	})
 
-	if (_serverconfig2.default.crawler && !process.env.IS_REMOTE_CRAWLER) {
+	if (
+		_serverconfig2.default.crawler &&
+		!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER
+	) {
 		app.get('/robots.txt', (res, req) => {
 			try {
 				const body = _fs2.default.readFileSync(
@@ -124,8 +115,8 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (!process.env.IS_REMOTE_CRAWLER) {
-		if (_constants.ENV === 'development') {
+	if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
+		if (_InitEnv.ENV === 'development') {
 			const serverIndexFilePath = _path2.default.resolve(
 				__dirname,
 				'./index.uws.ts'
@@ -136,7 +127,7 @@ const startServer = async () => {
 			// 	persistent: true,
 			// })
 
-			if (!process.env.REFRESH_SERVER) {
+			if (!_InitEnv.PROCESS_ENV.REFRESH_SERVER) {
 				_child_process.spawn.call(void 0, 'vite', [], {
 					stdio: 'inherit',
 					shell: true,
@@ -160,7 +151,7 @@ const startServer = async () => {
 			// 	})
 			// 	process.exit(0)
 			// })
-		} else if (!_constants.serverInfo.isServer) {
+		} else if (!_InitEnv.PROCESS_ENV.IS_SERVER) {
 			_child_process.spawn.call(void 0, 'vite', ['preview'], {
 				stdio: 'inherit',
 				shell: true,

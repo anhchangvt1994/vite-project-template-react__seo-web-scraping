@@ -27,6 +27,7 @@ var _htmlminifier = require('html-minifier')
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('../../constants')
+var _InitEnv = require('../../utils/InitEnv')
 
 var _constants3 = require('../constants')
 
@@ -37,7 +38,7 @@ const compressContent = (html) => {
 		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
 	)
 		return html
-	else if (_constants.ENV !== 'development') {
+	else if (_InitEnv.ENV !== 'development') {
 		html = _htmlminifier.minify.call(void 0, html, {
 			collapseBooleanAttributes: true,
 			collapseInlineTagWhitespace: true,

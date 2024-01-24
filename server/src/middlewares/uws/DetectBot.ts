@@ -1,6 +1,7 @@
 import { HttpRequest, HttpResponse } from 'uWebSockets.js'
-import detectBot from '../../utils/DetectBot.uws'
 import { getStore, setStore } from '../../store'
+import detectBot from '../../utils/DetectBot.uws'
+import { PROCESS_ENV } from '../../utils/InitEnv'
 
 const DetectBotMiddle = (res: HttpResponse, req: HttpRequest) => {
 	if (!res.cookies) res.cookies = {}
@@ -12,7 +13,7 @@ const DetectBotMiddle = (res: HttpResponse, req: HttpRequest) => {
 		return detectBot(req as any)
 	})()
 
-	if (!process.env.IS_REMOTE_CRAWLER) {
+	if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
 		const headersStore = getStore('headers')
 		headersStore.botInfo = JSON.stringify(res.cookies.botInfo)
 		setStore('headers', headersStore)

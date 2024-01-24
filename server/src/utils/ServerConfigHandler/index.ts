@@ -1,4 +1,4 @@
-import { ENV_MODE } from '../../constants'
+import { ENV_MODE, PROCESS_ENV } from '../InitEnv'
 import { defaultServerConfig } from './constants'
 import { IServerConfig, IServerConfigOptional } from './types'
 
@@ -77,12 +77,12 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 	serverConfigDefined.crawler =
 		ENV_MODE === 'development'
 			? serverConfigDefined.crawler
-			: process.env.CRAWLER || serverConfigDefined.crawler
+			: PROCESS_ENV.CRAWLER || serverConfigDefined.crawler
 
 	serverConfigDefined.crawlerSecretKey =
 		ENV_MODE === 'development'
 			? serverConfigDefined.crawlerSecretKey
-			: process.env.CRAWLER_SECRET_KEY || undefined
+			: PROCESS_ENV.CRAWLER_SECRET_KEY || undefined
 
 	return serverConfigDefined as IServerConfig
 }

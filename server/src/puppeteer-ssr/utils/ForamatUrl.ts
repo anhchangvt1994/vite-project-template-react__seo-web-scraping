@@ -1,6 +1,7 @@
 import { Response } from 'express'
 import { IBotInfo } from '../../types'
 import { getCookieFromResponse } from '../../utils/CookieHandler'
+import { PROCESS_ENV } from '../../utils/InitEnv'
 
 export const convertUrlHeaderToQueryString = (
 	url: string,
@@ -44,8 +45,8 @@ export const getUrl = (req) => {
 	return (
 		req.query.urlTesting ||
 		req.query.url ||
-		(process.env.BASE_URL
-			? process.env.BASE_URL + pathname
+		(PROCESS_ENV.BASE_URL
+			? PROCESS_ENV.BASE_URL + pathname
 			: req.protocol + '://' + req.get('host') + pathname)
 	).trim()
 } // getUrl

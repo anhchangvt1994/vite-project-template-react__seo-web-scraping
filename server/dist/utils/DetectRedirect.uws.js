@@ -2,10 +2,11 @@
 Object.defineProperty(exports, '__esModule', { value: true })
 
 var _redirectconfig = require('../app/redirect.config')
+var _InitEnv = require('./InitEnv')
 
 const DetectRedirect = (req, res) => {
 	const urlInfo = new URL(
-		`${process.env.BASE_URL}${req.getUrl()}?${
+		`${_InitEnv.PROCESS_ENV.BASE_URL}${req.getUrl()}?${
 			req.getQuery() ? req.getQuery() : ''
 		}`
 	)

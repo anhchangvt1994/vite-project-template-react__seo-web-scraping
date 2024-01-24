@@ -9,6 +9,7 @@ import {
 	resourceExtension,
 } from '../../constants'
 import Console from '../../utils/ConsoleHandler'
+import { PROCESS_ENV } from '../../utils/InitEnv'
 import { DISABLE_SSR_CACHE, DURATION_TIMEOUT, MAX_WORKERS } from '../constants'
 import { ISSRResult } from '../types'
 import CacheManager from './CacheManager'
@@ -57,7 +58,7 @@ const SSRGenerator = async ({
 	isSkipWaiting = false,
 	...ISRHandlerParams
 }: IISRGeneratorParams): Promise<ISSRResult> => {
-	if (!process.env.BASE_URL) {
+	if (!PROCESS_ENV.BASE_URL) {
 		Console.error('Missing base url!')
 		return
 	}
@@ -70,7 +71,7 @@ const SSRGenerator = async ({
 	const startGenerating = Date.now()
 
 	if (SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.TWO)
-		fetchData(`${process.env.BASE_URL}/cleaner-service`, {
+		fetchData(`${PROCESS_ENV.BASE_URL}/cleaner-service`, {
 			method: 'POST',
 			headers: new Headers({
 				Authorization: 'mtr-cleaner-service',
@@ -149,7 +150,7 @@ const SSRGenerator = async ({
 				const handle = (() => {
 					if (SERVER_LESS)
 						return fetchData(
-							`${process.env.BASE_URL}/web-scraping`,
+							`${PROCESS_ENV.BASE_URL}/web-scraping`,
 							{
 								method: 'GET',
 								headers: new Headers({
@@ -213,7 +214,7 @@ const SSRGenerator = async ({
 					const handle = (() => {
 						if (SERVER_LESS)
 							return fetchData(
-								`${process.env.BASE_URL}/web-scraping`,
+								`${PROCESS_ENV.BASE_URL}/web-scraping`,
 								{
 									method: 'GET',
 									headers: new Headers({

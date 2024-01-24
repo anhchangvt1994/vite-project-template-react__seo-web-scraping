@@ -1,14 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { HttpResponse, TemplatedApp } from 'uWebSockets.js'
-import {
-	COOKIE_EXPIRED,
-	ENV,
-	ENV_MODE,
-	IS_REMOTE_CRAWLER,
-	MODE,
-	SERVER_LESS,
-} from '../constants'
+import { COOKIE_EXPIRED, IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
 import DetectBotMiddle from '../middlewares/uws/DetectBot'
 import DetectDeviceMiddle from '../middlewares/uws/DetectDevice'
 import DetectLocaleMiddle from '../middlewares/uws/DetectLocale'
@@ -18,6 +11,7 @@ import ServerConfig from '../server.config'
 import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
+import { ENV, ENV_MODE, MODE, PROCESS_ENV } from '../utils/InitEnv'
 import { CACHEABLE_STATUS_CODE, DISABLE_SSR_CACHE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl.uws'
 import ISRGenerator from './utils/ISRGenerator.next'
@@ -127,8 +121,8 @@ const puppeteerSSRService = (async () => {
 		}
 		_app.get('/*', async function (res, req) {
 			// NOTE - Check and create base url
-			if (!process.env.BASE_URL)
-				process.env.BASE_URL = `${
+			if (!PROCESS_ENV.BASE_URL)
+				PROCESS_ENV.BASE_URL = `${
 					req.getHeader('x-forwarded-proto')
 						? req.getHeader('x-forwarded-proto')
 						: 'http'

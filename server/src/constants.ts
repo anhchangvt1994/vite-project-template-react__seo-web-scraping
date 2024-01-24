@@ -1,85 +1,28 @@
+import { PROCESS_ENV, ENV } from './utils/InitEnv'
 import fs from 'fs'
 import path from 'path'
 
-const serverInfoPath = path.resolve(__dirname, '../server-info.json')
+export const pagesPath = PROCESS_ENV.IS_SERVER
+	? (() => {
+			const tmpPath = '/tmp'
+			if (fs.existsSync(tmpPath)) return tmpPath + '/pages'
 
-let serverInfoStringify
+			return path.resolve(__dirname, './puppeteer-ssr/utils/Cache.worker/pages')
+	  })()
+	: path.resolve(__dirname, './puppeteer-ssr/utils/Cache.worker/pages')
 
-if (fs.existsSync(serverInfoPath)) {
-	serverInfoStringify = fs.readFileSync(serverInfoPath)
-}
+export const userDataPath = PROCESS_ENV.IS_SERVER
+	? (() => {
+			const tmpPath = '/tmp'
+			if (fs.existsSync(tmpPath)) return tmpPath + '/browsers'
 
-let serverInfo
-if (serverInfoStringify) {
-	try {
-		serverInfo = JSON.parse(serverInfoStringify) || {}
+			return path.resolve(__dirname, './puppeteer-ssr/browsers')
+	  })()
+	: path.resolve(__dirname, './puppeteer-ssr/browsers')
 
-		if (process.env.IS_SERVER)
-			serverInfo.isServer = Boolean(process.env.IS_SERVER)
-	} catch (err) {
-		console.error(err)
-	}
-}
+export const resourceExtension = PROCESS_ENV.IS_SERVER ? 'js' : 'ts'
 
-export { serverInfo }
-
-export const pagesPath =
-	!serverInfo || serverInfo.isServer
-		? (() => {
-				const tmpPath = '/tmp'
-				if (fs.existsSync(tmpPath)) return tmpPath + '/pages'
-
-				return path.resolve(
-					__dirname,
-					'./puppeteer-ssr/utils/Cache.worker/pages'
-				)
-		  })()
-		: path.resolve(__dirname, './puppeteer-ssr/utils/Cache.worker/pages')
-
-export const userDataPath =
-	!serverInfo || serverInfo.isServer
-		? (() => {
-				const tmpPath = '/tmp'
-				if (fs.existsSync(tmpPath)) return tmpPath + '/browsers'
-
-				return path.resolve(__dirname, './puppeteer-ssr/browsers')
-		  })()
-		: path.resolve(__dirname, './puppeteer-ssr/browsers')
-
-export const resourceExtension =
-	!serverInfo || serverInfo.isServer ? 'js' : 'ts'
-
-export const SERVER_LESS = !!process.env.SERVER_LESS
-
-export const ENV = (
-	['development', 'production'].includes(process.env.ENV as string)
-		? process.env.ENV
-		: 'production'
-) as 'development' | 'production'
-export const MODE = (
-	['development', 'preview', 'production'].includes(process.env.MODE as string)
-		? process.env.MODE
-		: process.env.ENV === 'development'
-		? 'development'
-		: 'production'
-) as 'development' | 'preview' | 'production'
-
-const envModeList = {
-	// NOTE - This means you can debug staging and production in development environment
-	development_development: 'development',
-	development_preview: 'staging',
-	development_production: 'production',
-
-	// NOTE - This means your final environment you need to deploy
-	production_development: 'staging',
-	production_preview: 'uat',
-	production_production: 'production',
-}
-export const ENV_MODE = envModeList[`${ENV}_${MODE}`] as
-	| 'development'
-	| 'staging'
-	| 'uat'
-	| 'production'
+export const SERVER_LESS = !!PROCESS_ENV.SERVER_LESS
 
 export const LOCALE_LIST_WITH_COUNTRY = {
 	af: ['en'],
@@ -445,18 +388,18 @@ export const LOCALE_LIST_WITH_LANGUAGE = {
 export const COUNTRY_CODE_DEFAULT = 'us'
 export const LANGUAGE_CODE_DEFAULT = 'en'
 export const ENABLE_CONSOLE_DEBUGGER = Boolean(
-	process.env.ENABLE_CONSOLE_DEBUGGER
+	PROCESS_ENV.ENABLE_CONSOLE_DEBUGGER
 )
-export const POWER_LEVEL = process.env.POWER_LEVEL
-	? Number(process.env.POWER_LEVEL)
+export const POWER_LEVEL = PROCESS_ENV.POWER_LEVEL
+	? Number(PROCESS_ENV.POWER_LEVEL)
 	: 3
 export const enum POWER_LEVEL_LIST {
 	ONE = 1, // low of scraping power
 	TWO = 2, // medium of scraping power
 	THREE = 3, // hight of scraping power
 }
-export const BANDWIDTH_LEVEL = process.env.BANDWIDTH_LEVEL
-	? Number(process.env.BANDWIDTH_LEVEL)
+export const BANDWIDTH_LEVEL = PROCESS_ENV.BANDWIDTH_LEVEL
+	? Number(PROCESS_ENV.BANDWIDTH_LEVEL)
 	: 2
 export const enum BANDWIDTH_LEVEL_LIST {
 	ONE = 1, // low
@@ -466,4 +409,4 @@ export const COOKIE_EXPIRED =
 	BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO && ENV !== 'development'
 		? 2000
 		: 60000
-export const IS_REMOTE_CRAWLER = Boolean(process.env.IS_REMOTE_CRAWLER)
+export const IS_REMOTE_CRAWLER = Boolean(PROCESS_ENV.IS_REMOTE_CRAWLER)

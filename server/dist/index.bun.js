@@ -46,11 +46,12 @@ var _DetectStaticExtensionbun = require('./utils/DetectStaticExtension.bun')
 var _DetectStaticExtensionbun2 = _interopRequireDefault(
 	_DetectStaticExtensionbun
 )
+var _InitEnv = require('./utils/InitEnv')
 
 require('events').EventEmitter.setMaxListeners(200)
 
 const cleanResourceWithCondition = async () => {
-	if (_constants.ENV_MODE === 'development') {
+	if (_InitEnv.ENV_MODE === 'development') {
 		// NOTE - Clean Browsers and Pages after start / restart
 		const {
 			deleteResource,
@@ -72,7 +73,7 @@ const startServer = async () => {
 	let port = _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
 	port = await _PortHandler.findFreePort.call(
 		void 0,
-		port || process.env.PUPPETEER_SSR_PORT || 8080
+		port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
 	)
 	_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 
@@ -99,7 +100,7 @@ const startServer = async () => {
 				 * https://www.inchcalculator.com/convert/month-to-second/
 				 */
 				if (isStatic) {
-					if (_constants.ENV !== 'development') {
+					if (_InitEnv.ENV !== 'development') {
 						ctx.set.headers['Cache-Control'] = 'public, max-age=7889238'
 					}
 
@@ -117,9 +118,9 @@ const startServer = async () => {
 		)
 		.use(
 			app.onBeforeHandle((ctx) => {
-				if (!process.env.BASE_URL) {
+				if (!_InitEnv.PROCESS_ENV.BASE_URL) {
 					const url = new URL(ctx.request.url)
-					process.env.BASE_URL = `${url.protocol}//${url.host}`
+					_InitEnv.PROCESS_ENV.BASE_URL = `${url.protocol}//${url.host}`
 				}
 			})
 		)
@@ -192,7 +193,7 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (process.env.ENV === 'development') {
+	if (_InitEnv.PROCESS_ENV.ENV === 'development') {
 		// NOTE - restart server onchange
 		const watcher = _chokidar2.default.watch(
 			[_path2.default.resolve(__dirname, './**/*.ts')],

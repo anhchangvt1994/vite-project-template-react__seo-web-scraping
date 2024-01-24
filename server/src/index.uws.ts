@@ -2,26 +2,9 @@ import { spawn } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
-import {
-	ENV,
-	ENV_MODE,
-	pagesPath,
-	resourceExtension,
-	serverInfo,
-} from './constants'
+import { pagesPath, resourceExtension } from './constants'
 import ServerConfig from './server.config'
-
-const dotenv = require('dotenv')
-dotenv.config({
-	path: path.resolve(__dirname, '../.env'),
-})
-
-if (ENV_MODE !== 'development') {
-	dotenv.config({
-		path: path.resolve(__dirname, '../.env.production'),
-		override: true,
-	})
-}
+import { ENV, ENV_MODE, PROCESS_ENV } from './utils/InitEnv'
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -44,13 +27,13 @@ const startServer = async () => {
 	await cleanResourceWithCondition()
 	let port =
 		ENV !== 'development'
-			? process.env.PORT || getPort('PUPPETEER_SSR_PORT')
+			? PROCESS_ENV.PORT || getPort('PUPPETEER_SSR_PORT')
 			: getPort('PUPPETEER_SSR_PORT')
-	port = await findFreePort(port || process.env.PUPPETEER_SSR_PORT || 8080)
+	port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
 	setPort(port, 'PUPPETEER_SSR_PORT')
 
 	if (ENV !== 'development') {
-		process.env.PORT = port
+		PROCESS_ENV.PORT = port
 	}
 
 	const app = require('uWebSockets.js')./*SSL*/ App({
@@ -59,7 +42,7 @@ const startServer = async () => {
 		passphrase: '1234',
 	})
 
-	if (ServerConfig.crawler && !process.env.IS_REMOTE_CRAWLER) {
+	if (ServerConfig.crawler && !PROCESS_ENV.IS_REMOTE_CRAWLER) {
 		app.get('/robots.txt', (res, req) => {
 			try {
 				const body = fs.readFileSync(path.resolve(__dirname, '../robots.txt'))
@@ -86,7 +69,7 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (!process.env.IS_REMOTE_CRAWLER) {
+	if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
 		if (ENV === 'development') {
 			const serverIndexFilePath = path.resolve(__dirname, './index.uws.ts')
 			// NOTE - restart server onchange
@@ -95,7 +78,7 @@ const startServer = async () => {
 			// 	persistent: true,
 			// })
 
-			if (!process.env.REFRESH_SERVER) {
+			if (!PROCESS_ENV.REFRESH_SERVER) {
 				spawn('vite', [], {
 					stdio: 'inherit',
 					shell: true,
@@ -119,7 +102,7 @@ const startServer = async () => {
 			// 	})
 			// 	process.exit(0)
 			// })
-		} else if (!serverInfo.isServer) {
+		} else if (!PROCESS_ENV.IS_SERVER) {
 			spawn('vite', ['preview'], {
 				stdio: 'inherit',
 				shell: true,

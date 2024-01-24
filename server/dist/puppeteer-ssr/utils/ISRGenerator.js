@@ -42,15 +42,16 @@ var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('../../constants')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-
+var _InitProcessEnv = require('../../utils/InitProcessEnv')
+var _InitProcessEnv2 = _interopRequireDefault(_InitProcessEnv)
 var _constants3 = require('../constants')
 
 var _utils = require('./Cache.worker/utils')
 
 const chromium = require('@sparticuz/chromium-min')
 
-const MAX_WORKERS = process.env.MAX_WORKERS
-	? Number(process.env.MAX_WORKERS)
+const MAX_WORKERS = _InitProcessEnv2.default.MAX_WORKERS
+	? Number(_InitProcessEnv2.default.MAX_WORKERS)
 	: 7
 
 const serverInfoPath = _path2.default.resolve(
@@ -73,7 +74,8 @@ if (serverInfoStringify) {
 }
 
 exports.default = (() => {
-	const litmitEmptyContentDuration = process.env.BROWSERLESS_API_KEY
+	const litmitEmptyContentDuration = _InitProcessEnv2.default
+		.BROWSERLESS_API_KEY
 		? 1800000
 		: 150000
 
@@ -237,7 +239,7 @@ exports.default = (() => {
 
 			const __launch = async () => {
 				totalRequests = 0
-				// if (process.env.BROWSERLESS_API_KEY && Boolean(browserLaunch)) return
+				// if (PROCESS_ENV.BROWSERLESS_API_KEY && Boolean(browserLaunch)) return
 
 				const selfUserDataDirPath = userDataDir()
 
@@ -245,9 +247,9 @@ exports.default = (() => {
 					let isError = false
 					let promiseBrowser
 					try {
-						// if (process.env.BROWSERLESS_API_KEY) {
+						// if (PROCESS_ENV.BROWSERLESS_API_KEY) {
 						// 	promiseBrowser = puppeteer.connect({
-						// 		browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.BROWSERLESS_API_KEY}`,
+						// 		browserWSEndpoint: `wss://chrome.browserless.io?token=${PROCESS_ENV.BROWSERLESS_API_KEY}`,
 						// 	})
 						// } else {
 						// 	promiseBrowser = puppeteer.launch({
@@ -670,7 +672,9 @@ exports.default = (() => {
 					if (result.isInit) {
 						// NOTE - Cache will be cleaned 10 minutes if requestAt time to current time larger than 30 seconds
 						cache.clean(result.file, {
-							schedule: process.env.BROWSERLESS_API_KEY ? 1800000 : 300000,
+							schedule: _InitProcessEnv2.default.BROWSERLESS_API_KEY
+								? 1800000
+								: 300000,
 							validRequestAtDuration: 120000,
 							fail: (result, retry) => {
 								if (result === 'update') {

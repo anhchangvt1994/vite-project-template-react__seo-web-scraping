@@ -10,12 +10,13 @@ import {
 import { canUseLinuxChromium, chromiumPath } from '../puppeteer-ssr/constants'
 import { getStore, setStore } from '../store'
 import Console from './ConsoleHandler'
+import { PROCESS_ENV } from './InitEnv'
 
 const CleanerService = async () => {
 	// NOTE - Browsers Cleaner
 	const cleanBrowsers = (() => {
 		let executablePath: string
-		return async (durationValidToKeep = process.env.RESET_RESOURCE ? 0 : 1) => {
+		return async (durationValidToKeep = PROCESS_ENV.RESET_RESOURCE ? 0 : 1) => {
 			const browserStore = (() => {
 				const tmpBrowserStore = getStore('browser')
 				return tmpBrowserStore || {}
@@ -69,7 +70,7 @@ const CleanerService = async () => {
 
 	// NOTE - Pages Cleaner
 	const cleanPages = async (
-		durationValidToKeep = process.env.RESET_RESOURCE ? 0 : 1
+		durationValidToKeep = PROCESS_ENV.RESET_RESOURCE ? 0 : 1
 	) => {
 		const pool = WorkerPool.pool(
 			path.resolve(

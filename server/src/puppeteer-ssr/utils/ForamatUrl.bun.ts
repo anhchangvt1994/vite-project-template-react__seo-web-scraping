@@ -1,4 +1,5 @@
 import { IBotInfo } from '../../types'
+import { PROCESS_ENV } from '../../utils/InitEnv'
 
 export const convertUrlHeaderToQueryString = (
 	url: string,
@@ -26,6 +27,6 @@ export const getUrl = (url) => {
 
 	return (
 		url.searchParams.urlTesting ||
-		(process.env.BASE_URL ? process.env.BASE_URL + url.pathname : url.href)
+		(PROCESS_ENV.BASE_URL ? PROCESS_ENV.BASE_URL + url.pathname : url.href)
 	).trim()
 } // getUrl

@@ -1,16 +1,17 @@
 import { FastifyInstance } from 'fastify'
 import path from 'path'
-import { ENV_MODE, SERVER_LESS } from '../constants'
+import { SERVER_LESS } from '../constants'
+import ServerConfig from '../server.config'
 import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
 import { getCookieFromResponse } from '../utils/CookieHandler'
+import { ENV_MODE } from '../utils/InitEnv'
 import sendFile from '../utils/SendFile'
 import { CACHEABLE_STATUS_CODE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl'
 import ISRGenerator from './utils/ISRGenerator.next'
 import ISRHandler from './utils/ISRHandler'
-import ServerConfig from '../server.config'
 
 const puppeteerSSRService = (async () => {
 	let _app: FastifyInstance

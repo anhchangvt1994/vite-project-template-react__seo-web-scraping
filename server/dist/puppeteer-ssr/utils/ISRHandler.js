@@ -37,8 +37,10 @@ var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('../../constants')
 var _serverconfig = require('../../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
+var _store = require('../../store')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _InitEnv = require('../../utils/InitEnv')
 
 var _constants3 = require('../constants')
 
@@ -46,10 +48,9 @@ var _BrowserManager = require('./BrowserManager')
 var _BrowserManager2 = _interopRequireDefault(_BrowserManager)
 var _CacheManager = require('./CacheManager')
 var _CacheManager2 = _interopRequireDefault(_CacheManager)
-var _store = require('../../store')
 
 const browserManager = (() => {
-	if (_constants.ENV_MODE === 'development') return undefined
+	if (_InitEnv.ENV_MODE === 'development') return undefined
 	if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
 		return _BrowserManager2.default.call(
 			void 0,

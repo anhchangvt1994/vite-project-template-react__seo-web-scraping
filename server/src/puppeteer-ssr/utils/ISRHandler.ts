@@ -3,14 +3,15 @@ import WorkerPool from 'workerpool'
 import {
 	BANDWIDTH_LEVEL,
 	BANDWIDTH_LEVEL_LIST,
-	ENV_MODE,
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
 	resourceExtension,
 	userDataPath,
 } from '../../constants'
 import ServerConfig from '../../server.config'
+import { getStore } from '../../store'
 import Console from '../../utils/ConsoleHandler'
+import { ENV_MODE } from '../../utils/InitEnv'
 import {
 	CACHEABLE_STATUS_CODE,
 	DURATION_TIMEOUT,
@@ -21,7 +22,6 @@ import {
 import { ISSRResult } from '../types'
 import BrowserManager, { IBrowser } from './BrowserManager'
 import CacheManager from './CacheManager'
-import { getStore } from '../../store'
 
 const browserManager = (() => {
 	if (ENV_MODE === 'development') return undefined as unknown as IBrowser

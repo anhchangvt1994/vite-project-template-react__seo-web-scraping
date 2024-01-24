@@ -4,13 +4,14 @@ import chokidar from 'chokidar'
 import { Elysia } from 'elysia'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
-import { ENV, ENV_MODE, pagesPath, resourceExtension } from './constants'
+import { pagesPath, resourceExtension } from './constants'
 import puppeteerSSRService from './puppeteer-ssr/index.bun'
 import Console from './utils/ConsoleHandler'
 import detectBot from './utils/DetectBot.bun'
 import detectDevice from './utils/DetectDevice.bun'
 import DetectRedirect from './utils/DetectRedirect.bun'
 import detectStaticExtension from './utils/DetectStaticExtension.bun'
+import { ENV, ENV_MODE, PROCESS_ENV } from './utils/InitEnv'
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -32,7 +33,7 @@ const cleanResourceWithCondition = async () => {
 const startServer = async () => {
 	await cleanResourceWithCondition()
 	let port = getPort('PUPPETEER_SSR_PORT')
-	port = await findFreePort(port || process.env.PUPPETEER_SSR_PORT || 8080)
+	port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
 	setPort(port, 'PUPPETEER_SSR_PORT')
 
 	const app = new Elysia()
@@ -71,9 +72,9 @@ const startServer = async () => {
 		)
 		.use(
 			app.onBeforeHandle((ctx) => {
-				if (!process.env.BASE_URL) {
+				if (!PROCESS_ENV.BASE_URL) {
 					const url = new URL(ctx.request.url)
-					process.env.BASE_URL = `${url.protocol}//${url.host}`
+					PROCESS_ENV.BASE_URL = `${url.protocol}//${url.host}`
 				}
 			})
 		)
@@ -134,7 +135,7 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (process.env.ENV === 'development') {
+	if (PROCESS_ENV.ENV === 'development') {
 		// NOTE - restart server onchange
 		const watcher = chokidar.watch([path.resolve(__dirname, './**/*.ts')], {
 			ignored: /$^/,

@@ -2,22 +2,23 @@
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj }
 }
-var _pm2 = require('pm2')
-var _pm22 = _interopRequireDefault(_pm2)
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
 var _chokidar = require('chokidar')
 var _chokidar2 = _interopRequireDefault(_chokidar)
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
+var _pm2 = require('pm2')
+var _pm22 = _interopRequireDefault(_pm2)
+var _constants = require('../constants')
 var _ConsoleHandler = require('../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _constants = require('../constants')
+var _InitEnv = require('../utils/InitEnv')
 
 const CLUSTER_INSTANCES =
-	process.env.CLUSTER_INSTANCES === 'max'
+	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max'
 		? 0
-		: Number(process.env.CLUSTER_INSTANCES || 2)
+		: Number(_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES || 2)
 const CLUSTER_KILL_TIMEOUT =
-	process.env.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
+	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
 
 const distPath =
 	_constants.resourceExtension === 'js' ? 'server/dist' : 'server/src'

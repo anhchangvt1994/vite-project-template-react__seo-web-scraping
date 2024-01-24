@@ -1,17 +1,18 @@
-import { HttpRequest, HttpResponse } from 'uWebSockets.js'
+import type { HttpRequest, HttpResponse } from 'uWebSockets.js'
 import {
 	IRedirectInfoItem,
 	IRedirectResult,
 	REDIRECT_INFO,
 	REDIRECT_INJECTION,
 } from '../app/redirect.config'
+import { PROCESS_ENV } from './InitEnv'
 
 const DetectRedirect: (
 	req: HttpRequest,
 	res: HttpResponse
 ) => IRedirectResult = (req, res) => {
 	const urlInfo = new URL(
-		`${process.env.BASE_URL}${req.getUrl()}?${
+		`${PROCESS_ENV.BASE_URL}${req.getUrl()}?${
 			req.getQuery() ? req.getQuery() : ''
 		}`
 	)

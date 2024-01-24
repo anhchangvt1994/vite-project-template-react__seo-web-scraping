@@ -12,12 +12,13 @@ var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('../../constants')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-
-var _utils = require('./Cache.worker/utils')
+var _InitEnv = require('../../utils/InitEnv')
 var _constants3 = require('../constants')
 
-const MAX_WORKERS = process.env.MAX_WORKERS
-	? Number(process.env.MAX_WORKERS)
+var _utils = require('./Cache.worker/utils')
+
+const MAX_WORKERS = _InitEnv.PROCESS_ENV.MAX_WORKERS
+	? Number(_InitEnv.PROCESS_ENV.MAX_WORKERS)
 	: 7
 
 const maintainFile = _path2.default.resolve(__dirname, '../../../maintain.html')

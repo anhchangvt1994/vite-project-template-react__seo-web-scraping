@@ -47,6 +47,7 @@ var _CleanerService = require('../utils/CleanerService')
 var _CleanerService2 = _interopRequireDefault(_CleanerService)
 var _ConsoleHandler = require('../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _InitEnv = require('../utils/InitEnv')
 var _constants3 = require('./constants')
 var _ForamatUrluws = require('./utils/ForamatUrl.uws')
 var _ISRGeneratornext = require('./utils/ISRGenerator.next')
@@ -56,9 +57,9 @@ var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
 
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 const ENVIRONMENT = JSON.stringify({
-	ENV: _constants.ENV,
-	MODE: _constants.MODE,
-	ENV_MODE: _constants.ENV_MODE,
+	ENV: _InitEnv.ENV,
+	MODE: _InitEnv.MODE,
+	ENV_MODE: _InitEnv.ENV_MODE,
 })
 
 const puppeteerSSRService = (async () => {
@@ -158,8 +159,8 @@ const puppeteerSSRService = (async () => {
 		}
 		_app.get('/*', async function (res, req) {
 			// NOTE - Check and create base url
-			if (!process.env.BASE_URL)
-				process.env.BASE_URL = `${
+			if (!_InitEnv.PROCESS_ENV.BASE_URL)
+				_InitEnv.PROCESS_ENV.BASE_URL = `${
 					req.getHeader('x-forwarded-proto')
 						? req.getHeader('x-forwarded-proto')
 						: 'http'
@@ -220,7 +221,7 @@ const puppeteerSSRService = (async () => {
 				)
 
 			if (
-				_constants.ENV_MODE !== 'development' &&
+				_InitEnv.ENV_MODE !== 'development' &&
 				enableISR &&
 				req.getHeader('service') !== 'puppeteer'
 			) {

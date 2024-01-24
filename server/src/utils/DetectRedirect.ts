@@ -4,9 +4,10 @@ import {
 	REDIRECT_INFO,
 	REDIRECT_INJECTION,
 } from '../app/redirect.config'
+import { PROCESS_ENV } from './InitEnv'
 
 const DetectRedirect: (req, res) => IRedirectResult = (req, res) => {
-	const urlInfo = new URL(`${process.env.BASE_URL}${req.originalUrl}`)
+	const urlInfo = new URL(`${PROCESS_ENV.BASE_URL}${req.originalUrl}`)
 	const redirectResult: IRedirectResult = {
 		originPath: urlInfo.pathname,
 		path: urlInfo.pathname,

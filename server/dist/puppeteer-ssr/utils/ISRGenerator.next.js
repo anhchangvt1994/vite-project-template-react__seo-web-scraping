@@ -32,6 +32,7 @@ var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('../../constants')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _InitEnv = require('../../utils/InitEnv')
 var _constants3 = require('../constants')
 
 var _CacheManager = require('./CacheManager')
@@ -72,7 +73,7 @@ const getRestOfDuration = (startGenerating, gapDuration = 0) => {
 } // getRestOfDuration
 
 const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
-	if (!process.env.BASE_URL) {
+	if (!_InitEnv.PROCESS_ENV.BASE_URL) {
 		_ConsoleHandler2.default.error('Missing base url!')
 		return
 	}
@@ -88,7 +89,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 		_constants.SERVER_LESS &&
 		_constants.BANDWIDTH_LEVEL === _constants.BANDWIDTH_LEVEL_LIST.TWO
 	)
-		fetchData(`${process.env.BASE_URL}/cleaner-service`, {
+		fetchData(`${_InitEnv.PROCESS_ENV.BASE_URL}/cleaner-service`, {
 			method: 'POST',
 			headers: new Headers({
 				Authorization: 'mtr-cleaner-service',
@@ -173,7 +174,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 				const handle = (() => {
 					if (_constants.SERVER_LESS)
 						return fetchData(
-							`${process.env.BASE_URL}/web-scraping`,
+							`${_InitEnv.PROCESS_ENV.BASE_URL}/web-scraping`,
 							{
 								method: 'GET',
 								headers: new Headers({
@@ -242,7 +243,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 					const handle = (() => {
 						if (_constants.SERVER_LESS)
 							return fetchData(
-								`${process.env.BASE_URL}/web-scraping`,
+								`${_InitEnv.PROCESS_ENV.BASE_URL}/web-scraping`,
 								{
 									method: 'GET',
 									headers: new Headers({

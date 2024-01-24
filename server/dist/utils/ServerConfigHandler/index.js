@@ -28,13 +28,13 @@ function _optionalChain(ops) {
 	}
 	return value
 }
-var _constants = require('../../constants')
-var _constants3 = require('./constants')
+var _InitEnv = require('../InitEnv')
+var _constants = require('./constants')
 
 const defineServerConfig = (options) => {
 	const serverConfigDefined = { ...options }
 
-	for (const key in _constants3.defaultServerConfig) {
+	for (const key in _constants.defaultServerConfig) {
 		if (key === 'locale') {
 			if (options[key]) {
 				serverConfigDefined[key] = {
@@ -72,7 +72,7 @@ const defineServerConfig = (options) => {
 							(_8) => _8.hideDefaultLocale,
 						]),
 					}
-			} else serverConfigDefined[key] = _constants3.defaultServerConfig[key]
+			} else serverConfigDefined[key] = _constants.defaultServerConfig[key]
 
 			const routes = _optionalChain([
 				options,
@@ -155,19 +155,19 @@ const defineServerConfig = (options) => {
 						} else tmpRoutes[localeRouteKey] = true
 					}
 				}
-			} else serverConfigDefined[key] = _constants3.defaultServerConfig[key]
+			} else serverConfigDefined[key] = _constants.defaultServerConfig[key]
 		} // isr
 	}
 
 	serverConfigDefined.crawler =
-		_constants.ENV_MODE === 'development'
+		_InitEnv.ENV_MODE === 'development'
 			? serverConfigDefined.crawler
-			: process.env.CRAWLER || serverConfigDefined.crawler
+			: _InitEnv.PROCESS_ENV.CRAWLER || serverConfigDefined.crawler
 
 	serverConfigDefined.crawlerSecretKey =
-		_constants.ENV_MODE === 'development'
+		_InitEnv.ENV_MODE === 'development'
 			? serverConfigDefined.crawlerSecretKey
-			: process.env.CRAWLER_SECRET_KEY || undefined
+			: _InitEnv.PROCESS_ENV.CRAWLER_SECRET_KEY || undefined
 
 	return serverConfigDefined
 }

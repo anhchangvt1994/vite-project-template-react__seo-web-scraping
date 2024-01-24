@@ -1,6 +1,7 @@
 'use strict'
 Object.defineProperty(exports, '__esModule', { value: true })
 var _constants = require('../constants')
+var _InitEnv = require('../utils/InitEnv')
 
 // NOTE - Browser Options
 const optionArgs = [
@@ -97,25 +98,25 @@ const regexQueryStringSpecialInfo =
 	/botInfo=(?<botInfo>[^&]*)&deviceInfo=(?<deviceInfo>[^&]*)/
 exports.regexQueryStringSpecialInfo = regexQueryStringSpecialInfo
 
-const MAX_WORKERS = process.env.MAX_WORKERS
-	? Number(process.env.MAX_WORKERS)
+const MAX_WORKERS = _InitEnv.PROCESS_ENV.MAX_WORKERS
+	? Number(_InitEnv.PROCESS_ENV.MAX_WORKERS)
 	: 7
 exports.MAX_WORKERS = MAX_WORKERS
 const DURATION_TIMEOUT = _constants.SERVER_LESS
 	? 5000
-	: process.env.DURATION_TIMEOUT
-	? Number(process.env.DURATION_TIMEOUT)
+	: _InitEnv.PROCESS_ENV.DURATION_TIMEOUT
+	? Number(_InitEnv.PROCESS_ENV.DURATION_TIMEOUT)
 	: 20000
 exports.DURATION_TIMEOUT = DURATION_TIMEOUT
 
-const DISABLE_COMPRESS_HTML = !!process.env.DISABLE_COMPRESS_HTML
+const DISABLE_COMPRESS_HTML = !!_InitEnv.PROCESS_ENV.DISABLE_COMPRESS_HTML
 exports.DISABLE_COMPRESS_HTML = DISABLE_COMPRESS_HTML
-const DISABLE_DEEP_OPTIMIZE = !!process.env.DISABLE_DEEP_OPTIMIZE
+const DISABLE_DEEP_OPTIMIZE = !!_InitEnv.PROCESS_ENV.DISABLE_DEEP_OPTIMIZE
 exports.DISABLE_DEEP_OPTIMIZE = DISABLE_DEEP_OPTIMIZE
-const DISABLE_OPTIMIZE = !!process.env.DISABLE_OPTIMIZE
+const DISABLE_OPTIMIZE = !!_InitEnv.PROCESS_ENV.DISABLE_OPTIMIZE
 exports.DISABLE_OPTIMIZE = DISABLE_OPTIMIZE
 
-const NOT_FOUND_PAGE_ID = process.env.NOT_FOUND_PAGE_ID || '404-page'
+const NOT_FOUND_PAGE_ID = _InitEnv.PROCESS_ENV.NOT_FOUND_PAGE_ID || '404-page'
 exports.NOT_FOUND_PAGE_ID = NOT_FOUND_PAGE_ID
 const regexNotFoundPageID = new RegExp(
 	`id=["']?${exports.NOT_FOUND_PAGE_ID}["']?`
@@ -130,9 +131,8 @@ const chromiumPath =
 exports.chromiumPath = chromiumPath
 
 const canUseLinuxChromium =
-	_constants.serverInfo &&
-	_constants.serverInfo.isServer &&
-	_constants.serverInfo.platform.toLowerCase() === 'linux'
+	_InitEnv.PROCESS_ENV.IS_SERVER &&
+	_InitEnv.PROCESS_ENV.PLATFORM.toLowerCase() === 'linux'
 exports.canUseLinuxChromium = canUseLinuxChromium
 
 const puppeteer = (() => {
@@ -141,5 +141,5 @@ const puppeteer = (() => {
 })()
 exports.puppeteer = puppeteer
 
-const DISABLE_SSR_CACHE = Boolean(process.env.DISABLE_SSR_CACHE)
+const DISABLE_SSR_CACHE = Boolean(_InitEnv.PROCESS_ENV.DISABLE_SSR_CACHE)
 exports.DISABLE_SSR_CACHE = DISABLE_SSR_CACHE

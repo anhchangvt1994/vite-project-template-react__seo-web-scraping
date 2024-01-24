@@ -3,57 +3,31 @@ const dns = require('dns')
 const fs = require('fs')
 const path = require('path')
 const { resolve } = require('path')
+const ObjectToEnvConverter = require('./ObjectToEnvConverter')
 
 const serverInfoPath = resolve(__dirname, '../../server-info.json')
+const envPath = resolve(__dirname, '../../.env')
 
-const internationalTLDs = [
-	'com',
-	'org',
-	'net',
-	'edu',
-	'gov',
-	'biz',
-	'info',
-	'name',
-	'pro',
-	'aero',
-	'coop',
-	'museum',
-	'asia',
-	'cat',
-	'int',
-	'jobs',
-	'mobi',
-	'tel',
-	'travel',
-]
+const readFileENVSync = () => {
+	if (!fs.existsSync(envPath)) return {}
 
-const countryTLDs = [
-	'us',
-	'uk',
-	'de',
-	'fr',
-	'jp',
-	'cn',
-	'in',
-	'br',
-	'ru',
-	'au',
-	'vn',
-	'ca',
-	'kr',
-	'es',
-	'it',
-	'nl',
-	'se',
-	'ch',
-	'be',
-	'dk',
-	'no',
-	'fi',
-]
+	const envStringify = fs.readFileSync(envPath, {
+		encoding: 'utf8',
+		flag: 'r',
+	})
 
-const TLDsMerged = new Array().concat(internationalTLDs).concat(countryTLDs)
+	if (!envStringify) return {}
+
+	let envInfo = {}
+	envStringify.split('\n').forEach((line) => {
+		const [name, value] = line.split('=')
+		if (name && value) {
+			envInfo[name] = value
+		}
+	})
+
+	return envInfo
+} // readFileENVSync
 
 ;(async () => {
 	if (fs.existsSync(serverInfoPath)) return
@@ -62,7 +36,7 @@ const TLDsMerged = new Array().concat(internationalTLDs).concat(countryTLDs)
 		platform: os.platform(),
 		hostname: os.hostname(),
 		address: '',
-		isServer: false,
+		// isServer: false,
 	}
 
 	const address = await new Promise((res) => {
@@ -73,17 +47,24 @@ const TLDsMerged = new Array().concat(internationalTLDs).concat(countryTLDs)
 	})
 
 	serverInfo.address = address
-	serverInfo.isServer =
-		Boolean(process.env.IS_SERVER) ||
-		!Boolean(
-			address === 'localhost' ||
-				address === '::1' ||
-				address.startsWith('fe80::') ||
-				/^(127)(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/.test(address)
-		)
-	// const subfixDomain = address.split('.').slice(-1).join('.')
-	// serverInfo.isServer = (TLDsMerged.includes(subfixDomain))
-	// serverInfo.isServer = true
+
+	const envInfo = readFileENVSync()
+
+	if (envInfo) {
+		try {
+			fs.writeFileSync(
+				envPath,
+				ObjectToEnvConverter({
+					...envInfo,
+					PLATFORM: serverInfo.platform,
+					HOSTNAME: serverInfo.hostname,
+					ADDRESS: serverInfo.address,
+				})
+			)
+
+			resolve('done')
+		} catch {}
+	}
 
 	console.log(serverInfo)
 

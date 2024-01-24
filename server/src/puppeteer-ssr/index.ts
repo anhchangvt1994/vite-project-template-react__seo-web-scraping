@@ -1,15 +1,16 @@
 import { Express } from 'express'
 import path from 'path'
-import { ENV_MODE, IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
+import { IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
+import ServerConfig from '../server.config'
 import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
 import { getCookieFromResponse } from '../utils/CookieHandler'
+import { ENV_MODE } from '../utils/InitEnv'
 import { CACHEABLE_STATUS_CODE, DISABLE_SSR_CACHE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl'
 import ISRGenerator from './utils/ISRGenerator.next'
 import SSRHandler from './utils/ISRHandler'
-import ServerConfig from '../server.config'
 
 const puppeteerSSRService = (async () => {
 	let _app: Express

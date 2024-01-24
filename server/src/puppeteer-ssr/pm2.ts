@@ -1,15 +1,16 @@
-import pm2 from 'pm2'
-import path from 'path'
 import chokidar from 'chokidar'
-import Console from '../utils/ConsoleHandler'
+import path from 'path'
+import pm2 from 'pm2'
 import { resourceExtension } from '../constants'
+import Console from '../utils/ConsoleHandler'
+import { PROCESS_ENV } from '../utils/InitEnv'
 
 const CLUSTER_INSTANCES =
-	process.env.CLUSTER_INSTANCES === 'max'
+	PROCESS_ENV.CLUSTER_INSTANCES === 'max'
 		? 0
-		: Number(process.env.CLUSTER_INSTANCES || 2)
+		: Number(PROCESS_ENV.CLUSTER_INSTANCES || 2)
 const CLUSTER_KILL_TIMEOUT =
-	process.env.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
+	PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
 
 const distPath = resourceExtension === 'js' ? 'server/dist' : 'server/src'
 

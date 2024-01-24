@@ -27,12 +27,15 @@ function _optionalChain(ops) {
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _constants = require('../constants')
+var _serverconfig = require('../server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
 var _CleanerService = require('../utils/CleanerService')
 var _CleanerService2 = _interopRequireDefault(_CleanerService)
 var _ConsoleHandler = require('../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _CookieHandler = require('../utils/CookieHandler')
+var _InitEnv = require('../utils/InitEnv')
 var _SendFile = require('../utils/SendFile')
 var _SendFile2 = _interopRequireDefault(_SendFile)
 var _constants3 = require('./constants')
@@ -41,8 +44,6 @@ var _ISRGeneratornext = require('./utils/ISRGenerator.next')
 var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext)
 var _ISRHandler = require('./utils/ISRHandler')
 var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
-var _serverconfig = require('../server.config')
-var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
 const puppeteerSSRService = (async () => {
 	let _app
@@ -158,7 +159,7 @@ const puppeteerSSRService = (async () => {
 			)
 
 			if (
-				_constants.ENV_MODE !== 'development' &&
+				_InitEnv.ENV_MODE !== 'development' &&
 				enableISR &&
 				headers.service !== 'puppeteer'
 			) {

@@ -22,6 +22,8 @@ function _optionalChain(ops) {
 	return value
 }
 
+var _InitEnv = require('../../utils/InitEnv')
+
 const convertUrlHeaderToQueryString = (url, res, simulateBot = false) => {
 	if (!url) return ''
 
@@ -70,7 +72,7 @@ const getUrl = (res, req) => {
 	return (
 		req.getQuery('urlTesting') ||
 		req.getQuery('url') ||
-		process.env.BASE_URL + pathname
+		_InitEnv.PROCESS_ENV.BASE_URL + pathname
 	).trim()
 }
 exports.getUrl = getUrl // getUrl

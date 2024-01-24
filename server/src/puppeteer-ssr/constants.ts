@@ -1,5 +1,6 @@
 import { PuppeteerLaunchOptions } from 'puppeteer-core'
-import { ENV, SERVER_LESS, serverInfo, userDataPath } from '../constants'
+import { SERVER_LESS, userDataPath } from '../constants'
+import { PROCESS_ENV } from '../utils/InitEnv'
 
 // NOTE - Browser Options
 export const optionArgs = [
@@ -85,20 +86,20 @@ export const regexHandleAttrsInteractiveTag: RegExp =
 export const regexQueryStringSpecialInfo =
 	/botInfo=(?<botInfo>[^&]*)&deviceInfo=(?<deviceInfo>[^&]*)/
 
-export const MAX_WORKERS = process.env.MAX_WORKERS
-	? Number(process.env.MAX_WORKERS)
+export const MAX_WORKERS = PROCESS_ENV.MAX_WORKERS
+	? Number(PROCESS_ENV.MAX_WORKERS)
 	: 7
 export const DURATION_TIMEOUT = SERVER_LESS
 	? 5000
-	: process.env.DURATION_TIMEOUT
-	? Number(process.env.DURATION_TIMEOUT)
+	: PROCESS_ENV.DURATION_TIMEOUT
+	? Number(PROCESS_ENV.DURATION_TIMEOUT)
 	: 20000
 
-export const DISABLE_COMPRESS_HTML = !!process.env.DISABLE_COMPRESS_HTML
-export const DISABLE_DEEP_OPTIMIZE = !!process.env.DISABLE_DEEP_OPTIMIZE
-export const DISABLE_OPTIMIZE = !!process.env.DISABLE_OPTIMIZE
+export const DISABLE_COMPRESS_HTML = !!PROCESS_ENV.DISABLE_COMPRESS_HTML
+export const DISABLE_DEEP_OPTIMIZE = !!PROCESS_ENV.DISABLE_DEEP_OPTIMIZE
+export const DISABLE_OPTIMIZE = !!PROCESS_ENV.DISABLE_OPTIMIZE
 
-export const NOT_FOUND_PAGE_ID = process.env.NOT_FOUND_PAGE_ID || '404-page'
+export const NOT_FOUND_PAGE_ID = PROCESS_ENV.NOT_FOUND_PAGE_ID || '404-page'
 export const regexNotFoundPageID = new RegExp(
 	`id=["']?${NOT_FOUND_PAGE_ID}["']?`
 )
@@ -109,13 +110,11 @@ export const chromiumPath =
 	'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
 
 export const canUseLinuxChromium =
-	serverInfo &&
-	serverInfo.isServer &&
-	serverInfo.platform.toLowerCase() === 'linux'
+	PROCESS_ENV.IS_SERVER && PROCESS_ENV.PLATFORM.toLowerCase() === 'linux'
 
 export const puppeteer = (() => {
 	if (canUseLinuxChromium) return require('puppeteer-core')
 	return require('puppeteer')
 })()
 
-export const DISABLE_SSR_CACHE = Boolean(process.env.DISABLE_SSR_CACHE)
+export const DISABLE_SSR_CACHE = Boolean(PROCESS_ENV.DISABLE_SSR_CACHE)

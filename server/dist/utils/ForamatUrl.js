@@ -23,6 +23,7 @@ function _optionalChain(ops) {
 }
 
 var _CookieHandler = require('./CookieHandler')
+var _InitEnv = require('./InitEnv')
 
 const convertUrlHeaderToQueryString = (url, res, simulateBot = false) => {
 	if (!url) return ''
@@ -58,8 +59,8 @@ const getUrl = (req) => {
 
 	return (
 		req.query.urlTesting ||
-		(process.env.BASE_URL
-			? process.env.BASE_URL + req.originalUrl
+		(_InitEnv.PROCESS_ENV.BASE_URL
+			? _InitEnv.PROCESS_ENV.BASE_URL + req.originalUrl
 			: req.protocol + '://' + req.get('host') + req.originalUrl)
 	).trim()
 }
