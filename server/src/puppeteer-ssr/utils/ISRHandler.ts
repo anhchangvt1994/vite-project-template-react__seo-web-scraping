@@ -182,6 +182,15 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 
 		const headersStore = getStore('headers')
 
+		const botInfo = JSON.parse(headersStore['botInfo'])
+
+		if (!botInfo.isBot) {
+			headersStore['botInfo'] = JSON.stringify({
+				name: 'unknown',
+				isBot: true,
+			})
+		}
+
 		try {
 			const result = await fetchData(
 				ServerConfig.crawler,
