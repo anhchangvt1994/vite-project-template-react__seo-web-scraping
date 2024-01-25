@@ -100,12 +100,14 @@ const BrowserManager = (
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0
 	let browserLaunch
+	let reserveUserDataDirPath
 	let executablePath
 
 	const __launch = async () => {
 		totalRequests = 0
 
-		const selfUserDataDirPath = userDataDir()
+		const selfUserDataDirPath = reserveUserDataDirPath || userDataDir()
+		reserveUserDataDirPath = `${userDataDir()}_reserve`
 
 		browserLaunch = new Promise(async (res, rej) => {
 			let isError = false
@@ -128,6 +130,7 @@ const BrowserManager = (
 				}
 
 				browserStore.userDataPath = selfUserDataDirPath
+				browserStore.reserveUserDataPath = reserveUserDataDirPath
 
 				_store.setStore.call(void 0, 'browser', browserStore)
 				_store.setStore.call(void 0, 'promise', promiseStore)
@@ -144,11 +147,33 @@ const BrowserManager = (
 						args: _chromiummin2.default.args,
 						executablePath,
 					})
+
+					// NOTE - Create a preventive browser to replace when current browser expired
+					new Promise(async (res) => {
+						const reserveBrowser = await _constants3.puppeteer.launch({
+							..._constants3.defaultBrowserOptions,
+							userDataDir: reserveUserDataDirPath,
+							args: _chromiummin2.default.args,
+							executablePath,
+						})
+						reserveBrowser.close()
+						res(null)
+					})
 				} else {
 					_ConsoleHandler2.default.log('Start browser without executablePath')
 					promiseBrowser = _constants3.puppeteer.launch({
 						..._constants3.defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
+					})
+
+					// NOTE - Create a preventive browser to replace when current browser expired
+					new Promise(async (res) => {
+						const reserveBrowser = await _constants3.puppeteer.launch({
+							..._constants3.defaultBrowserOptions,
+							userDataDir: reserveUserDataDirPath,
+						})
+						reserveBrowser.close()
+						res(null)
 					})
 				}
 			} catch (err) {
@@ -186,6 +211,7 @@ const BrowserManager = (
 
 					if (!_constants.SERVER_LESS && tabsClosed === 20) {
 						browser.close()
+						__launch()
 						exports.deleteUserDataDir.call(void 0, selfUserDataDirPath)
 					}
 				})
@@ -238,8 +264,14 @@ const BrowserManager = (
 				'optionalCall',
 				(_9) => _9(),
 			])
+
+			if (!page) {
+				__launch()
+				return _newPage()
+			}
 		} catch (err) {
-			return
+			__launch()
+			return _newPage()
 		}
 
 		if (page) browser.emit('createNewPage', page)

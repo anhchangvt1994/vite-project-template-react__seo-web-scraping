@@ -45,10 +45,18 @@ const convertUrlHeaderToQueryString = (url, res, simulateBot = false) => {
 	const deviceInfoStringify = JSON.stringify(
 		_optionalChain([cookies, 'optionalAccess', (_2) => _2['DeviceInfo']])
 	)
+	const localInfoStrinfity = JSON.stringify(
+		_optionalChain([cookies, 'optionalAccess', (_3) => _3['LocaleInfo']])
+	)
+	const environmentInfo = JSON.stringify(
+		_optionalChain([cookies, 'optionalAccess', (_4) => _4['EnvironmentInfo']])
+	)
 
-	let urlFormatted = `${url}${
-		url.indexOf('?') === -1 ? '?' : '&'
-	}botInfo=${botInfoStringify}&deviceInfo=${deviceInfoStringify}`.trim()
+	let urlFormatted = `${url}${url.indexOf('?') === -1 ? '?' : '&'}
+    botInfo=${botInfoStringify}
+    &deviceInfo=${deviceInfoStringify}
+    &localInfoStrinfity=${localInfoStrinfity}
+    &environmentInfo=${environmentInfo}`.trim()
 
 	return urlFormatted
 }

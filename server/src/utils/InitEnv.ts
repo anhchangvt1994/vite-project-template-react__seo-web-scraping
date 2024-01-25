@@ -32,6 +32,14 @@ export const ENV_MODE = envModeList[`${ENV}_${MODE}`] as
 	| 'uat'
 	| 'production'
 
+interface IProcessENV {
+	PLATFORM: string
+	HOSTNAME: string
+	ADDRESS: string
+	IS_SERVER: string
+	[key: string]: string
+}
+
 export const PROCESS_ENV = (() => {
 	dotenv.config({
 		path: path.resolve(__dirname, '../../.env'),
@@ -57,5 +65,5 @@ export const PROCESS_ENV = (() => {
 			})
 	}
 
-	return process.env
+	return process.env as IProcessENV
 })()

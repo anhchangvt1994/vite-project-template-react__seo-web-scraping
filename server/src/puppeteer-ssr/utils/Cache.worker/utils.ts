@@ -23,7 +23,7 @@ if (!fs.existsSync(pagesPath)) {
 }
 
 export const regexKeyConverter =
-	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)/g
+	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
 
 export const getKey = (url) => {
 	if (!url) {

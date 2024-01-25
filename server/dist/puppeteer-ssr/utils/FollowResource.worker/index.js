@@ -129,10 +129,16 @@ const scanToCleanBrowsers = async (
 			const curUserDataPath = browserStore.userDataPath
 				? _path2.default.join('', browserStore.userDataPath)
 				: ''
+			const reserveUserDataPath = browserStore.reserveUserDataPath
+				? _path2.default.join('', browserStore.reserveUserDataPath)
+				: ''
 
 			for (const file of browserList) {
 				const absolutePath = _path2.default.join(dirPath, file)
-				if (absolutePath === curUserDataPath) {
+				if (
+					absolutePath === curUserDataPath ||
+					absolutePath === reserveUserDataPath
+				) {
 					counter++
 					if (counter === browserList.length) return res(null)
 					continue

@@ -1,6 +1,7 @@
 export interface IStores {
 	browser: {
 		userDataPath?: string
+		reserveUserDataPath?: string
 		[key: string]: string | number | undefined
 	}
 	headers: {

@@ -1,8 +1,6 @@
 import { HttpRequest, HttpResponse } from 'uWebSockets.js'
 import ServerConfig from '../../server.config'
-import { getStore, setStore } from '../../store'
 import detectLocale from '../../utils/DetectLocale.uws'
-import { PROCESS_ENV } from '../../utils/InitEnv'
 
 const DetectLocaleMiddle = (res: HttpResponse, req: HttpRequest) => {
 	if (!res.cookies) res.cookies = {}
@@ -14,12 +12,6 @@ const DetectLocaleMiddle = (res: HttpResponse, req: HttpRequest) => {
 		if (tmpLocaleInfo) return JSON.parse(tmpLocaleInfo)
 		return detectLocale(req)
 	})()
-
-	if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
-		const headersStore = getStore('headers')
-		headersStore.localeInfo = JSON.stringify(res.cookies.localeInfo)
-		setStore('headers', headersStore)
-	}
 
 	const enableLocale =
 		ServerConfig.locale.enable &&

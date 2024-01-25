@@ -45,7 +45,6 @@ var _PortHandler = require('../../config/utils/PortHandler')
 var _constants = require('./constants')
 var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
-var _store = require('./store')
 var _CookieHandler = require('./utils/CookieHandler')
 var _DetectBot = require('./utils/DetectBot')
 var _DetectBot2 = _interopRequireDefault(_DetectBot)
@@ -169,12 +168,6 @@ const startServer = async () => {
 				`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 
-			if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
-				const headersStore = _store.getStore.call(void 0, 'headers')
-				headersStore.botInfo = botInfo
-				_store.setStore.call(void 0, 'headers', headersStore)
-			}
-
 			next()
 		})
 		.use(function (req, res, next) {
@@ -202,12 +195,6 @@ const startServer = async () => {
 					localeInfo
 				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
-
-			if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
-				const headersStore = _store.getStore.call(void 0, 'headers')
-				headersStore.localeInfo = JSON.stringify(localeInfo)
-				_store.setStore.call(void 0, 'headers', headersStore)
-			}
 
 			if (enableLocale) {
 				_CookieHandler.setCookie.call(
@@ -285,12 +272,6 @@ const startServer = async () => {
 				res,
 				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
-
-			if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
-				const headersStore = _store.getStore.call(void 0, 'headers')
-				headersStore.deviceInfo = deviceInfo
-				_store.setStore.call(void 0, 'headers', headersStore)
-			}
 
 			next()
 		})

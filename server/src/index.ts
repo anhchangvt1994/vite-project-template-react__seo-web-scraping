@@ -4,7 +4,6 @@ import express from 'express'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
 import { COOKIE_EXPIRED, pagesPath, resourceExtension } from './constants'
-import { getStore, setStore } from './store'
 import { setCookie } from './utils/CookieHandler'
 import detectBot from './utils/DetectBot'
 import detectDevice from './utils/DetectDevice'
@@ -102,12 +101,6 @@ const startServer = async () => {
 
 			setCookie(res, `BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`)
 
-			if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
-				const headersStore = getStore('headers')
-				headersStore.botInfo = botInfo
-				setStore('headers', headersStore)
-			}
-
 			next()
 		})
 		.use(function (req, res, next) {
@@ -134,12 +127,6 @@ const startServer = async () => {
 					localeInfo
 				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
-
-			if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
-				const headersStore = getStore('headers')
-				headersStore.localeInfo = JSON.stringify(localeInfo)
-				setStore('headers', headersStore)
-			}
 
 			if (enableLocale) {
 				setCookie(
@@ -203,12 +190,6 @@ const startServer = async () => {
 				res,
 				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
 			)
-
-			if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
-				const headersStore = getStore('headers')
-				headersStore.deviceInfo = deviceInfo
-				setStore('headers', headersStore)
-			}
 
 			next()
 		})

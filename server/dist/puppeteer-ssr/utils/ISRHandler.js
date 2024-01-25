@@ -37,7 +37,7 @@ var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('../../constants')
 var _serverconfig = require('../../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
-var _store = require('../../store')
+
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _InitEnv = require('../../utils/InitEnv')
@@ -191,12 +191,24 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 
 	let html = ''
 	let status = 200
+	const specialInfo = _nullishCoalesce(
+		_optionalChain([
+			_constants3.regexQueryStringSpecialInfo,
+			'access',
+			(_) => _.exec,
+			'call',
+			(_2) => _2(url),
+			'optionalAccess',
+			(_3) => _3.groups,
+		]),
+		() => ({})
+	)
 
 	if (_serverconfig2.default.crawler) {
 		const requestParams = {
 			startGenerating,
 			isFirstRequest: true,
-			url,
+			url: url.split('?')[0],
 		}
 
 		if (_serverconfig2.default.crawlerSecretKey) {
@@ -204,12 +216,12 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 				_serverconfig2.default.crawlerSecretKey
 		}
 
-		const headersStore = _store.getStore.call(void 0, 'headers')
+		const headers = { ...specialInfo }
 
-		const botInfo = JSON.parse(headersStore['botInfo'])
+		const botInfo = JSON.parse(headers['botInfo'])
 
 		if (!botInfo.isBot) {
-			headersStore['botInfo'] = JSON.stringify({
+			headers['botInfo'] = JSON.stringify({
 				name: 'unknown',
 				isBot: true,
 			})
@@ -222,7 +234,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 					method: 'GET',
 					headers: new Headers({
 						Accept: 'text/html; charset=utf-8',
-						...headersStore,
+						...headers,
 					}),
 				},
 				requestParams
@@ -256,7 +268,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 		let isGetHtmlProcessError = false
 
 		try {
-			await page.waitForNetworkIdle({ idleTime: 150 })
+			// await page.waitForNetworkIdle({ idleTime: 150 })
 			await page.setRequestInterception(true)
 			page.on('request', (req) => {
 				const resourceType = req.resourceType()
@@ -272,19 +284,6 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 					req.continue()
 				}
 			})
-
-			const specialInfo = _nullishCoalesce(
-				_optionalChain([
-					_constants3.regexQueryStringSpecialInfo,
-					'access',
-					(_) => _.exec,
-					'call',
-					(_2) => _2(url),
-					'optionalAccess',
-					(_3) => _3.groups,
-				]),
-				() => ({})
-			)
 
 			await page.setExtraHTTPHeaders({
 				...specialInfo,

@@ -168,24 +168,25 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 
 	let html = ''
 	let status = 200
+	const specialInfo = regexQueryStringSpecialInfo.exec(url)?.groups ?? {}
 
 	if (ServerConfig.crawler) {
 		const requestParams = {
 			startGenerating,
 			isFirstRequest: true,
-			url,
+			url: url.split('?')[0],
 		}
 
 		if (ServerConfig.crawlerSecretKey) {
 			requestParams['crawlerSecretKey'] = ServerConfig.crawlerSecretKey
 		}
 
-		const headersStore = getStore('headers')
+		const headers = { ...specialInfo }
 
-		const botInfo = JSON.parse(headersStore['botInfo'])
+		const botInfo = JSON.parse(headers['botInfo'])
 
 		if (!botInfo.isBot) {
-			headersStore['botInfo'] = JSON.stringify({
+			headers['botInfo'] = JSON.stringify({
 				name: 'unknown',
 				isBot: true,
 			})
@@ -198,7 +199,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 					method: 'GET',
 					headers: new Headers({
 						Accept: 'text/html; charset=utf-8',
-						...headersStore,
+						...headers,
 					}),
 				},
 				requestParams
@@ -232,7 +233,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 		let isGetHtmlProcessError = false
 
 		try {
-			await page.waitForNetworkIdle({ idleTime: 150 })
+			// await page.waitForNetworkIdle({ idleTime: 150 })
 			await page.setRequestInterception(true)
 			page.on('request', (req) => {
 				const resourceType = req.resourceType()
@@ -248,8 +249,6 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 					req.continue()
 				}
 			})
-
-			const specialInfo = regexQueryStringSpecialInfo.exec(url)?.groups ?? {}
 
 			await page.setExtraHTTPHeaders({
 				...specialInfo,

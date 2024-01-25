@@ -45,12 +45,14 @@ const BrowserManager = (
 	const maxRequestPerBrowser = 20
 	let totalRequests = 0
 	let browserLaunch: Promise<Browser | undefined>
+	let reserveUserDataDirPath: string
 	let executablePath: string
 
 	const __launch = async () => {
 		totalRequests = 0
 
-		const selfUserDataDirPath = userDataDir()
+		const selfUserDataDirPath = reserveUserDataDirPath || userDataDir()
+		reserveUserDataDirPath = `${userDataDir()}_reserve`
 
 		browserLaunch = new Promise(async (res, rej) => {
 			let isError = false
@@ -71,6 +73,7 @@ const BrowserManager = (
 				}
 
 				browserStore.userDataPath = selfUserDataDirPath
+				browserStore.reserveUserDataPath = reserveUserDataDirPath
 
 				setStore('browser', browserStore)
 				setStore('promise', promiseStore)
@@ -87,11 +90,33 @@ const BrowserManager = (
 						args: Chromium.args,
 						executablePath,
 					})
+
+					// NOTE - Create a preventive browser to replace when current browser expired
+					new Promise(async (res) => {
+						const reserveBrowser = await puppeteer.launch({
+							...defaultBrowserOptions,
+							userDataDir: reserveUserDataDirPath,
+							args: Chromium.args,
+							executablePath,
+						})
+						reserveBrowser.close()
+						res(null)
+					})
 				} else {
 					Console.log('Start browser without executablePath')
 					promiseBrowser = puppeteer.launch({
 						...defaultBrowserOptions,
 						userDataDir: selfUserDataDirPath,
+					})
+
+					// NOTE - Create a preventive browser to replace when current browser expired
+					new Promise(async (res) => {
+						const reserveBrowser = await puppeteer.launch({
+							...defaultBrowserOptions,
+							userDataDir: reserveUserDataDirPath,
+						})
+						reserveBrowser.close()
+						res(null)
 					})
 				}
 			} catch (err) {
@@ -129,6 +154,7 @@ const BrowserManager = (
 
 					if (!SERVER_LESS && tabsClosed === 20) {
 						browser.close()
+						__launch()
 						deleteUserDataDir(selfUserDataDirPath)
 					}
 				}) as any)
@@ -153,7 +179,7 @@ const BrowserManager = (
 		const pages = (await (await curBrowserLaunch)?.pages())?.length ?? 0
 		await new Promise((res) => setTimeout(res, pages * 20))
 
-		return curBrowserLaunch
+		return curBrowserLaunch as Promise<Browser>
 	} // _get
 
 	const _newPage = async () => {
@@ -162,8 +188,14 @@ const BrowserManager = (
 		try {
 			browser = await _get()
 			page = await browser?.newPage?.()
+
+			if (!page) {
+				__launch()
+				return _newPage()
+			}
 		} catch (err) {
-			return
+			__launch()
+			return _newPage()
 		}
 
 		if (page) browser.emit('createNewPage', page)

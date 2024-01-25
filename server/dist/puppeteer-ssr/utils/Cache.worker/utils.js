@@ -44,7 +44,7 @@ if (!_fs2.default.existsSync(_constants.pagesPath)) {
 }
 
 const regexKeyConverter =
-	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)/g
+	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
 exports.regexKeyConverter = regexKeyConverter
 
 const getKey = (url) => {
