@@ -84,7 +84,7 @@ export const regexHandleAttrsHtmlTag: RegExp = /<(html)([^>]*)>/g
 export const regexHandleAttrsInteractiveTag: RegExp =
 	/<(a|button|input)([^>]*)(\/|)>([\s\S]*?)<\/(a|button)>/g
 export const regexQueryStringSpecialInfo =
-	/botInfo=(?<botInfo>[^&]*)&deviceInfo=(?<deviceInfo>[^&]*)/
+	/botInfo=(?<botInfo>[^&]*)&deviceInfo=(?<deviceInfo>[^&]*)&localeInfo=(?<localeInfo>[^&]*)&environmentInfo=(?<environmentInfo>[^&]*)/
 
 export const MAX_WORKERS = PROCESS_ENV.MAX_WORKERS
 	? Number(PROCESS_ENV.MAX_WORKERS)

@@ -9,7 +9,6 @@ import {
 	userDataPath,
 } from '../../constants'
 import ServerConfig from '../../server.config'
-import { getStore } from '../../store'
 import Console from '../../utils/ConsoleHandler'
 import { ENV_MODE } from '../../utils/InitEnv'
 import {

@@ -56,11 +56,6 @@ var _ISRHandler = require('./utils/ISRHandler')
 var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
 
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
-const ENVIRONMENT = JSON.stringify({
-	ENV: _InitEnv.ENV,
-	MODE: _InitEnv.MODE,
-	ENV_MODE: _InitEnv.ENV_MODE,
-})
 
 const puppeteerSSRService = (async () => {
 	let _app
@@ -71,7 +66,9 @@ const puppeteerSSRService = (async () => {
 		res
 			.writeHeader(
 				'set-cookie',
-				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+				`EnvironmentInfo=${JSON.stringify(
+					res.cookies.environmentInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 			.writeHeader(
 				'set-cookie',
@@ -209,6 +206,20 @@ const puppeteerSSRService = (async () => {
 
 			// NOTE - Detect DeviceInfo
 			_DetectDevice2.default.call(void 0, res, req)
+
+			// NOTE - Set cookies for EnvironmentInfo
+			res.cookies.environmentInfo = (() => {
+				const tmpEnvironmentInfo =
+					req.getHeader('environmentinfo') || req.getHeader('environmentInfo')
+
+				if (tmpEnvironmentInfo) return JSON.parse(tmpEnvironmentInfo)
+
+				return {
+					ENV: _InitEnv.ENV,
+					MODE: _InitEnv.MODE,
+					ENV_MODE: _InitEnv.ENV_MODE,
+				}
+			})()
 
 			const enableISR =
 				_serverconfig2.default.isr.enable &&

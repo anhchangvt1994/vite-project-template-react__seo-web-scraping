@@ -17,11 +17,6 @@ import { ENV, MODE, ENV_MODE, PROCESS_ENV } from './utils/InitEnv'
 import sendFile from './utils/SendFile'
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
-const ENVIRONMENT = JSON.stringify({
-	ENV,
-	MODE,
-	ENV_MODE,
-})
 
 require('events').EventEmitter.setMaxListeners(200)
 
@@ -108,12 +103,12 @@ const startServer = async () => {
 		})
 		.use(function (req, res, next) {
 			const localeInfo = (() => {
-				let tmpLocaleInfo = req['localeinfo'] || req['localeInfo']
+				let tmpLocaleInfo =
+					req.headers['localeinfo'] || req.headers['localeInfo']
 
-				if (tmpLocaleInfo) JSON.parse(tmpLocaleInfo)
-				else tmpLocaleInfo = detectLocale(req)
+				if (tmpLocaleInfo) return JSON.parse(tmpLocaleInfo as string)
 
-				return tmpLocaleInfo
+				return detectLocale(req)
 			})()
 
 			const enableLocale =
@@ -177,9 +172,21 @@ const startServer = async () => {
 	}
 	app
 		.use(function (req, res, next) {
+			const environmentInfo = (() => {
+				const tmpEnvironmentInfo =
+					req.headers['environmentinfo'] || req.headers['environmentInfo']
+
+				if (tmpEnvironmentInfo) return tmpEnvironmentInfo
+
+				return JSON.stringify({
+					ENV,
+					MODE,
+					ENV_MODE,
+				})
+			})()
 			setCookie(
 				res,
-				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND}`
+				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
 			)
 			next()
 		})

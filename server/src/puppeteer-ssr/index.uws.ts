@@ -18,11 +18,6 @@ import ISRGenerator from './utils/ISRGenerator.next'
 import SSRHandler from './utils/ISRHandler'
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
-const ENVIRONMENT = JSON.stringify({
-	ENV,
-	MODE,
-	ENV_MODE,
-})
 
 const puppeteerSSRService = (async () => {
 	let _app: TemplatedApp
@@ -33,7 +28,9 @@ const puppeteerSSRService = (async () => {
 		res
 			.writeHeader(
 				'set-cookie',
-				`EnvironmentInfo=${ENVIRONMENT};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+				`EnvironmentInfo=${JSON.stringify(
+					res.cookies.environmentInfo
+				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 			.writeHeader(
 				'set-cookie',
@@ -164,6 +161,20 @@ const puppeteerSSRService = (async () => {
 
 			// NOTE - Detect DeviceInfo
 			DetectDeviceMiddle(res, req)
+
+			// NOTE - Set cookies for EnvironmentInfo
+			res.cookies.environmentInfo = (() => {
+				const tmpEnvironmentInfo =
+					req.getHeader('environmentinfo') || req.getHeader('environmentInfo')
+
+				if (tmpEnvironmentInfo) return JSON.parse(tmpEnvironmentInfo)
+
+				return {
+					ENV,
+					MODE,
+					ENV_MODE,
+				}
+			})()
 
 			const enableISR =
 				ServerConfig.isr.enable &&
