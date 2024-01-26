@@ -26,6 +26,7 @@ function _optionalChain(ops) {
 var _htmlminifier = require('html-minifier')
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
+var _zlib = require('zlib')
 var _constants = require('../../constants')
 var _InitEnv = require('../../utils/InitEnv')
 
@@ -38,6 +39,9 @@ const compressContent = (html) => {
 		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
 	)
 		return html
+
+	if (Buffer.isBuffer(html))
+		html = _zlib.gunzipSync.call(void 0, html).toString()
 	else if (_InitEnv.ENV !== 'development') {
 		html = _htmlminifier.minify.call(void 0, html, {
 			collapseBooleanAttributes: true,
@@ -56,6 +60,8 @@ const compressContent = (html) => {
 
 const optimizeContent = (html, isFullOptimize = false) => {
 	if (!html) return ''
+	if (Buffer.isBuffer(html))
+		html = _zlib.gunzipSync.call(void 0, html).toString()
 
 	html = html.replace(_constants3.regexOptimizeForScriptBlockPerformance, '')
 

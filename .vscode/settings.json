@@ -40,5 +40,10 @@
 	"path-autocomplete.pathSeparators": " \t({[",
 	"workbench.editor.empty.hint": "hidden",
 	"eslint.experimental.useFlatConfig": true,
-	"eslint.workingDirectories": [{ "mode": "auto" }]
+	"eslint.workingDirectories": [
+		{
+			"mode": "auto"
+		}
+	],
+	"jira-plugin.workingProject": ""
 }

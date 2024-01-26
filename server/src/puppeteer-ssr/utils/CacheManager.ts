@@ -60,11 +60,11 @@ const CacheManager = () => {
 		}
 
 		const key = getCacheKey(url)
-		let file = `${pagesPath}/${key}.html`
+		let file = `${pagesPath}/${key}.gz`
 		let isRaw = false
 
 		if (!fs.existsSync(file)) {
-			file = `${pagesPath}/${key}.raw.html`
+			file = `${pagesPath}/${key}.raw.gz`
 			isRaw = true
 		}
 

@@ -10,6 +10,8 @@ import {
 	getKey,
 	setRequestTimeInfo,
 } from './utils'
+import { gzipSync } from 'zlib'
+import { DISABLE_COMPRESS_HTML } from '../../constants'
 
 const maintainFile = path.resolve(__dirname, '../../../../maintain.html')
 
@@ -31,14 +33,15 @@ const get = async (
 	}
 
 	const key = getKey(url)
-	let file = `${pagesPath}/${key}.html`
+
+	let file = `${pagesPath}/${key}.gz`
 	let isRaw = false
 
 	switch (true) {
 		case fs.existsSync(file):
 			break
 		default:
-			file = `${pagesPath}/${key}.raw.html`
+			file = `${pagesPath}/${key}.raw.gz`
 			isRaw = true
 			break
 	}
@@ -50,7 +53,7 @@ const get = async (
 
 		try {
 			fs.writeFileSync(file, '')
-			Console.log(`File ${key}.html has been created.`)
+			Console.log(`File ${key}.gz has been created.`)
 
 			return {
 				file,
@@ -122,20 +125,22 @@ const set = async ({
 	}
 
 	const key = getKey(url)
-	const file = `${pagesPath}/${key}${isRaw ? '.raw' : ''}.html`
+	const file = `${pagesPath}/${key}${isRaw ? '.raw' : ''}.gz`
 
-	if (!isRaw && fs.existsSync(`${pagesPath}/${key}.raw.html`)) {
+	if (!isRaw && fs.existsSync(`${pagesPath}/${key}.raw.gz`)) {
 		try {
-			fs.renameSync(`${pagesPath}/${key}.raw.html`, file)
+			fs.renameSync(`${pagesPath}/${key}.raw.gz`, file)
 		} catch (err) {
 			Console.error(err)
 			return
 		}
 	}
 
-	if (fs.existsSync(file)) {
+	// NOTE - If file is exist and isRaw or not disable compress process, will be created new or updated
+	if (fs.existsSync(file) && (isRaw || !DISABLE_COMPRESS_HTML)) {
+		const contentCompression = gzipSync(html)
 		try {
-			fs.writeFileSync(file, html)
+			fs.writeFileSync(file, contentCompression)
 			Console.log(`Cập nhật nội dung cho file ${file}`)
 		} catch (err) {
 			Console.error(err)
@@ -154,8 +159,8 @@ const set = async ({
 const remove = (url: string) => {
 	if (!url) return Console.log('Url can not empty!')
 	const key = getKey(url)
-	let file = `${pagesPath}/${key}.raw.html`
-	if (!fs.existsSync(file)) file = `${pagesPath}/${key}.html`
+	let file = `${pagesPath}/${key}.raw.gz`
+	if (!fs.existsSync(file)) file = `${pagesPath}/${key}.gz`
 	if (!fs.existsSync(file))
 		return Console.log('Does not exist file reference url!')
 

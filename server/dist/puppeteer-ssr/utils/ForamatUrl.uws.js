@@ -64,7 +64,7 @@ const convertUrlHeaderToQueryString = (url, res, simulateBot = false) => {
 			(_6) => _6.localeInfo,
 		])
 	)
-	const environmentInfo = JSON.stringify(
+	const environmentInfoStringify = JSON.stringify(
 		_optionalChain([
 			res,
 			'access',
@@ -76,7 +76,7 @@ const convertUrlHeaderToQueryString = (url, res, simulateBot = false) => {
 
 	let urlFormatted = `${url}${
 		url.indexOf('?') === -1 ? '?' : '&'
-	}botInfo=${botInfoStringify}&deviceInfo=${deviceInfoStringify}&localeInfo=${localeInfoStringify}&environmentInfo=${environmentInfo}`.trim()
+	}botInfo=${botInfoStringify}&deviceInfo=${deviceInfoStringify}&localeInfo=${localeInfoStringify}&environmentInfo=${environmentInfoStringify}`.trim()
 
 	return urlFormatted
 }

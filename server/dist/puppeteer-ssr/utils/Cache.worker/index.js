@@ -41,6 +41,8 @@ var _ConsoleHandler = require('../../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _utils = require('./utils')
+var _zlib = require('zlib')
+var _constants3 = require('../../constants')
 
 const maintainFile = _path2.default.resolve(
 	__dirname,
@@ -58,14 +60,15 @@ const get = async (url, options) => {
 	}
 
 	const key = _utils.getKey.call(void 0, url)
-	let file = `${_constants.pagesPath}/${key}.html`
+
+	let file = `${_constants.pagesPath}/${key}.gz`
 	let isRaw = false
 
 	switch (true) {
 		case _fs2.default.existsSync(file):
 			break
 		default:
-			file = `${_constants.pagesPath}/${key}.raw.html`
+			file = `${_constants.pagesPath}/${key}.raw.gz`
 			isRaw = true
 			break
 	}
@@ -77,7 +80,7 @@ const get = async (url, options) => {
 
 		try {
 			_fs2.default.writeFileSync(file, '')
-			_ConsoleHandler2.default.log(`File ${key}.html has been created.`)
+			_ConsoleHandler2.default.log(`File ${key}.gz has been created.`)
 
 			return {
 				file,
@@ -154,23 +157,28 @@ const set = async ({ html, url, isRaw = false }) => {
 	}
 
 	const key = _utils.getKey.call(void 0, url)
-	const file = `${_constants.pagesPath}/${key}${isRaw ? '.raw' : ''}.html`
+	const file = `${_constants.pagesPath}/${key}${isRaw ? '.raw' : ''}.gz`
 
 	if (
 		!isRaw &&
-		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.html`)
+		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.gz`)
 	) {
 		try {
-			_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.html`, file)
+			_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.gz`, file)
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
 			return
 		}
 	}
 
-	if (_fs2.default.existsSync(file)) {
+	// NOTE - If file is exist and isRaw or not disable compress process, will be created new or updated
+	if (
+		_fs2.default.existsSync(file) &&
+		(isRaw || !_constants3.DISABLE_COMPRESS_HTML)
+	) {
+		const contentCompression = _zlib.gzipSync.call(void 0, html)
 		try {
-			_fs2.default.writeFileSync(file, html)
+			_fs2.default.writeFileSync(file, contentCompression)
 			_ConsoleHandler2.default.log(`Cập nhật nội dung cho file ${file}`)
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
@@ -188,9 +196,8 @@ const set = async ({ html, url, isRaw = false }) => {
 const remove = (url) => {
 	if (!url) return _ConsoleHandler2.default.log('Url can not empty!')
 	const key = _utils.getKey.call(void 0, url)
-	let file = `${_constants.pagesPath}/${key}.raw.html`
-	if (!_fs2.default.existsSync(file))
-		file = `${_constants.pagesPath}/${key}.html`
+	let file = `${_constants.pagesPath}/${key}.raw.gz`
+	if (!_fs2.default.existsSync(file)) file = `${_constants.pagesPath}/${key}.gz`
 	if (!_fs2.default.existsSync(file))
 		return _ConsoleHandler2.default.log('Does not exist file reference url!')
 

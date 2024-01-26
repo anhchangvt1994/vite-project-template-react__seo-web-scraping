@@ -12,6 +12,8 @@ import { CACHEABLE_STATUS_CODE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl'
 import ISRGenerator from './utils/ISRGenerator.next'
 import ISRHandler from './utils/ISRHandler'
+import { gzipSync, gunzipSync } from 'zlib'
+import fs from 'fs'
 
 const puppeteerSSRService = (async () => {
 	let _app: FastifyInstance
@@ -76,6 +78,8 @@ const puppeteerSSRService = (async () => {
 						ServerConfig.isr.routes[pathname].enable
 				)
 			const headers = req.headers
+			const enableGzipEncoding =
+				headers['accept-encoding']?.indexOf('gzip') !== -1
 
 			res.raw.setHeader(
 				'Content-Type',
@@ -112,6 +116,9 @@ const puppeteerSSRService = (async () => {
 							)
 							res.raw.setHeader('Cache-Control', 'no-store')
 							res.raw.statusCode = result.status
+							if (enableGzipEncoding && result.status === 200) {
+								res.raw.setHeader('Content-Encoding', 'gzip')
+							}
 
 							if (result.status === 503) res.header('Retry-After', '120')
 						} else {
@@ -122,12 +129,36 @@ const puppeteerSSRService = (async () => {
 						if (
 							(CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
 							result.response
-						)
-							return result.html
-								? res.send(result.html)
-								: sendFile(result.response, res.raw)
+						) {
+							const body = (() => {
+								let tmpBody: string | Buffer = ''
+
+								if (enableGzipEncoding) {
+									tmpBody = result.html
+										? gzipSync(result.html)
+										: fs.readFileSync(result.response)
+								} else if (result.response.indexOf('.gz') !== -1) {
+									const content = fs.readFileSync(result.response)
+
+									tmpBody = gunzipSync(content).toString()
+								} else {
+									tmpBody = fs.readFileSync(result.response)
+								}
+
+								return tmpBody
+							})()
+
+							return res.send(body)
+						}
 						// Serve prerendered page as response.
-						else return res.send(result.html || `${result.status} Error`) // Serve prerendered page as response.
+						else {
+							const body = result.html
+								? enableGzipEncoding
+									? gzipSync(result.html)
+									: result.html
+								: `${result.status} Error`
+							return res.send(body) // Serve prerendered page as response.
+						}
 					} catch (err) {
 						Console.error('url', url)
 						Console.error(err)

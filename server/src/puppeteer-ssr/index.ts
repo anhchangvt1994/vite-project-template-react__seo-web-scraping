@@ -1,5 +1,7 @@
 import { Express } from 'express'
+import fs from 'fs'
 import path from 'path'
+import { gunzipSync, gzipSync } from 'zlib'
 import { IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
 import ServerConfig from '../server.config'
 import { IBotInfo } from '../types'
@@ -75,6 +77,8 @@ const puppeteerSSRService = (async () => {
 						ServerConfig.isr.routes[pathname].enable
 				)
 			const headers = req.headers
+			const enableGzipEncoding =
+				headers['accept-encoding']?.indexOf('gzip') !== -1
 
 			res.set({
 				'Content-Type':
@@ -123,6 +127,12 @@ const puppeteerSSRService = (async () => {
 
 							res.status(result.status)
 
+							if (enableGzipEncoding && result.status === 200) {
+								res.set({
+									'Content-Encoding': 'gzip',
+								})
+							}
+
 							if (result.status === 503) res.set('Retry-After', '120')
 						} else {
 							next(new Error('504 Gateway Timeout'))
@@ -133,12 +143,36 @@ const puppeteerSSRService = (async () => {
 						if (
 							(CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
 							result.response
-						)
-							result.html
-								? res.send(result.html)
-								: res.sendFile(result.response)
+						) {
+							const body = (() => {
+								let tmpBody: string | Buffer = ''
+
+								if (enableGzipEncoding) {
+									tmpBody = result.html
+										? gzipSync(result.html)
+										: fs.readFileSync(result.response)
+								} else if (result.response.indexOf('.gz') !== -1) {
+									const content = fs.readFileSync(result.response)
+
+									tmpBody = gunzipSync(content).toString()
+								} else {
+									tmpBody = fs.readFileSync(result.response)
+								}
+
+								return tmpBody
+							})()
+
+							res.send(body)
+						}
 						// Serve prerendered page as response.
-						else res.send(result.html || `${result.status} Error`) // Serve prerendered page as response.
+						else {
+							const body = result.html
+								? enableGzipEncoding
+									? gzipSync(result.html)
+									: result.html
+								: `${result.status} Error`
+							res.send(body) // Serve prerendered page as response.
+						}
 					} catch (err) {
 						Console.error('url', url)
 						Console.error(err)

@@ -44,6 +44,9 @@ var _ISRGeneratornext = require('./utils/ISRGenerator.next')
 var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext)
 var _ISRHandler = require('./utils/ISRHandler')
 var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
+var _zlib = require('zlib')
+var _fs = require('fs')
+var _fs2 = _interopRequireDefault(_fs)
 
 const puppeteerSSRService = (async () => {
 	let _app
@@ -150,6 +153,16 @@ const puppeteerSSRService = (async () => {
 						_serverconfig2.default.isr.routes[pathname].enable
 				)
 			const headers = req.headers
+			const enableGzipEncoding =
+				_optionalChain([
+					headers,
+					'access',
+					(_14) => _14['accept-encoding'],
+					'optionalAccess',
+					(_15) => _15.indexOf,
+					'call',
+					(_16) => _16('gzip'),
+				]) !== -1
 
 			res.raw.setHeader(
 				'Content-Type',
@@ -187,6 +200,9 @@ const puppeteerSSRService = (async () => {
 							)
 							res.raw.setHeader('Cache-Control', 'no-store')
 							res.raw.statusCode = result.status
+							if (enableGzipEncoding && result.status === 200) {
+								res.raw.setHeader('Content-Encoding', 'gzip')
+							}
 
 							if (result.status === 503) res.header('Retry-After', '120')
 						} else {
@@ -198,12 +214,36 @@ const puppeteerSSRService = (async () => {
 							(_constants3.CACHEABLE_STATUS_CODE[result.status] ||
 								result.status === 503) &&
 							result.response
-						)
-							return result.html
-								? res.send(result.html)
-								: _SendFile2.default.call(void 0, result.response, res.raw)
+						) {
+							const body = (() => {
+								let tmpBody = ''
+
+								if (enableGzipEncoding) {
+									tmpBody = result.html
+										? _zlib.gzipSync.call(void 0, result.html)
+										: _fs2.default.readFileSync(result.response)
+								} else if (result.response.indexOf('.gz') !== -1) {
+									const content = _fs2.default.readFileSync(result.response)
+
+									tmpBody = _zlib.gunzipSync.call(void 0, content).toString()
+								} else {
+									tmpBody = _fs2.default.readFileSync(result.response)
+								}
+
+								return tmpBody
+							})()
+
+							return res.send(body)
+						}
 						// Serve prerendered page as response.
-						else return res.send(result.html || `${result.status} Error`) // Serve prerendered page as response.
+						else {
+							const body = result.html
+								? enableGzipEncoding
+									? _zlib.gzipSync.call(void 0, result.html)
+									: result.html
+								: `${result.status} Error`
+							return res.send(body) // Serve prerendered page as response.
+						}
 					} catch (err) {
 						_ConsoleHandler2.default.error('url', url)
 						_ConsoleHandler2.default.error(err)

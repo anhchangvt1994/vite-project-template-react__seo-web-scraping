@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { HttpResponse, TemplatedApp } from 'uWebSockets.js'
+import { gunzipSync, gzipSync } from 'zlib'
 import { COOKIE_EXPIRED, IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
 import DetectBotMiddle from '../middlewares/uws/DetectBot'
 import DetectDeviceMiddle from '../middlewares/uws/DetectDevice'
@@ -186,6 +187,9 @@ const puppeteerSSRService = (async () => {
 						ServerConfig.isr.routes[res.urlForCrawler].enable
 				)
 
+			const enableGzipEncoding =
+				req.getHeader('accept-encoding')?.indexOf('gzip') !== -1
+
 			if (
 				ENV_MODE !== 'development' &&
 				enableISR &&
@@ -216,6 +220,10 @@ const puppeteerSSRService = (async () => {
 								 */
 								res.writeStatus(String(result.status))
 
+								if (enableGzipEncoding && result.status === 200) {
+									res.writeHeader('Content-Encoding', 'gzip')
+								}
+
 								if (result.status === 503) res.writeHeader('Retry-After', '120')
 
 								// Add Server-Timing! See https://w3c.github.io/server-timing/.
@@ -226,9 +234,24 @@ const puppeteerSSRService = (async () => {
 								) {
 									try {
 										res = _getResponseWithDefaultCookie(res)
-										const body = result.html
-											? result.html
-											: fs.readFileSync(result.response)
+										const body = (() => {
+											let tmpBody: string | Buffer = ''
+
+											if (enableGzipEncoding) {
+												tmpBody = result.html
+													? gzipSync(result.html)
+													: fs.readFileSync(result.response)
+											} else if (result.response.indexOf('.gz') !== -1) {
+												const content = fs.readFileSync(result.response)
+
+												tmpBody = gunzipSync(content).toString()
+											} else {
+												tmpBody = fs.readFileSync(result.response)
+											}
+
+											return tmpBody
+										})()
+
 										res.end(body, true)
 									} catch {
 										res.writeStatus('404').end('Page not found!', true)
@@ -243,7 +266,11 @@ const puppeteerSSRService = (async () => {
 											.writeHeader('Cache-Control', 'no-store')
 									}
 
-									res.end(result.html || '', true)
+									const body = enableGzipEncoding
+										? gzipSync(result.html)
+										: result.html
+
+									res.end(body || '', true)
 								} else {
 									res.end(`${result.status} Error`, true)
 								}

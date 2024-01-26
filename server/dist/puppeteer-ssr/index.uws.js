@@ -29,6 +29,7 @@ var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 
+var _zlib = require('zlib')
 var _constants = require('../constants')
 var _DetectBot = require('../middlewares/uws/DetectBot')
 var _DetectBot2 = _interopRequireDefault(_DetectBot)
@@ -231,6 +232,19 @@ const puppeteerSSRService = (async () => {
 						_serverconfig2.default.isr.routes[res.urlForCrawler].enable
 				)
 
+			const enableGzipEncoding =
+				_optionalChain([
+					req,
+					'access',
+					(_3) => _3.getHeader,
+					'call',
+					(_4) => _4('accept-encoding'),
+					'optionalAccess',
+					(_5) => _5.indexOf,
+					'call',
+					(_6) => _6('gzip'),
+				]) !== -1
+
 			if (
 				_InitEnv.ENV_MODE !== 'development' &&
 				enableISR &&
@@ -262,6 +276,10 @@ const puppeteerSSRService = (async () => {
 								 */
 								res.writeStatus(String(result.status))
 
+								if (enableGzipEncoding && result.status === 200) {
+									res.writeHeader('Content-Encoding', 'gzip')
+								}
+
 								if (result.status === 503) res.writeHeader('Retry-After', '120')
 
 								// Add Server-Timing! See https://w3c.github.io/server-timing/.
@@ -272,9 +290,28 @@ const puppeteerSSRService = (async () => {
 								) {
 									try {
 										res = _getResponseWithDefaultCookie(res)
-										const body = result.html
-											? result.html
-											: _fs2.default.readFileSync(result.response)
+										const body = (() => {
+											let tmpBody = ''
+
+											if (enableGzipEncoding) {
+												tmpBody = result.html
+													? _zlib.gzipSync.call(void 0, result.html)
+													: _fs2.default.readFileSync(result.response)
+											} else if (result.response.indexOf('.gz') !== -1) {
+												const content = _fs2.default.readFileSync(
+													result.response
+												)
+
+												tmpBody = _zlib.gunzipSync
+													.call(void 0, content)
+													.toString()
+											} else {
+												tmpBody = _fs2.default.readFileSync(result.response)
+											}
+
+											return tmpBody
+										})()
+
 										res.end(body, true)
 									} catch (e) {
 										res.writeStatus('404').end('Page not found!', true)
@@ -289,7 +326,11 @@ const puppeteerSSRService = (async () => {
 											.writeHeader('Cache-Control', 'no-store')
 									}
 
-									res.end(result.html || '', true)
+									const body = enableGzipEncoding
+										? _zlib.gzipSync.call(void 0, result.html)
+										: result.html
+
+									res.end(body || '', true)
 								} else {
 									res.end(`${result.status} Error`, true)
 								}

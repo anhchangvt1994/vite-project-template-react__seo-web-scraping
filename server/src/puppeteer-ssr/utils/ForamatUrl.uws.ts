@@ -22,11 +22,11 @@ export const convertUrlHeaderToQueryString = (
 
 	const deviceInfoStringify = JSON.stringify(res.cookies?.deviceInfo)
 	const localeInfoStringify = JSON.stringify(res.cookies?.localeInfo)
-	const environmentInfo = JSON.stringify(res.cookies?.environmentInfo)
+	const environmentInfoStringify = JSON.stringify(res.cookies?.environmentInfo)
 
 	let urlFormatted = `${url}${
 		url.indexOf('?') === -1 ? '?' : '&'
-	}botInfo=${botInfoStringify}&deviceInfo=${deviceInfoStringify}&localeInfo=${localeInfoStringify}&environmentInfo=${environmentInfo}`.trim()
+	}botInfo=${botInfoStringify}&deviceInfo=${deviceInfoStringify}&localeInfo=${localeInfoStringify}&environmentInfo=${environmentInfoStringify}`.trim()
 
 	return urlFormatted
 } // formatUrl
