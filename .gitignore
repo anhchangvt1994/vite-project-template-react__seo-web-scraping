@@ -34,4 +34,4 @@ config/utils/PortHandler/.env
 server/**/server-info.json
 server/**/user_data*
 server/**/.cache
-server/**/utils/Cache.worker/pages/*.html
+server/**/utils/Cache.worker/pages/*
