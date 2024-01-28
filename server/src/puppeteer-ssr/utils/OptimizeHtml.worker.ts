@@ -1,6 +1,6 @@
 import { minify } from 'html-minifier'
 import workerpool from 'workerpool'
-import { gunzipSync } from 'zlib'
+import { brotliDecompressSync } from 'zlib'
 import { POWER_LEVEL, POWER_LEVEL_LIST } from '../../constants'
 import { ENV } from '../../utils/InitEnv'
 import {
@@ -20,7 +20,7 @@ const compressContent = (html: string): string => {
 	else if (DISABLE_COMPRESS_HTML || POWER_LEVEL === POWER_LEVEL_LIST.ONE)
 		return html
 
-	if (Buffer.isBuffer(html)) html = gunzipSync(html).toString()
+	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
 	else if (ENV !== 'development') {
 		html = minify(html, {
 			collapseBooleanAttributes: true,
@@ -39,7 +39,7 @@ const compressContent = (html: string): string => {
 
 const optimizeContent = (html: string, isFullOptimize = false): string => {
 	if (!html) return ''
-	if (Buffer.isBuffer(html)) html = gunzipSync(html).toString()
+	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
 
 	html = html.replace(regexOptimizeForScriptBlockPerformance, '')
 

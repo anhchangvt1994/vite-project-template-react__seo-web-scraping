@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { HttpResponse, TemplatedApp } from 'uWebSockets.js'
-import { gunzipSync, gzipSync } from 'zlib'
+import { brotliCompressSync, brotliDecompressSync, gzipSync } from 'zlib'
 import { COOKIE_EXPIRED, IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
 import DetectBotMiddle from '../middlewares/uws/DetectBot'
 import DetectDeviceMiddle from '../middlewares/uws/DetectDevice'
@@ -187,8 +187,13 @@ const puppeteerSSRService = (async () => {
 						ServerConfig.isr.routes[res.urlForCrawler].enable
 				)
 
-			const enableGzipEncoding =
-				req.getHeader('accept-encoding')?.indexOf('gzip') !== -1
+			const enableContentEncoding = Boolean(req.getHeader('accept-encoding'))
+			const contentEncoding = (() => {
+				const tmpHeaderAcceptEncoding = req.getHeader('accept-encoding') || ''
+				if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+				else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1) return 'gzip'
+				return '' as 'br' | 'gzip' | ''
+			})()
 
 			if (
 				ENV_MODE !== 'development' &&
@@ -220,8 +225,8 @@ const puppeteerSSRService = (async () => {
 								 */
 								res.writeStatus(String(result.status))
 
-								if (enableGzipEncoding && result.status === 200) {
-									res.writeHeader('Content-Encoding', 'gzip')
+								if (enableContentEncoding && result.status === 200) {
+									res.writeHeader('Content-Encoding', contentEncoding)
 								}
 
 								if (result.status === 503) res.writeHeader('Retry-After', '120')
@@ -237,14 +242,18 @@ const puppeteerSSRService = (async () => {
 										const body = (() => {
 											let tmpBody: string | Buffer = ''
 
-											if (enableGzipEncoding) {
+											if (enableContentEncoding) {
 												tmpBody = result.html
-													? gzipSync(result.html)
+													? contentEncoding === 'br'
+														? brotliCompressSync(result.html)
+														: contentEncoding === 'gzip'
+														? gzipSync(result.html)
+														: result.html
 													: fs.readFileSync(result.response)
-											} else if (result.response.indexOf('.gz') !== -1) {
+											} else if (result.response.indexOf('.br') !== -1) {
 												const content = fs.readFileSync(result.response)
 
-												tmpBody = gunzipSync(content).toString()
+												tmpBody = brotliDecompressSync(content).toString()
 											} else {
 												tmpBody = fs.readFileSync(result.response)
 											}
@@ -266,8 +275,8 @@ const puppeteerSSRService = (async () => {
 											.writeHeader('Cache-Control', 'no-store')
 									}
 
-									const body = enableGzipEncoding
-										? gzipSync(result.html)
+									const body = enableContentEncoding
+										? brotliCompressSync(result.html)
 										: result.html
 
 									res.end(body || '', true)

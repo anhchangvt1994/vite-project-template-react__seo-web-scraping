@@ -232,18 +232,13 @@ const puppeteerSSRService = (async () => {
 						_serverconfig2.default.isr.routes[res.urlForCrawler].enable
 				)
 
-			const enableGzipEncoding =
-				_optionalChain([
-					req,
-					'access',
-					(_3) => _3.getHeader,
-					'call',
-					(_4) => _4('accept-encoding'),
-					'optionalAccess',
-					(_5) => _5.indexOf,
-					'call',
-					(_6) => _6('gzip'),
-				]) !== -1
+			const enableContentEncoding = Boolean(req.getHeader('accept-encoding'))
+			const contentEncoding = (() => {
+				const tmpHeaderAcceptEncoding = req.getHeader('accept-encoding') || ''
+				if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+				else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1) return 'gzip'
+				return ''
+			})()
 
 			if (
 				_InitEnv.ENV_MODE !== 'development' &&
@@ -276,8 +271,8 @@ const puppeteerSSRService = (async () => {
 								 */
 								res.writeStatus(String(result.status))
 
-								if (enableGzipEncoding && result.status === 200) {
-									res.writeHeader('Content-Encoding', 'gzip')
+								if (enableContentEncoding && result.status === 200) {
+									res.writeHeader('Content-Encoding', contentEncoding)
 								}
 
 								if (result.status === 503) res.writeHeader('Retry-After', '120')
@@ -293,16 +288,20 @@ const puppeteerSSRService = (async () => {
 										const body = (() => {
 											let tmpBody = ''
 
-											if (enableGzipEncoding) {
+											if (enableContentEncoding) {
 												tmpBody = result.html
-													? _zlib.gzipSync.call(void 0, result.html)
+													? contentEncoding === 'br'
+														? _zlib.brotliCompressSync.call(void 0, result.html)
+														: contentEncoding === 'gzip'
+														? _zlib.gzipSync.call(void 0, result.html)
+														: result.html
 													: _fs2.default.readFileSync(result.response)
-											} else if (result.response.indexOf('.gz') !== -1) {
+											} else if (result.response.indexOf('.br') !== -1) {
 												const content = _fs2.default.readFileSync(
 													result.response
 												)
 
-												tmpBody = _zlib.gunzipSync
+												tmpBody = _zlib.brotliDecompressSync
 													.call(void 0, content)
 													.toString()
 											} else {
@@ -326,8 +325,8 @@ const puppeteerSSRService = (async () => {
 											.writeHeader('Cache-Control', 'no-store')
 									}
 
-									const body = enableGzipEncoding
-										? _zlib.gzipSync.call(void 0, result.html)
+									const body = enableContentEncoding
+										? _zlib.brotliCompressSync.call(void 0, result.html)
 										: result.html
 
 									res.end(body || '', true)

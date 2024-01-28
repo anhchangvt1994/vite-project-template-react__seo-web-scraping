@@ -61,14 +61,14 @@ const get = async (url, options) => {
 
 	const key = _utils.getKey.call(void 0, url)
 
-	let file = `${_constants.pagesPath}/${key}.gz`
+	let file = `${_constants.pagesPath}/${key}.br`
 	let isRaw = false
 
 	switch (true) {
 		case _fs2.default.existsSync(file):
 			break
 		default:
-			file = `${_constants.pagesPath}/${key}.raw.gz`
+			file = `${_constants.pagesPath}/${key}.raw.br`
 			isRaw = true
 			break
 	}
@@ -80,7 +80,7 @@ const get = async (url, options) => {
 
 		try {
 			_fs2.default.writeFileSync(file, '')
-			_ConsoleHandler2.default.log(`File ${key}.gz has been created.`)
+			_ConsoleHandler2.default.log(`File ${key}.br has been created.`)
 
 			return {
 				file,
@@ -157,14 +157,14 @@ const set = async ({ html, url, isRaw = false }) => {
 	}
 
 	const key = _utils.getKey.call(void 0, url)
-	const file = `${_constants.pagesPath}/${key}${isRaw ? '.raw' : ''}.gz`
+	const file = `${_constants.pagesPath}/${key}${isRaw ? '.raw' : ''}.br`
 
 	if (
 		!isRaw &&
-		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.gz`)
+		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`)
 	) {
 		try {
-			_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.gz`, file)
+			_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.br`, file)
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
 			return
@@ -176,7 +176,9 @@ const set = async ({ html, url, isRaw = false }) => {
 		_fs2.default.existsSync(file) &&
 		(isRaw || !_constants3.DISABLE_COMPRESS_HTML)
 	) {
-		const contentCompression = _zlib.gzipSync.call(void 0, html)
+		const contentCompression = Buffer.isBuffer(html)
+			? html
+			: _zlib.brotliCompressSync.call(void 0, html)
 		try {
 			_fs2.default.writeFileSync(file, contentCompression)
 			_ConsoleHandler2.default.log(`Cập nhật nội dung cho file ${file}`)
@@ -196,8 +198,8 @@ const set = async ({ html, url, isRaw = false }) => {
 const remove = (url) => {
 	if (!url) return _ConsoleHandler2.default.log('Url can not empty!')
 	const key = _utils.getKey.call(void 0, url)
-	let file = `${_constants.pagesPath}/${key}.raw.gz`
-	if (!_fs2.default.existsSync(file)) file = `${_constants.pagesPath}/${key}.gz`
+	let file = `${_constants.pagesPath}/${key}.raw.br`
+	if (!_fs2.default.existsSync(file)) file = `${_constants.pagesPath}/${key}.br`
 	if (!_fs2.default.existsSync(file))
 		return _ConsoleHandler2.default.log('Does not exist file reference url!')
 

@@ -11,6 +11,9 @@ import detectLocale from './utils/DetectLocale'
 import DetectRedirect from './utils/DetectRedirect'
 import detectStaticExtension from './utils/DetectStaticExtension'
 import { ENV, MODE, ENV_MODE, PROCESS_ENV } from './utils/InitEnv'
+import fs from 'fs'
+import { brotliCompressSync, gzipSync } from 'zlib'
+import serveStatic from 'serve-static'
 
 const ServerConfig = require('./server.config')?.default ?? {}
 
@@ -65,16 +68,51 @@ const startServer = async () => {
 				 * https://www.inchcalculator.com/convert/month-to-second/
 				 */
 				if (isStatic) {
-					if (ENV !== 'development') {
-						res.set('Cache-Control', 'public, max-age=31556952')
-					}
+					const staticPath = path.resolve(__dirname, `../../dist/${req.url}`)
+					res.status(200).set('Cache-Control', 'public, max-age=31556952')
 
-					try {
+					if (ENV === 'development') {
+						try {
+							res.sendFile(staticPath)
+						} catch (err) {
+							res.status(404).send('File not found')
+						}
+					} else {
+						const enableContentEncoding = Boolean(
+							req.headers['accept-encoding']
+						)
+						const contentEncoding = (() => {
+							const tmpHeaderAcceptEncoding =
+								req.headers['accept-encoding'] || ''
+							if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+							else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
+								return 'gzip'
+							return '' as 'br' | 'gzip' | ''
+						})()
+						res.set({
+							'Content-Encoding': contentEncoding,
+						})
+						const body = (() => {
+							const content = fs.readFileSync(
+								path.resolve(__dirname, `../../dist/${req.url}`)
+							)
+							const tmpBody =
+								contentEncoding === 'br'
+									? brotliCompressSync(content)
+									: contentEncoding === 'gzip'
+									? gzipSync(content)
+									: content
+
+							return tmpBody
+						})()
+
+						const mimeType = serveStatic.mime.lookup(staticPath)
+
 						res
-							.status(200)
-							.sendFile(path.resolve(__dirname, `../../dist/${req.url}`))
-					} catch (err) {
-						res.status(404).send('File not found')
+							.set({
+								'Content-type': mimeType,
+							})
+							.send(body)
 					}
 				} else {
 					next()

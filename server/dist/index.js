@@ -51,6 +51,11 @@ var _DetectRedirect2 = _interopRequireDefault(_DetectRedirect)
 var _DetectStaticExtension = require('./utils/DetectStaticExtension')
 var _DetectStaticExtension2 = _interopRequireDefault(_DetectStaticExtension)
 var _InitEnv = require('./utils/InitEnv')
+var _fs = require('fs')
+var _fs2 = _interopRequireDefault(_fs)
+var _zlib = require('zlib')
+var _servestatic = require('serve-static')
+var _servestatic2 = _interopRequireDefault(_servestatic)
 
 const ServerConfig = _nullishCoalesce(
 	_optionalChain([
@@ -123,18 +128,54 @@ const startServer = async () => {
 				 * https://www.inchcalculator.com/convert/month-to-second/
 				 */
 				if (isStatic) {
-					if (_InitEnv.ENV !== 'development') {
-						res.set('Cache-Control', 'public, max-age=31556952')
-					}
+					const staticPath = _path2.default.resolve(
+						__dirname,
+						`../../dist/${req.url}`
+					)
+					res.status(200).set('Cache-Control', 'public, max-age=31556952')
 
-					try {
-						res
-							.status(200)
-							.sendFile(
+					if (_InitEnv.ENV === 'development') {
+						try {
+							res.sendFile(staticPath)
+						} catch (err) {
+							res.status(404).send('File not found')
+						}
+					} else {
+						const enableContentEncoding = Boolean(
+							req.headers['accept-encoding']
+						)
+						const contentEncoding = (() => {
+							const tmpHeaderAcceptEncoding =
+								req.headers['accept-encoding'] || ''
+							if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+							else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
+								return 'gzip'
+							return ''
+						})()
+						res.set({
+							'Content-Encoding': contentEncoding,
+						})
+						const body = (() => {
+							const content = _fs2.default.readFileSync(
 								_path2.default.resolve(__dirname, `../../dist/${req.url}`)
 							)
-					} catch (err) {
-						res.status(404).send('File not found')
+							const tmpBody =
+								contentEncoding === 'br'
+									? _zlib.brotliCompressSync.call(void 0, content)
+									: contentEncoding === 'gzip'
+									? _zlib.gzipSync.call(void 0, content)
+									: content
+
+							return tmpBody
+						})()
+
+						const mimeType = _servestatic2.default.mime.lookup(staticPath)
+
+						res
+							.set({
+								'Content-type': mimeType,
+							})
+							.send(body)
 					}
 				} else {
 					next()

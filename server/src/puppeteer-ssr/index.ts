@@ -1,7 +1,7 @@
 import { Express } from 'express'
 import fs from 'fs'
 import path from 'path'
-import { gunzipSync, gzipSync } from 'zlib'
+import { brotliCompressSync, brotliDecompressSync, gzipSync } from 'zlib'
 import { IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
 import ServerConfig from '../server.config'
 import { IBotInfo } from '../types'
@@ -77,8 +77,13 @@ const puppeteerSSRService = (async () => {
 						ServerConfig.isr.routes[pathname].enable
 				)
 			const headers = req.headers
-			const enableGzipEncoding =
-				headers['accept-encoding']?.indexOf('gzip') !== -1
+			const enableContentEncoding = Boolean(headers['accept-encoding'])
+			const contentEncoding = (() => {
+				const tmpHeaderAcceptEncoding = headers['accept-encoding'] || ''
+				if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+				else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1) return 'gzip'
+				return '' as 'br' | 'gzip' | ''
+			})()
 
 			res.set({
 				'Content-Type':
@@ -127,9 +132,9 @@ const puppeteerSSRService = (async () => {
 
 							res.status(result.status)
 
-							if (enableGzipEncoding && result.status === 200) {
+							if (enableContentEncoding && result.status === 200) {
 								res.set({
-									'Content-Encoding': 'gzip',
+									'Content-Encoding': contentEncoding,
 								})
 							}
 
@@ -147,14 +152,18 @@ const puppeteerSSRService = (async () => {
 							const body = (() => {
 								let tmpBody: string | Buffer = ''
 
-								if (enableGzipEncoding) {
+								if (enableContentEncoding) {
 									tmpBody = result.html
-										? gzipSync(result.html)
+										? contentEncoding === 'br'
+											? brotliCompressSync(result.html)
+											: contentEncoding === 'gzip'
+											? gzipSync(result.html)
+											: result.html
 										: fs.readFileSync(result.response)
-								} else if (result.response.indexOf('.gz') !== -1) {
+								} else if (result.response.indexOf('.br') !== -1) {
 									const content = fs.readFileSync(result.response)
 
-									tmpBody = gunzipSync(content).toString()
+									tmpBody = brotliDecompressSync(content).toString()
 								} else {
 									tmpBody = fs.readFileSync(result.response)
 								}
@@ -166,11 +175,22 @@ const puppeteerSSRService = (async () => {
 						}
 						// Serve prerendered page as response.
 						else {
-							const body = result.html
-								? enableGzipEncoding
-									? gzipSync(result.html)
-									: result.html
-								: `${result.status} Error`
+							const body = (() => {
+								let tmpBody
+								if (enableContentEncoding) {
+									tmpBody = result.html
+										? contentEncoding === 'br'
+											? brotliCompressSync(result.html)
+											: contentEncoding === 'gzip'
+											? gzipSync(result.html)
+											: result.html
+										: fs.readFileSync(result.response)
+								}
+
+								tmpBody = result.html || `${result.status} Error`
+
+								return tmpBody
+							})()
 							res.send(body) // Serve prerendered page as response.
 						}
 					} catch (err) {

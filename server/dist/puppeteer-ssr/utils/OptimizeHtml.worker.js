@@ -41,7 +41,7 @@ const compressContent = (html) => {
 		return html
 
 	if (Buffer.isBuffer(html))
-		html = _zlib.gunzipSync.call(void 0, html).toString()
+		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
 	else if (_InitEnv.ENV !== 'development') {
 		html = _htmlminifier.minify.call(void 0, html, {
 			collapseBooleanAttributes: true,
@@ -61,7 +61,7 @@ const compressContent = (html) => {
 const optimizeContent = (html, isFullOptimize = false) => {
 	if (!html) return ''
 	if (Buffer.isBuffer(html))
-		html = _zlib.gunzipSync.call(void 0, html).toString()
+		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
 
 	html = html.replace(_constants3.regexOptimizeForScriptBlockPerformance, '')
 
