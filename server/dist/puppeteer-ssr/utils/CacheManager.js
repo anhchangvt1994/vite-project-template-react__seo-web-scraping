@@ -67,11 +67,11 @@ const CacheManager = () => {
 		}
 
 		const key = _utils.getKey.call(void 0, url)
-		let file = `${_constants.pagesPath}/${key}.gz`
+		let file = `${_constants.pagesPath}/${key}.br`
 		let isRaw = false
 
 		if (!_fs2.default.existsSync(file)) {
-			file = `${_constants.pagesPath}/${key}.raw.gz`
+			file = `${_constants.pagesPath}/${key}.raw.br`
 			isRaw = true
 		}
 

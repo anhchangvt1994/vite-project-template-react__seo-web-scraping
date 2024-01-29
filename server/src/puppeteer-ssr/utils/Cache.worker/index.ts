@@ -10,7 +10,7 @@ import {
 	getKey,
 	setRequestTimeInfo,
 } from './utils'
-import { gzipSync } from 'zlib'
+import { brotliCompressSync } from 'zlib'
 import { DISABLE_COMPRESS_HTML } from '../../constants'
 
 const maintainFile = path.resolve(__dirname, '../../../../maintain.html')
@@ -34,14 +34,14 @@ const get = async (
 
 	const key = getKey(url)
 
-	let file = `${pagesPath}/${key}.gz`
+	let file = `${pagesPath}/${key}.br`
 	let isRaw = false
 
 	switch (true) {
 		case fs.existsSync(file):
 			break
 		default:
-			file = `${pagesPath}/${key}.raw.gz`
+			file = `${pagesPath}/${key}.raw.br`
 			isRaw = true
 			break
 	}
@@ -53,7 +53,7 @@ const get = async (
 
 		try {
 			fs.writeFileSync(file, '')
-			Console.log(`File ${key}.gz has been created.`)
+			Console.log(`File ${key}.br has been created.`)
 
 			return {
 				file,
@@ -125,11 +125,11 @@ const set = async ({
 	}
 
 	const key = getKey(url)
-	const file = `${pagesPath}/${key}${isRaw ? '.raw' : ''}.gz`
+	const file = `${pagesPath}/${key}${isRaw ? '.raw' : ''}.br`
 
-	if (!isRaw && fs.existsSync(`${pagesPath}/${key}.raw.gz`)) {
+	if (!isRaw && fs.existsSync(`${pagesPath}/${key}.raw.br`)) {
 		try {
-			fs.renameSync(`${pagesPath}/${key}.raw.gz`, file)
+			fs.renameSync(`${pagesPath}/${key}.raw.br`, file)
 		} catch (err) {
 			Console.error(err)
 			return
@@ -138,7 +138,9 @@ const set = async ({
 
 	// NOTE - If file is exist and isRaw or not disable compress process, will be created new or updated
 	if (fs.existsSync(file) && (isRaw || !DISABLE_COMPRESS_HTML)) {
-		const contentCompression = gzipSync(html)
+		const contentCompression = Buffer.isBuffer(html)
+			? html
+			: brotliCompressSync(html)
 		try {
 			fs.writeFileSync(file, contentCompression)
 			Console.log(`Cập nhật nội dung cho file ${file}`)
@@ -159,8 +161,8 @@ const set = async ({
 const remove = (url: string) => {
 	if (!url) return Console.log('Url can not empty!')
 	const key = getKey(url)
-	let file = `${pagesPath}/${key}.raw.gz`
-	if (!fs.existsSync(file)) file = `${pagesPath}/${key}.gz`
+	let file = `${pagesPath}/${key}.raw.br`
+	if (!fs.existsSync(file)) file = `${pagesPath}/${key}.br`
 	if (!fs.existsSync(file))
 		return Console.log('Does not exist file reference url!')
 

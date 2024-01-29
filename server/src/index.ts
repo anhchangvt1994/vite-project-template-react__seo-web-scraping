@@ -1,7 +1,10 @@
 import { spawn } from 'child_process'
 import cors from 'cors'
 import express from 'express'
+import fs from 'fs'
 import path from 'path'
+import serveStatic from 'serve-static'
+import { brotliCompressSync, gzipSync } from 'zlib'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
 import { COOKIE_EXPIRED, pagesPath, resourceExtension } from './constants'
 import { setCookie } from './utils/CookieHandler'
@@ -10,7 +13,7 @@ import detectDevice from './utils/DetectDevice'
 import detectLocale from './utils/DetectLocale'
 import DetectRedirect from './utils/DetectRedirect'
 import detectStaticExtension from './utils/DetectStaticExtension'
-import { ENV, MODE, ENV_MODE, PROCESS_ENV } from './utils/InitEnv'
+import { ENV, ENV_MODE, MODE, PROCESS_ENV } from './utils/InitEnv'
 
 const ServerConfig = require('./server.config')?.default ?? {}
 
@@ -65,16 +68,50 @@ const startServer = async () => {
 				 * https://www.inchcalculator.com/convert/month-to-second/
 				 */
 				if (isStatic) {
-					if (ENV !== 'development') {
-						res.set('Cache-Control', 'public, max-age=31556952')
-					}
+					const staticPath = path.resolve(__dirname, `../../dist/${req.url}`)
 
 					try {
-						res
-							.status(200)
-							.sendFile(path.resolve(__dirname, `../../dist/${req.url}`))
-					} catch (err) {
-						res.status(404).send('File not found')
+						if (ENV === 'development') {
+							res
+								.status(200)
+								.set('Cache-Control', 'public, max-age=31556952')
+								.sendFile(staticPath)
+						} else {
+							const contentEncoding = (() => {
+								const tmpHeaderAcceptEncoding =
+									req.headers['accept-encoding'] || ''
+								if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+								else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
+									return 'gzip'
+								return '' as 'br' | 'gzip' | ''
+							})()
+							res.set({
+								'Content-Encoding': contentEncoding,
+							})
+							const body = (() => {
+								const content = fs.readFileSync(staticPath)
+								const tmpBody =
+									contentEncoding === 'br'
+										? brotliCompressSync(content)
+										: contentEncoding === 'gzip'
+										? gzipSync(content)
+										: content
+
+								return tmpBody
+							})()
+
+							const mimeType = serveStatic.mime.lookup(staticPath)
+
+							res
+								.status(200)
+								.set('Cache-Control', 'public, max-age=31556952')
+								.set({
+									'Content-type': mimeType,
+								})
+								.send(body)
+						}
+					} catch {
+						res.status(404).send('File not found!')
 					}
 				} else {
 					next()

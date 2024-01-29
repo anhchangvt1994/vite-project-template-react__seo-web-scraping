@@ -2,10 +2,10 @@ import fs from 'fs'
 import path from 'path'
 import serveStatic from 'serve-static'
 import { HttpRequest, HttpResponse } from 'uWebSockets.js'
-import { ENV } from '../../constants'
+import { brotliCompressSync, gzipSync } from 'zlib'
 import ServerConfig from '../../server.config'
 import detectStaticExtension from '../../utils/DetectStaticExtension.uws'
-import { PROCESS_ENV } from '../../utils/InitEnv'
+import { ENV, PROCESS_ENV } from '../../utils/InitEnv'
 
 const DetectStaticMiddle = (res: HttpResponse, req: HttpRequest) => {
 	const isStatic = detectStaticExtension(req)
@@ -17,19 +17,50 @@ const DetectStaticMiddle = (res: HttpResponse, req: HttpRequest) => {
 	 */
 
 	if (isStatic && ServerConfig.crawler && !PROCESS_ENV.IS_REMOTE_CRAWLER) {
-		const filePath = path.resolve(__dirname, `../../../../dist/${req.getUrl()}`)
-
-		if (ENV !== 'development') {
-			res.writeHeader('Cache-Control', 'public, max-age=31556952')
-		}
+		const staticPath = path.resolve(
+			__dirname,
+			`../../../../dist/${req.getUrl()}`
+		)
 
 		try {
-			const mimeType = serveStatic.mime.lookup(filePath)
-			const body = fs.readFileSync(filePath)
-			res.writeHeader('Content-Type', mimeType as string).end(body)
+			if (ENV === 'development') {
+				const body = fs.readFileSync(staticPath)
+				const mimeType = serveStatic.mime.lookup(staticPath)
+				res
+					.writeStatus('200')
+					.writeHeader('Cache-Control', 'public, max-age=31556952')
+					.writeHeader('Content-Type', mimeType as string)
+					.end(body)
+			} else {
+				const contentEncoding = (() => {
+					const tmpHeaderAcceptEncoding = req.getHeader('accept-encoding') || ''
+					if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+					else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1) return 'gzip'
+					return '' as 'br' | 'gzip' | ''
+				})()
+				const body = (() => {
+					const content = fs.readFileSync(staticPath)
+					const tmpBody =
+						contentEncoding === 'br'
+							? brotliCompressSync(content)
+							: contentEncoding === 'gzip'
+							? gzipSync(content)
+							: content
+
+					return tmpBody
+				})()
+
+				const mimeType = serveStatic.mime.lookup(staticPath)
+
+				res
+					.writeStatus('200')
+					.writeHeader('Cache-Control', 'public, max-age=31556952')
+					.writeHeader('Content-Encoding', contentEncoding as string)
+					.writeHeader('Content-Type', mimeType as string)
+					.end(body)
+			}
 		} catch {
-			res.writeStatus('404')
-			res.end('File not found')
+			res.writeStatus('404').end('File not found')
 		}
 
 		res.writableEnded = true

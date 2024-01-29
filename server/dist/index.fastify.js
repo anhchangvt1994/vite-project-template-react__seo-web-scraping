@@ -37,10 +37,13 @@ var _cors = require('cors')
 var _cors2 = _interopRequireDefault(_cors)
 var _fastify = require('fastify')
 var _fastify2 = _interopRequireDefault(_fastify)
+var _fs = require('fs')
+var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _servestatic = require('serve-static')
 var _servestatic2 = _interopRequireDefault(_servestatic)
+var _zlib = require('zlib')
 var _PortHandler = require('../../config/utils/PortHandler')
 var _constants = require('./constants')
 var _serverconfig = require('./server.config')
@@ -129,16 +132,51 @@ const startServer = async () => {
 				 */
 
 				if (isStatic) {
-					const filePath = _path2.default.resolve(
+					const staticPath = _path2.default.resolve(
 						__dirname,
 						`../../dist/${req.url}`
 					)
 
-					if (_InitEnv.ENV !== 'development') {
+					if (_InitEnv.ENV === 'development') {
 						res.setHeader('Cache-Control', 'public, max-age=31556952')
-					}
+						_SendFile2.default.call(void 0, staticPath, res)
+					} else {
+						try {
+							const contentEncoding = (() => {
+								const tmpHeaderAcceptEncoding =
+									req.headers['accept-encoding'] || ''
+								if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+								else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
+									return 'gzip'
+								return ''
+							})()
 
-					_SendFile2.default.call(void 0, filePath, res)
+							const body = (() => {
+								const content = _fs2.default.readFileSync(staticPath)
+								const tmpBody =
+									contentEncoding === 'br'
+										? _zlib.brotliCompressSync.call(void 0, content)
+										: contentEncoding === 'gzip'
+										? _zlib.gzipSync.call(void 0, content)
+										: content
+
+								return tmpBody
+							})()
+
+							const mimeType = _servestatic2.default.mime.lookup(staticPath)
+
+							res
+								.writeHead(200, {
+									'cache-control': 'public, max-age=31556952',
+									'content-encoding': contentEncoding,
+									'content-type': mimeType,
+								})
+								.end(body)
+						} catch (err) {
+							res.statusCode = 404
+							res.end('File not found')
+						}
+					}
 				} else {
 					next()
 				}

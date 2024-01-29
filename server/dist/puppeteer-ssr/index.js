@@ -121,16 +121,13 @@ const puppeteerSSRService = (async () => {
 						_serverconfig2.default.isr.routes[pathname].enable
 				)
 			const headers = req.headers
-			const enableGzipEncoding =
-				_optionalChain([
-					headers,
-					'access',
-					(_6) => _6['accept-encoding'],
-					'optionalAccess',
-					(_7) => _7.indexOf,
-					'call',
-					(_8) => _8('gzip'),
-				]) !== -1
+			const enableContentEncoding = Boolean(headers['accept-encoding'])
+			const contentEncoding = (() => {
+				const tmpHeaderAcceptEncoding = headers['accept-encoding'] || ''
+				if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+				else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1) return 'gzip'
+				return ''
+			})()
 
 			res.set({
 				'Content-Type':
@@ -181,9 +178,9 @@ const puppeteerSSRService = (async () => {
 
 							res.status(result.status)
 
-							if (enableGzipEncoding && result.status === 200) {
+							if (enableContentEncoding && result.status === 200) {
 								res.set({
-									'Content-Encoding': 'gzip',
+									'Content-Encoding': contentEncoding,
 								})
 							}
 
@@ -202,14 +199,20 @@ const puppeteerSSRService = (async () => {
 							const body = (() => {
 								let tmpBody = ''
 
-								if (enableGzipEncoding) {
+								if (enableContentEncoding) {
 									tmpBody = result.html
-										? _zlib.gzipSync.call(void 0, result.html)
+										? contentEncoding === 'br'
+											? _zlib.brotliCompressSync.call(void 0, result.html)
+											: contentEncoding === 'gzip'
+											? _zlib.gzipSync.call(void 0, result.html)
+											: result.html
 										: _fs2.default.readFileSync(result.response)
-								} else if (result.response.indexOf('.gz') !== -1) {
+								} else if (result.response.indexOf('.br') !== -1) {
 									const content = _fs2.default.readFileSync(result.response)
 
-									tmpBody = _zlib.gunzipSync.call(void 0, content).toString()
+									tmpBody = _zlib.brotliDecompressSync
+										.call(void 0, content)
+										.toString()
 								} else {
 									tmpBody = _fs2.default.readFileSync(result.response)
 								}
@@ -221,11 +224,22 @@ const puppeteerSSRService = (async () => {
 						}
 						// Serve prerendered page as response.
 						else {
-							const body = result.html
-								? enableGzipEncoding
-									? _zlib.gzipSync.call(void 0, result.html)
-									: result.html
-								: `${result.status} Error`
+							const body = (() => {
+								let tmpBody
+								if (enableContentEncoding) {
+									tmpBody = result.html
+										? contentEncoding === 'br'
+											? _zlib.brotliCompressSync.call(void 0, result.html)
+											: contentEncoding === 'gzip'
+											? _zlib.gzipSync.call(void 0, result.html)
+											: result.html
+										: _fs2.default.readFileSync(result.response)
+								}
+
+								tmpBody = result.html || `${result.status} Error`
+
+								return tmpBody
+							})()
 							res.send(body) // Serve prerendered page as response.
 						}
 					} catch (err) {

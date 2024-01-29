@@ -2,8 +2,10 @@ import middie from '@fastify/middie'
 import { spawn } from 'child_process'
 import cors from 'cors'
 import fastify from 'fastify'
+import fs from 'fs'
 import path from 'path'
 import serveStatic from 'serve-static'
+import { brotliCompressSync, gzipSync } from 'zlib'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
 import { COOKIE_EXPIRED, pagesPath, resourceExtension } from './constants'
 import ServerConfig from './server.config'
@@ -13,7 +15,7 @@ import detectDevice from './utils/DetectDevice'
 import detectLocale from './utils/DetectLocale'
 import DetectRedirect from './utils/DetectRedirect'
 import detectStaticExtension from './utils/DetectStaticExtension'
-import { ENV, MODE, ENV_MODE, PROCESS_ENV } from './utils/InitEnv'
+import { ENV, ENV_MODE, MODE, PROCESS_ENV } from './utils/InitEnv'
 import sendFile from './utils/SendFile'
 
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
@@ -69,13 +71,48 @@ const startServer = async () => {
 				 */
 
 				if (isStatic) {
-					const filePath = path.resolve(__dirname, `../../dist/${req.url}`)
+					const staticPath = path.resolve(__dirname, `../../dist/${req.url}`)
 
-					if (ENV !== 'development') {
+					if (ENV === 'development') {
 						res.setHeader('Cache-Control', 'public, max-age=31556952')
-					}
+						sendFile(staticPath, res)
+					} else {
+						try {
+							const contentEncoding = (() => {
+								const tmpHeaderAcceptEncoding =
+									req.headers['accept-encoding'] || ''
+								if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+								else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
+									return 'gzip'
+								return '' as 'br' | 'gzip' | ''
+							})()
 
-					sendFile(filePath, res)
+							const body = (() => {
+								const content = fs.readFileSync(staticPath)
+								const tmpBody =
+									contentEncoding === 'br'
+										? brotliCompressSync(content)
+										: contentEncoding === 'gzip'
+										? gzipSync(content)
+										: content
+
+								return tmpBody
+							})()
+
+							const mimeType = serveStatic.mime.lookup(staticPath)
+
+							res
+								.writeHead(200, {
+									'cache-control': 'public, max-age=31556952',
+									'content-encoding': contentEncoding,
+									'content-type': mimeType,
+								})
+								.end(body)
+						} catch (err) {
+							res.statusCode = 404
+							res.end('File not found')
+						}
+					}
 				} else {
 					next()
 				}

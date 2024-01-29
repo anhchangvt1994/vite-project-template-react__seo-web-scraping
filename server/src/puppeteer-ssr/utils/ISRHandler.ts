@@ -166,10 +166,12 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 	}
 
 	let html = ''
+	let isForceToOptimizeAndCompress = false
 	let status = 200
 	const specialInfo = regexQueryStringSpecialInfo.exec(url)?.groups ?? {}
 
 	if (ServerConfig.crawler) {
+		isForceToOptimizeAndCompress = true
 		const requestParams = {
 			startGenerating,
 			isFirstRequest: true,
@@ -313,7 +315,11 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 		)
 
 		try {
-			html = await optimizeHTMLContentPool.exec('optimizeContent', [html, true])
+			html = await optimizeHTMLContentPool.exec('optimizeContent', [
+				html,
+				true,
+				isForceToOptimizeAndCompress,
+			])
 		} catch (err) {
 			Console.error(err)
 			return
