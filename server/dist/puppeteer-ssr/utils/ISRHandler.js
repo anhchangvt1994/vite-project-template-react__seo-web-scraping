@@ -159,7 +159,9 @@ const waitResponse = (() => {
 					setTimeout(resolveAfterPageLoadInFewSecond, maximumTimeout)
 				})
 
-				resolve(result)
+				setTimeout(() => {
+					resolve(result)
+				}, 100)
 			})
 		} catch (err) {
 			throw err
