@@ -118,6 +118,11 @@ const puppeteerSSRService = (async () => {
 				})
 		}
 		_app.get('/*', async function (res, req) {
+			DetectStaticMiddle(res, req)
+
+			// NOTE - Check if static will send static file
+			if (res.writableEnded) return
+
 			// NOTE - Check and create base url
 			if (!PROCESS_ENV.BASE_URL)
 				PROCESS_ENV.BASE_URL = `${
@@ -125,11 +130,6 @@ const puppeteerSSRService = (async () => {
 						? req.getHeader('x-forwarded-proto')
 						: 'http'
 				}://${req.getHeader('host')}`
-
-			DetectStaticMiddle(res, req)
-
-			// NOTE - Check if static will send static file
-			if (res.writableEnded) return
 
 			// NOTE - Detect, setup BotInfo and LocaleInfo
 			DetectBotMiddle(res, req)

@@ -32,10 +32,10 @@ var _InitEnv = require('../../utils/InitEnv')
 
 var _constants3 = require('../constants')
 
-const compressContent = (html) => {
+const compressContent = (html, isForce = false) => {
 	if (!html) return ''
 	else if (
-		_constants3.DISABLE_COMPRESS_HTML ||
+		(_constants3.DISABLE_COMPRESS_HTML && !isForce) ||
 		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
 	)
 		return html
@@ -58,19 +58,19 @@ const compressContent = (html) => {
 	return html
 } // compressContent
 
-const optimizeContent = (html, isFullOptimize = false) => {
+const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
 	if (!html) return ''
 	if (Buffer.isBuffer(html))
 		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
 
 	html = html.replace(_constants3.regexOptimizeForScriptBlockPerformance, '')
 
-	if (_constants3.DISABLE_OPTIMIZE) return html
+	if (_constants3.DISABLE_OPTIMIZE && !isForce) return html
 
 	html = html.replace(_constants3.regexOptimizeForPerformanceNormally, '')
 
 	if (
-		_constants3.DISABLE_DEEP_OPTIMIZE ||
+		(_constants3.DISABLE_DEEP_OPTIMIZE && !isForce) ||
 		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
 	)
 		return html

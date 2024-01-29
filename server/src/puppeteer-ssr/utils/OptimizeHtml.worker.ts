@@ -15,9 +15,12 @@ import {
 	regexOptimizeForScriptBlockPerformance,
 } from '../constants'
 
-const compressContent = (html: string): string => {
+const compressContent = (html: string, isForce = false): string => {
 	if (!html) return ''
-	else if (DISABLE_COMPRESS_HTML || POWER_LEVEL === POWER_LEVEL_LIST.ONE)
+	else if (
+		(DISABLE_COMPRESS_HTML && !isForce) ||
+		POWER_LEVEL === POWER_LEVEL_LIST.ONE
+	)
 		return html
 
 	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
@@ -37,17 +40,25 @@ const compressContent = (html: string): string => {
 	return html
 } // compressContent
 
-const optimizeContent = (html: string, isFullOptimize = false): string => {
+const optimizeContent = (
+	html: string,
+	isFullOptimize = false,
+	isForce = false
+): string => {
 	if (!html) return ''
 	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
 
 	html = html.replace(regexOptimizeForScriptBlockPerformance, '')
 
-	if (DISABLE_OPTIMIZE) return html
+	if (DISABLE_OPTIMIZE && !isForce) return html
 
 	html = html.replace(regexOptimizeForPerformanceNormally, '')
 
-	if (DISABLE_DEEP_OPTIMIZE || POWER_LEVEL === POWER_LEVEL_LIST.ONE) return html
+	if (
+		(DISABLE_DEEP_OPTIMIZE && !isForce) ||
+		POWER_LEVEL === POWER_LEVEL_LIST.ONE
+	)
+		return html
 	else if (isFullOptimize) {
 		html = html
 			.replace(regexOptimizeForPerformanceHardly, '')

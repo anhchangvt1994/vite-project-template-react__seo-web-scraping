@@ -156,6 +156,11 @@ const puppeteerSSRService = (async () => {
 				})
 		}
 		_app.get('/*', async function (res, req) {
+			_DetectStatic2.default.call(void 0, res, req)
+
+			// NOTE - Check if static will send static file
+			if (res.writableEnded) return
+
 			// NOTE - Check and create base url
 			if (!_InitEnv.PROCESS_ENV.BASE_URL)
 				_InitEnv.PROCESS_ENV.BASE_URL = `${
@@ -163,11 +168,6 @@ const puppeteerSSRService = (async () => {
 						? req.getHeader('x-forwarded-proto')
 						: 'http'
 				}://${req.getHeader('host')}`
-
-			_DetectStatic2.default.call(void 0, res, req)
-
-			// NOTE - Check if static will send static file
-			if (res.writableEnded) return
 
 			// NOTE - Detect, setup BotInfo and LocaleInfo
 			_DetectBot2.default.call(void 0, res, req)
