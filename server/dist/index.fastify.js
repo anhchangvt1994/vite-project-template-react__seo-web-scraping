@@ -302,7 +302,7 @@ const startServer = async () => {
 			_CookieHandler.setCookie.call(
 				void 0,
 				res,
-				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
+				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 			next()
 		})

@@ -197,7 +197,7 @@ const startServer = async () => {
 			_CookieHandler.setCookie.call(
 				void 0,
 				res,
-				`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
+				`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 
 			next()
@@ -301,7 +301,7 @@ const startServer = async () => {
 			_CookieHandler.setCookie.call(
 				void 0,
 				res,
-				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
+				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 			next()
 		})
@@ -314,7 +314,7 @@ const startServer = async () => {
 			_CookieHandler.setCookie.call(
 				void 0,
 				res,
-				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
+				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 
 			next()
@@ -346,10 +346,21 @@ const startServer = async () => {
 			// })
 
 			if (!_InitEnv.PROCESS_ENV.REFRESH_SERVER) {
-				_child_process.spawn.call(void 0, 'vite', [], {
-					stdio: 'inherit',
-					shell: true,
-				})
+				if (_InitEnv.PROCESS_ENV.BUILD_TOOL === 'vite')
+					_child_process.spawn.call(void 0, 'vite', [], {
+						stdio: 'inherit',
+						shell: true,
+					})
+				else if (_InitEnv.PROCESS_ENV.BUILD_TOOL === 'webpack')
+					_child_process.spawn.call(
+						void 0,
+						'cross-env',
+						['PORT=3000 IO_PORT=3030 npx webpack serve --mode=development'],
+						{
+							stdio: 'inherit',
+							shell: true,
+						}
+					)
 			}
 
 			// watcher.on('change', async (path) => {
@@ -368,10 +379,23 @@ const startServer = async () => {
 			// 	process.exit(0)
 			// })
 		} else if (!_InitEnv.PROCESS_ENV.IS_SERVER) {
-			_child_process.spawn.call(void 0, 'vite', ['preview'], {
-				stdio: 'inherit',
-				shell: true,
-			})
+			if (_InitEnv.PROCESS_ENV.BUILD_TOOL === 'vite')
+				_child_process.spawn.call(void 0, 'vite', ['preview'], {
+					stdio: 'inherit',
+					shell: true,
+				})
+			else if (_InitEnv.PROCESS_ENV.BUILD_TOOL === 'webpack')
+				_child_process.spawn.call(
+					void 0,
+					'cross-env',
+					[
+						'PORT=1234 NODE_NO_WARNINGS=1 node ./config/webpack.serve.config.js',
+					],
+					{
+						stdio: 'inherit',
+						shell: true,
+					}
+				)
 		}
 	}
 }

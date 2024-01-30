@@ -26,6 +26,7 @@ declare global {
   const createGlobalStyle: typeof import('styled-components')['createGlobalStyle']
   const createRef: typeof import('react')['createRef']
   const createRoot: typeof import('react-dom/client')['createRoot']
+  const deleteCookie: typeof import('utils/CookieHelper.ts')['deleteCookie']
   const forwardRef: typeof import('react')['forwardRef']
   const generatePath: typeof import('react-router-dom')['generatePath']
   const generateSentenceCase: typeof import('utils/StringHelper.ts')['generateSentenceCase']

@@ -46,6 +46,16 @@ var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext)
 var _ISRHandler = require('./utils/ISRHandler')
 var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
 
+const _resetCookie = (res) => {
+	_CookieHandler.setCookie.call(void 0, res, `BotInfo=;Max-Age=0;Path=/`)
+	_CookieHandler.setCookie.call(
+		void 0,
+		res,
+		`EnvironmentInfo=;Max-Age=0;Path=/`
+	)
+	_CookieHandler.setCookie.call(void 0, res, `DeviceInfo=;Max-Age=0;Path=/`)
+} // _resetCookie
+
 const puppeteerSSRService = (async () => {
 	let _app
 	const webScrapingService = 'web-scraping-service'
@@ -278,7 +288,9 @@ const puppeteerSSRService = (async () => {
 			 * calc by using:
 			 * https://www.inchcalculator.com/convert/year-to-second/
 			 */
-			if (headers.accept === 'application/json')
+			if (headers.accept === 'application/json') {
+				// NOTE - If header accept application/json (pre-ISR generate static file when user enter and navigate), system will reset cookies to ensure that cookie doesn't exist in these cases
+				_resetCookie(res)
 				res
 					.set({
 						'Cache-Control': 'no-store',
@@ -288,7 +300,7 @@ const puppeteerSSRService = (async () => {
 							? JSON.parse(req.headers['redirect'])
 							: { status: 200, originPath: pathname, path: pathname }
 					)
-			else {
+			} else {
 				const filePath =
 					req.headers['static-html-path'] ||
 					_path2.default.resolve(__dirname, '../../../dist/index.html')

@@ -223,7 +223,7 @@ const startServer = async () => {
 			})()
 			setCookie(
 				res,
-				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND}`
+				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 			)
 			next()
 		})

@@ -407,6 +407,6 @@ export const enum BANDWIDTH_LEVEL_LIST {
 }
 export const COOKIE_EXPIRED =
 	BANDWIDTH_LEVEL == BANDWIDTH_LEVEL_LIST.TWO && ENV !== 'development'
-		? 2000
+		? 20000
 		: 60000
 export const IS_REMOTE_CRAWLER = Boolean(PROCESS_ENV.IS_REMOTE_CRAWLER)

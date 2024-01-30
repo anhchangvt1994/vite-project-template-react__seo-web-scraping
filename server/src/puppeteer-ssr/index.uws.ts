@@ -25,7 +25,7 @@ const puppeteerSSRService = (async () => {
 	const webScrapingService = 'web-scraping-service'
 	const cleanerService = 'cleaner-service'
 
-	const _getResponseWithDefaultCookie = (res: HttpResponse) => {
+	const _setCookie = (res: HttpResponse) => {
 		res
 			.writeHeader(
 				'set-cookie',
@@ -53,7 +53,16 @@ const puppeteerSSRService = (async () => {
 			)
 
 		return res
-	} // _getResponseWithDefaultCookie
+	} // _setCookie
+
+	const _resetCookie = (res: HttpResponse) => {
+		res
+			.writeHeader('set-cookie', `EnvironmentInfo=;Max-Age=0;Path=/`)
+			.writeHeader('set-cookie', `BotInfo=;Max-Age=0;Path=/`)
+			.writeHeader('set-cookie', `DeviceInfo=;Max-Age=0;Path=/`)
+
+		return res
+	} // _resetCookie
 
 	const _allRequestHandler = () => {
 		if (SERVER_LESS) {
@@ -238,7 +247,7 @@ const puppeteerSSRService = (async () => {
 									result.response
 								) {
 									try {
-										res = _getResponseWithDefaultCookie(res)
+										res = _setCookie(res)
 										const body = (() => {
 											let tmpBody: string | Buffer = ''
 
@@ -328,7 +337,8 @@ const puppeteerSSRService = (async () => {
 				if (req.getHeader('accept') === 'application/json') {
 					res.writeStatus('200')
 
-					res = _getResponseWithDefaultCookie(res)
+					res = _setCookie(res)
+					res = _resetCookie(res)
 					res.end(
 						JSON.stringify({
 							status: 200,
@@ -352,7 +362,7 @@ const puppeteerSSRService = (async () => {
 									? 'application/json'
 									: 'text/html; charset=utf-8'
 							)
-						res = _getResponseWithDefaultCookie(res)
+						res = _setCookie(res)
 						res
 							.writeHeader('Cache-Control', 'no-store')
 							.writeHeader('etag', 'false')

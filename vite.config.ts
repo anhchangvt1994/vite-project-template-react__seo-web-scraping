@@ -137,7 +137,7 @@ export default defineConfig(async ({ mode }) => {
 							'DeviceInfo',
 							'LocaleInfo',
 						],
-						'utils/CookieHelper.ts': ['getCookie', 'setCookie'],
+						'utils/CookieHelper.ts': ['getCookie', 'setCookie', 'deleteCookie'],
 						'components/Link.tsx': [['default', 'Link']],
 					},
 					{

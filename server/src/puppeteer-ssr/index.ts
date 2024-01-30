@@ -7,12 +7,18 @@ import ServerConfig from '../server.config'
 import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
-import { getCookieFromResponse } from '../utils/CookieHandler'
+import { getCookieFromResponse, setCookie } from '../utils/CookieHandler'
 import { ENV_MODE } from '../utils/InitEnv'
 import { CACHEABLE_STATUS_CODE, DISABLE_SSR_CACHE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl'
 import ISRGenerator from './utils/ISRGenerator.next'
 import SSRHandler from './utils/ISRHandler'
+
+const _resetCookie = (res) => {
+	setCookie(res, `BotInfo=;Max-Age=0;Path=/`)
+	setCookie(res, `EnvironmentInfo=;Max-Age=0;Path=/`)
+	setCookie(res, `DeviceInfo=;Max-Age=0;Path=/`)
+} // _resetCookie
 
 const puppeteerSSRService = (async () => {
 	let _app: Express
@@ -229,7 +235,9 @@ const puppeteerSSRService = (async () => {
 			 * calc by using:
 			 * https://www.inchcalculator.com/convert/year-to-second/
 			 */
-			if (headers.accept === 'application/json')
+			if (headers.accept === 'application/json') {
+				// NOTE - If header accept application/json (pre-ISR generate static file when user enter and navigate), system will reset cookies to ensure that cookie doesn't exist in these cases
+				_resetCookie(res)
 				res
 					.set({
 						'Cache-Control': 'no-store',
@@ -239,7 +247,7 @@ const puppeteerSSRService = (async () => {
 							? JSON.parse(req.headers['redirect'] as string)
 							: { status: 200, originPath: pathname, path: pathname }
 					)
-			else {
+			} else {
 				const filePath =
 					(req.headers['static-html-path'] as string) ||
 					path.resolve(__dirname, '../../../dist/index.html')
