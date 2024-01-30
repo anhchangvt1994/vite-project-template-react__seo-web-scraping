@@ -40,6 +40,8 @@ const PROCESS_ENV = (() => {
 	})
 
 	switch (exports.ENV_MODE) {
+		case 'development':
+			break
 		case 'staging':
 			dotenv.config({
 				path: _path2.default.resolve(__dirname, '../../.env.staging'),
@@ -57,6 +59,7 @@ const PROCESS_ENV = (() => {
 				path: _path2.default.resolve(__dirname, '../../.env.production'),
 				override: true,
 			})
+			break
 	}
 
 	return process.env

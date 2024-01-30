@@ -46,6 +46,8 @@ export const PROCESS_ENV = (() => {
 	})
 
 	switch (ENV_MODE) {
+		case 'development':
+			break
 		case 'staging':
 			dotenv.config({
 				path: path.resolve(__dirname, '../../.env.staging'),
@@ -63,6 +65,7 @@ export const PROCESS_ENV = (() => {
 				path: path.resolve(__dirname, '../../.env.production'),
 				override: true,
 			})
+			break
 	}
 
 	return process.env as IProcessENV
