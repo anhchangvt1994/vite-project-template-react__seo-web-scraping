@@ -169,6 +169,13 @@ const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
 								''
 							)
 
+							const tmpContentWithTrim = tmpContent
+								.replace(/([\n]|<!--(\s[^>]+)*-->)/g, '')
+								.trim()
+
+							if (!tmpContentWithTrim.replace(/<[^>]*>/g, ''))
+								tmpContent = `${tmpContentWithTrim} ${href}`
+
 							if (curAttrs.indexOf('aria-label=') !== -1) {
 								const ariaLabel = _optionalChain([
 									/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g,
