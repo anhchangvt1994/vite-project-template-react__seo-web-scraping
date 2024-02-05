@@ -5,6 +5,7 @@ var _InitEnv = require('../utils/InitEnv')
 
 // NOTE - Browser Options
 const optionArgs = [
+	'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
 	'--no-sandbox',
 	'--disable-setuid-sandbox',
 	'--headless',
@@ -19,7 +20,8 @@ const optionArgs = [
 	// '--chrome-flags',
 	'--ignore-certificate-errors',
 	'--ignore-certificate-errors-spki-list ',
-	'--disable-features=IsolateOrigins,SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure',
+	'--disable-features=SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure,IsolateOrigins,site-per-process,BlockInsecurePrivateNetworkRequests',
+	'--disable-site-isolation-trials',
 	'--no-zygote',
 	'--disable-accelerated-2d-canvas',
 	'--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
@@ -51,6 +53,7 @@ const optionArgs = [
 	'--use-mock-keychain',
 	// '--use-gl=angle',
 	// '--use-angle=gl-egl',
+	// "--shm-size=4gb",
 ]
 exports.optionArgs = optionArgs
 
@@ -62,6 +65,7 @@ const defaultBrowserOptions = {
 	},
 	userDataDir: `${_constants.userDataPath}/user_data`,
 	args: exports.optionArgs,
+	protocolTimeout: 240000, // NOTE - Handle for error protocol timeout (can test adidas site to got detail of this issue)
 	ignoreDefaultArgs: false,
 	ignoreHTTPSErrors: true,
 }
@@ -127,7 +131,7 @@ const CACHEABLE_STATUS_CODE = { 200: true, 302: true }
 exports.CACHEABLE_STATUS_CODE = CACHEABLE_STATUS_CODE
 
 const chromiumPath =
-	'https://github.com/Sparticuz/chromium/releases/download/v121.0.0/chromium-v121.0.0-pack.tar'
+	'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
 exports.chromiumPath = chromiumPath
 
 const canUseLinuxChromium =

@@ -23,7 +23,7 @@ const deleteResource = (path, WorkerPool) => {
 		})
 		.catch((err) => {
 			if (err) {
-				console.error(err)
+				_ConsoleHandler2.default.error(err)
 				if (WorkerPool) {
 					WorkerPool.pool().terminate()
 				}

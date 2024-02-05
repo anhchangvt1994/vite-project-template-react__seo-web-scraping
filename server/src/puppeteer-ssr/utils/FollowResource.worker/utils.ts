@@ -16,7 +16,7 @@ export const deleteResource = (path: string, WorkerPool?: TWorkerPool) => {
 		})
 		.catch((err) => {
 			if (err) {
-				console.error(err)
+				Console.error(err)
 				if (WorkerPool) {
 					WorkerPool.pool().terminate()
 				}

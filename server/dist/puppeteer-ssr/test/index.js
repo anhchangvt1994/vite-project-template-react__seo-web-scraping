@@ -6,15 +6,25 @@ function _interopRequireDefault(obj) {
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('./constants')
+var _constants3 = require('../../constants')
+
+const minWorkers = 1
+const maxWorkers = 10
 
 const testPuppeteerSSRService = (() => {
 	const _init = () => {
-		const TestPool = _workerpool2.default.pool(__dirname + '/test.worker.ts', {
-			minWorkers: 1,
-			maxWorkers: 10,
-		})
+		const TestPool = _workerpool2.default.pool(
+			__dirname + `/test.worker.${_constants3.resourceExtension}`,
+			{
+				minWorkers,
+				maxWorkers,
+			}
+		)
 
-		const domain = 'https://webpack-vue-puppeteer-ssr.onrender.com/'
+		const domain = 'http://localhost:8080'
+		console.log('total urls: ', _constants.urlList.length)
+		console.log('max workers: ', maxWorkers)
+		console.log('========================>')
 		_constants.urlList.forEach(async (url) => {
 			let tmpUrl = `${domain}?urlTesting=${url}`
 			try {

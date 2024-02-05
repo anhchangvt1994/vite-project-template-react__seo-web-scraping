@@ -244,8 +244,8 @@ const SSRGenerator = async ({
 							SERVER_LESS
 								? 5000
 								: BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE
-								? 10000
-								: 20000
+								? 60000
+								: 60000
 						)
 
 					const result = await (async () => {

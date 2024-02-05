@@ -81,6 +81,7 @@ const puppeteerSSRService = (async () => {
 						const url = req.getQuery('url') || ''
 
 						res.onAborted(() => {
+							res.writableEnded = true
 							Console.log('Request aborted')
 						})
 
@@ -113,6 +114,7 @@ const puppeteerSSRService = (async () => {
 							)
 					else {
 						res.onAborted(() => {
+							res.writableEnded = true
 							Console.log('Request aborted')
 						})
 
@@ -217,6 +219,7 @@ const puppeteerSSRService = (async () => {
 
 				if (botInfo.isBot) {
 					res.onAborted(() => {
+						res.writableEnded = true
 						Console.log('Request aborted')
 					})
 
@@ -300,7 +303,8 @@ const puppeteerSSRService = (async () => {
 						Console.error('url', url)
 						Console.error(err)
 						// NOTE - Error: uWS.HttpResponse must not be accessed after uWS.HttpResponse.onAborted callback, or after a successful response. See documentation for uWS.HttpResponse and consult the user manual.
-						res.writeStatus('500').end('Server Error!', true)
+						if (!res.writableEnded)
+							res.writeStatus('500').end('Server Error!', true)
 					}
 
 					res.writableEnded = true

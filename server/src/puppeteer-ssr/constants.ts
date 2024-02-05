@@ -4,6 +4,7 @@ import { PROCESS_ENV } from '../utils/InitEnv'
 
 // NOTE - Browser Options
 export const optionArgs = [
+	'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
 	'--no-sandbox',
 	'--disable-setuid-sandbox',
 	'--headless',
@@ -18,7 +19,8 @@ export const optionArgs = [
 	// '--chrome-flags',
 	'--ignore-certificate-errors',
 	'--ignore-certificate-errors-spki-list ',
-	'--disable-features=IsolateOrigins,SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure',
+	'--disable-features=SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure,IsolateOrigins,site-per-process,BlockInsecurePrivateNetworkRequests',
+	'--disable-site-isolation-trials',
 	'--no-zygote',
 	'--disable-accelerated-2d-canvas',
 	'--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
@@ -50,6 +52,7 @@ export const optionArgs = [
 	'--use-mock-keychain',
 	// '--use-gl=angle',
 	// '--use-angle=gl-egl',
+	// "--shm-size=4gb",
 ]
 
 export const defaultBrowserOptions: PuppeteerLaunchOptions = {
@@ -60,6 +63,7 @@ export const defaultBrowserOptions: PuppeteerLaunchOptions = {
 	},
 	userDataDir: `${userDataPath}/user_data`,
 	args: optionArgs,
+	protocolTimeout: 240000, // NOTE - Handle for error protocol timeout (can test adidas site to got detail of this issue)
 	ignoreDefaultArgs: false,
 	ignoreHTTPSErrors: true,
 }
@@ -107,7 +111,7 @@ export const regexNotFoundPageID = new RegExp(
 export const CACHEABLE_STATUS_CODE = { 200: true, 302: true }
 
 export const chromiumPath =
-	'https://github.com/Sparticuz/chromium/releases/download/v121.0.0/chromium-v121.0.0-pack.tar'
+	'https://github.com/Sparticuz/chromium/releases/download/v119.0.2/chromium-v119.0.2-pack.tar'
 
 export const canUseLinuxChromium =
 	PROCESS_ENV.IS_SERVER && PROCESS_ENV.PLATFORM.toLowerCase() === 'linux'

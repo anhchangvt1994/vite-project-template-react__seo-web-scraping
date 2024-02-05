@@ -48,10 +48,9 @@ const optimizeContent = (
 	if (!html) return ''
 	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
 
-	html = html.replace(regexOptimizeForScriptBlockPerformance, '')
-
 	if (DISABLE_OPTIMIZE && !isForce) return html
 
+	html = html.replace(regexOptimizeForScriptBlockPerformance, '')
 	html = html.replace(regexOptimizeForPerformanceNormally, '')
 
 	if (

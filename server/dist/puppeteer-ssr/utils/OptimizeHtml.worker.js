@@ -63,10 +63,9 @@ const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
 	if (Buffer.isBuffer(html))
 		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
 
-	html = html.replace(_constants3.regexOptimizeForScriptBlockPerformance, '')
-
 	if (_constants3.DISABLE_OPTIMIZE && !isForce) return html
 
+	html = html.replace(_constants3.regexOptimizeForScriptBlockPerformance, '')
 	html = html.replace(_constants3.regexOptimizeForPerformanceNormally, '')
 
 	if (

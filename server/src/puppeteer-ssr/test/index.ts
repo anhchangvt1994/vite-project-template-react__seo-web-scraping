@@ -1,14 +1,24 @@
 import WokerPool from 'workerpool'
 import { urlList } from './constants'
+import { resourceExtension } from '../../constants'
+
+const minWorkers = 1
+const maxWorkers = 10
 
 const testPuppeteerSSRService = (() => {
 	const _init = () => {
-		const TestPool = WokerPool.pool(__dirname + '/test.worker.ts', {
-			minWorkers: 1,
-			maxWorkers: 10,
-		})
+		const TestPool = WokerPool.pool(
+			__dirname + `/test.worker.${resourceExtension}`,
+			{
+				minWorkers,
+				maxWorkers,
+			}
+		)
 
-		const domain = 'https://webpack-vue-puppeteer-ssr.onrender.com/'
+		const domain = 'http://localhost:8080'
+		console.log('total urls: ', urlList.length)
+		console.log('max workers: ', maxWorkers)
+		console.log('========================>')
 		urlList.forEach(async (url) => {
 			let tmpUrl = `${domain}?urlTesting=${url}`
 			try {

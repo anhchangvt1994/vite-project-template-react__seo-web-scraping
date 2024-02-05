@@ -23,12 +23,13 @@ function _optionalChain(ops) {
 	}
 	return value
 }
-var _puppeteercore = require('puppeteer-core')
-var _puppeteercore2 = _interopRequireDefault(_puppeteercore)
+var _puppeteer = require('puppeteer')
+var _puppeteer2 = _interopRequireDefault(_puppeteer)
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
-var _constants = require('../constants')
+
 var _path = require('path')
+var _constants3 = require('../../constants')
 
 const _deleteUserDataDir = async (path) => {
 	if (path) {
@@ -43,7 +44,7 @@ const _deleteUserDataDir = async (path) => {
 						_path.resolve.call(
 							void 0,
 							__dirname,
-							'../utils/FollowResource.worker/index.ts'
+							`../utils/FollowResource.worker/index.${_constants3.resourceExtension}`
 						)
 					),
 				'optionalAccess',
@@ -58,20 +59,66 @@ const _deleteUserDataDir = async (path) => {
 } // _deleteUserDataDir
 
 const loadCapacityTest = async (url) => {
-	const userDataDir = `server/src/puppeteer-ssr/test/browsers/user_data_${Date.now()}`
-	const browser = await _puppeteercore2.default.launch({
-		..._constants.defaultBrowserOptions,
+	const userDataDir = `server/dist/puppeteer-ssr/test/browsers/user_data_${Date.now()}`
+	const browser = await _puppeteer2.default.launch({
+		// ...defaultBrowserOptions,
 		headless: 'new',
 		userDataDir,
 		args: [
-			..._constants.optionArgs,
-			'--user-agent=Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+			'--no-sandbox',
+			'--disable-setuid-sandbox',
 			'--headless',
+			// '--disable-gpu',
+			'--disable-software-rasterizer',
+			'--hide-scrollbars',
+			'--disable-translate',
+			'--disable-extensions',
+			'--disable-web-security',
+			'--no-first-run',
+			'--disable-notifications',
+			// '--chrome-flags',
+			'--ignore-certificate-errors',
+			'--ignore-certificate-errors-spki-list ',
+			'--disable-features=IsolateOrigins,SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure',
+			'--no-zygote',
+			'--disable-accelerated-2d-canvas',
+			'--disable-speech-api', // 	Disables the Web Speech API (both speech recognition and synthesis)
+			'--disable-background-networking', // Disable several subsystems which run network requests in the background. This is for use 									  // when doing network performance testing to avoid noise in the measurements. ↪
+			'--disable-background-timer-throttling', // Disable task throttling of timer tasks from background pages. ↪
+			'--disable-backgrounding-occluded-windows',
+			'--disable-breakpad',
+			'--disable-client-side-phishing-detection',
+			'--disable-component-update',
+			'--disable-default-apps',
+			'--disable-dev-shm-usage',
+			'--disable-domain-reliability',
+			'--disable-features=AudioServiceOutOfProcess',
+			'--disable-hang-monitor',
+			'--disable-ipc-flooding-protection',
+			'--disable-offer-store-unmasked-wallet-cards',
+			'--disable-popup-blocking',
+			'--disable-print-preview',
+			'--disable-prompt-on-repost',
+			'--disable-renderer-backgrounding',
+			'--disable-sync',
+			'--ignore-gpu-blacklist',
+			'--metrics-recording-only',
+			'--mute-audio',
+			'--no-default-browser-check',
+			'--no-pings',
+			'--password-store=basic',
+			'--use-gl=swiftshader',
+			'--use-mock-keychain',
+			// '--use-gl=angle',
+			// '--use-angle=gl-egl',
+			'--user-agent=Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+			// "--headless",
 		],
 	})
 
 	if (browser.isConnected()) {
 		const page = await browser.newPage()
+		console.log('start to crawl: ', url)
 		const response = await page.goto(url)
 		console.log('-------------')
 		if (
