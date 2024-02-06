@@ -251,6 +251,14 @@ const puppeteerSSRService = (async () => {
 				return ''
 			})()
 
+			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts')
+			_ConsoleHandler2.default.log(
+				'enableContentEncoding: ',
+				enableContentEncoding
+			)
+			_ConsoleHandler2.default.log('contentEncoding: ', contentEncoding)
+			_ConsoleHandler2.default.log('------>')
+
 			if (
 				_InitEnv.ENV_MODE !== 'development' &&
 				enableISR &&

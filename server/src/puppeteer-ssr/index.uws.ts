@@ -206,6 +206,11 @@ const puppeteerSSRService = (async () => {
 				return '' as 'br' | 'gzip' | ''
 			})()
 
+			Console.log('<---puppeteer/index.uws.ts')
+			Console.log('enableContentEncoding: ', enableContentEncoding)
+			Console.log('contentEncoding: ', contentEncoding)
+			Console.log('------>')
+
 			if (
 				ENV_MODE !== 'development' &&
 				enableISR &&
