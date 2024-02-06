@@ -206,6 +206,15 @@ const puppeteerSSRService = (async () => {
 				return '' as 'br' | 'gzip' | ''
 			})()
 
+			Console.log('<---puppeteer/index.uws.ts--->')
+			Console.log('enableContentEncoding: ', enableContentEncoding)
+			Console.log(
+				`req.getHeader('accept-encoding'): `,
+				req.getHeader('accept-encoding')
+			)
+			Console.log('contentEncoding: ', contentEncoding)
+			Console.log('<---puppeteer/index.uws.ts--->')
+
 			if (
 				ENV_MODE !== 'development' &&
 				enableISR &&
@@ -261,7 +270,23 @@ const puppeteerSSRService = (async () => {
 														: contentEncoding === 'gzip'
 														? gzipSync(result.html)
 														: result.html
-													: fs.readFileSync(result.response)
+													: (() => {
+															let tmpContent: Buffer | string = fs.readFileSync(
+																result.response
+															)
+
+															if (contentEncoding === 'br') return tmpContent
+															else
+																tmpContent =
+																	brotliDecompressSync(tmpContent).toString()
+
+															if (result.status === 200) {
+																if (contentEncoding === 'gzip')
+																	tmpContent = gzipSync(tmpContent)
+															}
+
+															return tmpContent
+													  })()
 											} else if (result.response.indexOf('.br') !== -1) {
 												const content = fs.readFileSync(result.response)
 

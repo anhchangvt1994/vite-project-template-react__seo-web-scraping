@@ -251,6 +251,18 @@ const puppeteerSSRService = (async () => {
 				return ''
 			})()
 
+			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
+			_ConsoleHandler2.default.log(
+				'enableContentEncoding: ',
+				enableContentEncoding
+			)
+			_ConsoleHandler2.default.log(
+				`req.getHeader('accept-encoding'): `,
+				req.getHeader('accept-encoding')
+			)
+			_ConsoleHandler2.default.log('contentEncoding: ', contentEncoding)
+			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
+
 			if (
 				_InitEnv.ENV_MODE !== 'development' &&
 				enableISR &&
@@ -307,7 +319,27 @@ const puppeteerSSRService = (async () => {
 														: contentEncoding === 'gzip'
 														? _zlib.gzipSync.call(void 0, result.html)
 														: result.html
-													: _fs2.default.readFileSync(result.response)
+													: (() => {
+															let tmpContent = _fs2.default.readFileSync(
+																result.response
+															)
+
+															if (contentEncoding === 'br') return tmpContent
+															else
+																tmpContent = _zlib.brotliDecompressSync
+																	.call(void 0, tmpContent)
+																	.toString()
+
+															if (result.status === 200) {
+																if (contentEncoding === 'gzip')
+																	tmpContent = _zlib.gzipSync.call(
+																		void 0,
+																		tmpContent
+																	)
+															}
+
+															return tmpContent
+													  })()
 											} else if (result.response.indexOf('.br') !== -1) {
 												const content = _fs2.default.readFileSync(
 													result.response
