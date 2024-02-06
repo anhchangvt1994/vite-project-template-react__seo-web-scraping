@@ -208,6 +208,10 @@ const puppeteerSSRService = (async () => {
 
 			Console.log('<---puppeteer/index.uws.ts')
 			Console.log('enableContentEncoding: ', enableContentEncoding)
+			Console.log(
+				`req.getHeader('accept-encoding'): `,
+				req.getHeader('accept-encoding')
+			)
 			Console.log('contentEncoding: ', contentEncoding)
 			Console.log('------>')
 
@@ -266,7 +270,22 @@ const puppeteerSSRService = (async () => {
 														: contentEncoding === 'gzip'
 														? gzipSync(result.html)
 														: result.html
-													: fs.readFileSync(result.response)
+													: (() => {
+															let tmpContent: Buffer | string = fs.readFileSync(
+																result.response
+															)
+
+															if (contentEncoding !== 'br')
+																tmpContent =
+																	brotliDecompressSync(tmpContent).toString()
+
+															if (result.status === 200) {
+																if (contentEncoding === 'gzip')
+																	tmpContent = gzipSync(tmpContent)
+															}
+
+															return tmpContent
+													  })()
 											} else if (result.response.indexOf('.br') !== -1) {
 												const content = fs.readFileSync(result.response)
 
