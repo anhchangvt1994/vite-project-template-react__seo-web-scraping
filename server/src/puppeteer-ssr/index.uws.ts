@@ -206,14 +206,14 @@ const puppeteerSSRService = (async () => {
 				return '' as 'br' | 'gzip' | ''
 			})()
 
-			Console.log('<---puppeteer/index.uws.ts')
+			Console.log('<---puppeteer/index.uws.ts--->')
 			Console.log('enableContentEncoding: ', enableContentEncoding)
 			Console.log(
 				`req.getHeader('accept-encoding'): `,
 				req.getHeader('accept-encoding')
 			)
 			Console.log('contentEncoding: ', contentEncoding)
-			Console.log('------>')
+			Console.log('<---puppeteer/index.uws.ts--->')
 
 			if (
 				ENV_MODE !== 'development' &&
@@ -275,7 +275,8 @@ const puppeteerSSRService = (async () => {
 																result.response
 															)
 
-															if (contentEncoding !== 'br')
+															if (contentEncoding === 'br') return tmpContent
+															else
 																tmpContent =
 																	brotliDecompressSync(tmpContent).toString()
 

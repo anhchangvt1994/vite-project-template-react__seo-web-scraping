@@ -92,6 +92,12 @@ const puppeteerSSRService = (async () => {
 				return '' as 'br' | 'gzip' | ''
 			})()
 
+			Console.log('<---puppeteer/index.uws.ts--->')
+			Console.log('enableContentEncoding: ', enableContentEncoding)
+			Console.log(`headers['accept-encoding']: `, headers['accept-encoding'])
+			Console.log('contentEncoding: ', contentEncoding)
+			Console.log('<---puppeteer/index.uws.ts--->')
+
 			res.raw.setHeader(
 				'Content-Type',
 				headers.accept === 'application/json'
@@ -136,7 +142,6 @@ const puppeteerSSRService = (async () => {
 							return res.status(504).send('504 Gateway Timeout')
 						}
 
-						// Add Server-Timing! See https://w3c.github.io/server-timing/.
 						if (
 							(CACHEABLE_STATUS_CODE[result.status] || result.status === 503) &&
 							result.response
@@ -151,7 +156,23 @@ const puppeteerSSRService = (async () => {
 											: contentEncoding === 'gzip'
 											? gzipSync(result.html)
 											: result.html
-										: fs.readFileSync(result.response)
+										: (() => {
+												let tmpContent: Buffer | string = fs.readFileSync(
+													result.response
+												)
+
+												if (contentEncoding === 'br') return tmpContent
+												else
+													tmpContent =
+														brotliDecompressSync(tmpContent).toString()
+
+												if (result.status === 200) {
+													if (contentEncoding === 'gzip')
+														tmpContent = gzipSync(tmpContent)
+												}
+
+												return tmpContent
+										  })()
 								} else if (result.response.indexOf('.br') !== -1) {
 									const content = fs.readFileSync(result.response)
 

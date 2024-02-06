@@ -171,6 +171,18 @@ const puppeteerSSRService = (async () => {
 				return ''
 			})()
 
+			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
+			_ConsoleHandler2.default.log(
+				'enableContentEncoding: ',
+				enableContentEncoding
+			)
+			_ConsoleHandler2.default.log(
+				`headers['accept-encoding']: `,
+				headers['accept-encoding']
+			)
+			_ConsoleHandler2.default.log('contentEncoding: ', contentEncoding)
+			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
+
 			res.raw.setHeader(
 				'Content-Type',
 				headers.accept === 'application/json'
@@ -216,7 +228,6 @@ const puppeteerSSRService = (async () => {
 							return res.status(504).send('504 Gateway Timeout')
 						}
 
-						// Add Server-Timing! See https://w3c.github.io/server-timing/.
 						if (
 							(_constants3.CACHEABLE_STATUS_CODE[result.status] ||
 								result.status === 503) &&
@@ -232,7 +243,24 @@ const puppeteerSSRService = (async () => {
 											: contentEncoding === 'gzip'
 											? _zlib.gzipSync.call(void 0, result.html)
 											: result.html
-										: _fs2.default.readFileSync(result.response)
+										: (() => {
+												let tmpContent = _fs2.default.readFileSync(
+													result.response
+												)
+
+												if (contentEncoding === 'br') return tmpContent
+												else
+													tmpContent = _zlib.brotliDecompressSync
+														.call(void 0, tmpContent)
+														.toString()
+
+												if (result.status === 200) {
+													if (contentEncoding === 'gzip')
+														tmpContent = _zlib.gzipSync.call(void 0, tmpContent)
+												}
+
+												return tmpContent
+										  })()
 								} else if (result.response.indexOf('.br') !== -1) {
 									const content = _fs2.default.readFileSync(result.response)
 

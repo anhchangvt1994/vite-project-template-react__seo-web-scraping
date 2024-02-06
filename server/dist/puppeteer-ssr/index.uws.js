@@ -251,7 +251,7 @@ const puppeteerSSRService = (async () => {
 				return ''
 			})()
 
-			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts')
+			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
 			_ConsoleHandler2.default.log(
 				'enableContentEncoding: ',
 				enableContentEncoding
@@ -261,7 +261,7 @@ const puppeteerSSRService = (async () => {
 				req.getHeader('accept-encoding')
 			)
 			_ConsoleHandler2.default.log('contentEncoding: ', contentEncoding)
-			_ConsoleHandler2.default.log('------>')
+			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
 
 			if (
 				_InitEnv.ENV_MODE !== 'development' &&
@@ -324,7 +324,8 @@ const puppeteerSSRService = (async () => {
 																result.response
 															)
 
-															if (contentEncoding !== 'br')
+															if (contentEncoding === 'br') return tmpContent
+															else
 																tmpContent = _zlib.brotliDecompressSync
 																	.call(void 0, tmpContent)
 																	.toString()
