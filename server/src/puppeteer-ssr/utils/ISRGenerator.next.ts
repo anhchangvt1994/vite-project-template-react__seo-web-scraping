@@ -83,7 +83,8 @@ const SSRGenerator = async ({
 	result = await cacheManager.achieve(ISRHandlerParams.url)
 
 	if (result) {
-		if (result.isRaw) {
+		const NonNullableResult = result
+		if (NonNullableResult.isRaw) {
 			Console.log('File và nội dung đã tồn tại, đang tiến hành Optimize file')
 			const asyncTmpResult = new Promise<ISSRResult>(async (res) => {
 				const optimizeHTMLContentPool = WorkerPool.pool(
@@ -94,10 +95,14 @@ const SSRGenerator = async ({
 					}
 				)
 
-				if (!result || !result.file || !fs.existsSync(result.file))
+				if (
+					!NonNullableResult ||
+					!NonNullableResult.file ||
+					!fs.existsSync(NonNullableResult.file)
+				)
 					res(undefined)
 
-				fs.readFile(result?.file as string, async (err, data) => {
+				fs.readFile(NonNullableResult.file as string, async (err, data) => {
 					if (err) return res(undefined)
 
 					const restOfDuration = (() => {
@@ -145,7 +150,7 @@ const SSRGenerator = async ({
 
 			const tmpResult = await asyncTmpResult
 			result = tmpResult || result
-		} else if (Date.now() - new Date(result.updatedAt).getTime() > 300000) {
+		} else if (NonNullableResult.refreshAt === NonNullableResult.requestedAt) {
 			const tmpResult: ISSRResult = await new Promise(async (res) => {
 				const handle = (() => {
 					if (SERVER_LESS)
@@ -161,14 +166,14 @@ const SSRGenerator = async ({
 							},
 							{
 								startGenerating,
-								isFirstRequest: true,
+								hasCache: NonNullableResult.available,
 								url: ISRHandlerParams.url,
 							}
 						)
 					else
 						return ISRHandler({
 							startGenerating,
-							isFirstRequest: true,
+							hasCache: NonNullableResult.available,
 							...ISRHandlerParams,
 						})
 				})()
@@ -192,21 +197,20 @@ const SSRGenerator = async ({
 		Console.log('result.available', result?.available)
 
 		if (result) {
+			const NonNullableResult = result
 			const isValidToScraping = (() => {
-				return (
-					result.isInit ||
-					(() => {
-						const createTimeDuration =
-							Date.now() - new Date(result.createdAt).getTime()
-						return (
-							!result.available &&
-							createTimeDuration >=
-								(SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.ONE
-									? 2000
-									: 10000)
-						)
-					})()
-				)
+				return NonNullableResult.isInit
+				// || (() => {
+				// 	const createTimeDuration =
+				// 		Date.now() - new Date(NonNullableResult.createdAt).getTime()
+				// 	return (
+				// 		!NonNullableResult.available &&
+				// 		createTimeDuration >=
+				// 			(SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.ONE
+				// 				? 2000
+				// 				: 10000)
+				// 	)
+				// })()
 			})()
 
 			if (isValidToScraping) {
@@ -225,14 +229,14 @@ const SSRGenerator = async ({
 								},
 								{
 									startGenerating,
-									isFirstRequest: true,
+									hasCache: NonNullableResult.available,
 									url: ISRHandlerParams.url,
 								}
 							)
 						else
 							return ISRHandler({
 								startGenerating,
-								isFirstRequest: true,
+								hasCache: NonNullableResult.available,
 								...ISRHandlerParams,
 							})
 					})()

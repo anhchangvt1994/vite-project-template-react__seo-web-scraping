@@ -295,7 +295,7 @@ const waitResponse = (() => {
 
 const gapDurationDefault = 1500
 
-const ISRHandler = async ({ isFirstRequest, url }) => {
+const ISRHandler = async ({ hasCache, url }) => {
 	const startGenerating = Date.now()
 	if (_getRestOfDuration(startGenerating, gapDurationDefault) <= 0) return
 
@@ -304,7 +304,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 	let restOfDuration = _getRestOfDuration(startGenerating, gapDurationDefault)
 
 	if (restOfDuration <= 0) {
-		if (!isFirstRequest) {
+		if (hasCache) {
 			const tmpResult = await cacheManager.achieve(url)
 
 			return tmpResult
@@ -332,7 +332,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 		isForceToOptimizeAndCompress = true
 		const requestParams = {
 			startGenerating,
-			isFirstRequest: true,
+			hasCache,
 			url: url.split('?')[0],
 		}
 
@@ -385,7 +385,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 		_ConsoleHandler2.default.log('Create new page success!')
 
 		if (!page) {
-			if (!page && !isFirstRequest) {
+			if (!page && hasCache) {
 				const tmpResult = await cacheManager.achieve(url)
 
 				return tmpResult
@@ -558,6 +558,9 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 				true,
 				isForceToOptimizeAndCompress,
 			])
+
+			if (hasCache)
+				html = await optimizeHTMLContentPool.exec('compressContent', [html])
 		} catch (err) {
 			_ConsoleHandler2.default.log('--------------------')
 			_ConsoleHandler2.default.log('ISRHandler line 368:')
@@ -570,7 +573,7 @@ const ISRHandler = async ({ isFirstRequest, url }) => {
 		result = await cacheManager.set({
 			html,
 			url,
-			isRaw: true,
+			isRaw: !hasCache,
 		})
 	} else {
 		await cacheManager.remove(url)

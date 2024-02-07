@@ -101,7 +101,8 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 	result = await cacheManager.achieve(ISRHandlerParams.url)
 
 	if (result) {
-		if (result.isRaw) {
+		const NonNullableResult = result
+		if (NonNullableResult.isRaw) {
 			_ConsoleHandler2.default.log(
 				'File và nội dung đã tồn tại, đang tiến hành Optimize file'
 			)
@@ -114,62 +115,62 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 					}
 				)
 
-				if (!result || !result.file || !_fs2.default.existsSync(result.file))
+				if (
+					!NonNullableResult ||
+					!NonNullableResult.file ||
+					!_fs2.default.existsSync(NonNullableResult.file)
+				)
 					res(undefined)
 
-				_fs2.default.readFile(
-					_optionalChain([result, 'optionalAccess', (_) => _.file]),
-					async (err, data) => {
-						if (err) return res(undefined)
+				_fs2.default.readFile(NonNullableResult.file, async (err, data) => {
+					if (err) return res(undefined)
 
-						const restOfDuration = (() => {
-							const duration = getRestOfDuration(startGenerating, 2000)
+					const restOfDuration = (() => {
+						const duration = getRestOfDuration(startGenerating, 2000)
 
-							return duration > 7000 ? 7000 : duration
-						})()
+						return duration > 7000 ? 7000 : duration
+					})()
 
-						let html = data.toString('utf-8')
-						const timeout = setTimeout(async () => {
-							optimizeHTMLContentPool.terminate()
-							const result = await cacheManager.set({
+					let html = data.toString('utf-8')
+					const timeout = setTimeout(async () => {
+						optimizeHTMLContentPool.terminate()
+						const result = await cacheManager.set({
+							html,
+							url: ISRHandlerParams.url,
+							isRaw: false,
+						})
+
+						res(result)
+					}, restOfDuration)
+
+					let tmpHTML = ''
+
+					try {
+						if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
+							tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
 								html,
-								url: ISRHandlerParams.url,
-								isRaw: false,
-							})
+							])
+					} catch (err) {
+						tmpHTML = html
+						// Console.error(err)
+					} finally {
+						clearTimeout(timeout)
+						optimizeHTMLContentPool.terminate()
 
-							res(result)
-						}, restOfDuration)
+						const result = await cacheManager.set({
+							html: tmpHTML,
+							url: ISRHandlerParams.url,
+							isRaw: false,
+						})
 
-						let tmpHTML = ''
-
-						try {
-							if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE)
-								tmpHTML = await optimizeHTMLContentPool.exec(
-									'compressContent',
-									[html]
-								)
-						} catch (err) {
-							tmpHTML = html
-							// Console.error(err)
-						} finally {
-							clearTimeout(timeout)
-							optimizeHTMLContentPool.terminate()
-
-							const result = await cacheManager.set({
-								html: tmpHTML,
-								url: ISRHandlerParams.url,
-								isRaw: false,
-							})
-
-							res(result)
-						}
+						res(result)
 					}
-				)
+				})
 			})
 
 			const tmpResult = await asyncTmpResult
 			result = tmpResult || result
-		} else if (Date.now() - new Date(result.updatedAt).getTime() > 300000) {
+		} else if (NonNullableResult.refreshAt === NonNullableResult.requestedAt) {
 			const tmpResult = await new Promise(async (res) => {
 				const handle = (() => {
 					if (_constants.SERVER_LESS)
@@ -185,14 +186,14 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 							},
 							{
 								startGenerating,
-								isFirstRequest: true,
+								hasCache: NonNullableResult.available,
 								url: ISRHandlerParams.url,
 							}
 						)
 					else
 						return _ISRHandler2.default.call(void 0, {
 							startGenerating,
-							isFirstRequest: true,
+							hasCache: NonNullableResult.available,
 							...ISRHandlerParams,
 						})
 				})()
@@ -215,27 +216,24 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 		_ConsoleHandler2.default.log('Check for condition to create new page.')
 		_ConsoleHandler2.default.log(
 			'result.available',
-			_optionalChain([result, 'optionalAccess', (_2) => _2.available])
+			_optionalChain([result, 'optionalAccess', (_) => _.available])
 		)
 
 		if (result) {
+			const NonNullableResult = result
 			const isValidToScraping = (() => {
-				return (
-					result.isInit ||
-					(() => {
-						const createTimeDuration =
-							Date.now() - new Date(result.createdAt).getTime()
-						return (
-							!result.available &&
-							createTimeDuration >=
-								(_constants.SERVER_LESS &&
-								_constants.BANDWIDTH_LEVEL ===
-									_constants.BANDWIDTH_LEVEL_LIST.ONE
-									? 2000
-									: 10000)
-						)
-					})()
-				)
+				return NonNullableResult.isInit
+				// || (() => {
+				// 	const createTimeDuration =
+				// 		Date.now() - new Date(NonNullableResult.createdAt).getTime()
+				// 	return (
+				// 		!NonNullableResult.available &&
+				// 		createTimeDuration >=
+				// 			(SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.ONE
+				// 				? 2000
+				// 				: 10000)
+				// 	)
+				// })()
 			})()
 
 			if (isValidToScraping) {
@@ -254,14 +252,14 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 								},
 								{
 									startGenerating,
-									isFirstRequest: true,
+									hasCache: NonNullableResult.available,
 									url: ISRHandlerParams.url,
 								}
 							)
 						else
 							return _ISRHandler2.default.call(void 0, {
 								startGenerating,
-								isFirstRequest: true,
+								hasCache: NonNullableResult.available,
 								...ISRHandlerParams,
 							})
 					})()

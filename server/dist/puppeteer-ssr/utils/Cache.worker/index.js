@@ -76,19 +76,22 @@ const get = async (url, options) => {
 	if (!_fs2.default.existsSync(file)) {
 		if (!options.autoCreateIfEmpty) return
 
-		_ConsoleHandler2.default.log(`Tạo mới file ${file}`)
+		_ConsoleHandler2.default.log(`Create file ${file}`)
 
 		try {
 			_fs2.default.writeFileSync(file, '')
 			_ConsoleHandler2.default.log(`File ${key}.br has been created.`)
 
+			const curTime = new Date()
+
 			return {
 				file,
 				response: maintainFile,
 				status: 503,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				requestedAt: new Date(),
+				createdAt: curTime,
+				updatedAt: curTime,
+				requestedAt: curTime,
+				refreshAt: curTime,
 				ttRenderMs: 200,
 				available: false,
 				isInit: true,
@@ -110,6 +113,7 @@ const get = async (url, options) => {
 	const info = await _utils.getFileInfo.call(void 0, file)
 
 	if (!info || info.size === 0) {
+		const curTime = new Date()
 		_ConsoleHandler2.default.log(`File ${file} chưa có thông tin`)
 		return {
 			file,
@@ -117,15 +121,19 @@ const get = async (url, options) => {
 			status: 503,
 			createdAt: _nullishCoalesce(
 				_optionalChain([info, 'optionalAccess', (_) => _.createdAt]),
-				() => new Date()
+				() => curTime
 			),
 			updatedAt: _nullishCoalesce(
 				_optionalChain([info, 'optionalAccess', (_2) => _2.updatedAt]),
-				() => new Date()
+				() => curTime
 			),
 			requestedAt: _nullishCoalesce(
 				_optionalChain([info, 'optionalAccess', (_3) => _3.requestedAt]),
-				() => new Date()
+				() => curTime
+			),
+			refreshAt: _nullishCoalesce(
+				_optionalChain([info, 'optionalAccess', (_4) => _4.refreshAt]),
+				() => curTime
 			),
 			ttRenderMs: 200,
 			available: false,
@@ -143,6 +151,7 @@ const get = async (url, options) => {
 		createdAt: info.createdAt,
 		updatedAt: info.updatedAt,
 		requestedAt: info.requestedAt,
+		refreshAt: info.refreshAt,
 		ttRenderMs: 200,
 		available: true,
 		isInit: false,

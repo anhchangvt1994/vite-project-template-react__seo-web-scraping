@@ -49,19 +49,22 @@ const get = async (
 	if (!fs.existsSync(file)) {
 		if (!options.autoCreateIfEmpty) return
 
-		Console.log(`Tạo mới file ${file}`)
+		Console.log(`Create file ${file}`)
 
 		try {
 			fs.writeFileSync(file, '')
 			Console.log(`File ${key}.br has been created.`)
 
+			const curTime = new Date()
+
 			return {
 				file,
 				response: maintainFile,
 				status: 503,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				requestedAt: new Date(),
+				createdAt: curTime,
+				updatedAt: curTime,
+				requestedAt: curTime,
+				refreshAt: curTime,
 				ttRenderMs: 200,
 				available: false,
 				isInit: true,
@@ -83,14 +86,16 @@ const get = async (
 	const info = await getFileInfo(file)
 
 	if (!info || info.size === 0) {
+		const curTime = new Date()
 		Console.log(`File ${file} chưa có thông tin`)
 		return {
 			file,
 			response: maintainFile,
 			status: 503,
-			createdAt: info?.createdAt ?? new Date(),
-			updatedAt: info?.updatedAt ?? new Date(),
-			requestedAt: info?.requestedAt ?? new Date(),
+			createdAt: info?.createdAt ?? curTime,
+			updatedAt: info?.updatedAt ?? curTime,
+			requestedAt: info?.requestedAt ?? curTime,
+			refreshAt: info?.refreshAt ?? curTime,
 			ttRenderMs: 200,
 			available: false,
 			isInit: false,
@@ -107,6 +112,7 @@ const get = async (
 		createdAt: info.createdAt,
 		updatedAt: info.updatedAt,
 		requestedAt: info.requestedAt,
+		refreshAt: info.refreshAt,
 		ttRenderMs: 200,
 		available: true,
 		isInit: false,

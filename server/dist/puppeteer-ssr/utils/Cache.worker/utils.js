@@ -79,11 +79,22 @@ const getFileInfo = async (file) => {
 				return
 			}
 
+			const refreshAt = (() => {
+				let tmpRefreshAt =
+					stats.mtimeMs > stats.ctimeMs ? stats.mtime : stats.ctime
+
+				if (Date.now() - new Date(tmpRefreshAt).getTime() > 5000)
+					tmpRefreshAt = stats.atime
+
+				return tmpRefreshAt
+			})()
+
 			res({
 				size: stats.size,
 				createdAt: stats.birthtime,
-				updatedAt: stats.mtime,
+				updatedAt: stats.mtimeMs > stats.ctimeMs ? stats.mtime : stats.ctime,
 				requestedAt: stats.atime,
+				refreshAt,
 			})
 		})
 	})
