@@ -81,7 +81,7 @@ const CacheManager = () => {
 
 		if (!info || info.size === 0) return
 
-		await _utils.setRequestTimeInfo.call(void 0, file, new Date())
+		// await setRequestTimeInfo(file, new Date())
 
 		return {
 			file,
@@ -127,6 +127,29 @@ const CacheManager = () => {
 		}
 	} // set
 
+	const renew = async (url) => {
+		const pool = _workerpool2.default.pool(
+			_path2.default.resolve(
+				__dirname,
+				`./Cache.worker/index.${_constants.resourceExtension}`
+			),
+			{
+				minWorkers: 1,
+				maxWorkers: MAX_WORKERS,
+			}
+		)
+
+		try {
+			const result = await pool.exec('renew', [url])
+			return result
+		} catch (err) {
+			_ConsoleHandler2.default.error(err)
+			return
+		} finally {
+			pool.terminate()
+		}
+	} // renew
+
 	const remove = async (url) => {
 		if (_constants3.DISABLE_SSR_CACHE) return
 		const pool = _workerpool2.default.pool(
@@ -154,6 +177,7 @@ const CacheManager = () => {
 		achieve,
 		get,
 		set,
+		renew,
 		remove,
 	}
 }

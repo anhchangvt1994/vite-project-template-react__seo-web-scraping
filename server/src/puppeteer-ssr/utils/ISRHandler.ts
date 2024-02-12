@@ -31,7 +31,7 @@ const browserManager = (() => {
 
 interface IISRHandlerParam {
 	startGenerating: number
-	isFirstRequest: boolean
+	hasCache: boolean
 	url: string
 }
 
@@ -90,13 +90,13 @@ const fetchData = async (
 
 const waitResponse = (() => {
 	const firstWaitingDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 150 : 500
 	const defaultRequestWaitingDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 150 : 500
 	const requestServedFromCacheDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 150 : 250
 	const requestFailDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 200 : 250
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 150 : 250
 	const maximumTimeout =
 		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 60000 : 60000
 
@@ -183,7 +183,7 @@ const waitResponse = (() => {
 
 const gapDurationDefault = 1500
 
-const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
+const ISRHandler = async ({ hasCache, url }: IISRHandlerParam) => {
 	const startGenerating = Date.now()
 	if (_getRestOfDuration(startGenerating, gapDurationDefault) <= 0) return
 
@@ -192,7 +192,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 	let restOfDuration = _getRestOfDuration(startGenerating, gapDurationDefault)
 
 	if (restOfDuration <= 0) {
-		if (!isFirstRequest) {
+		if (hasCache) {
 			const tmpResult = await cacheManager.achieve(url)
 
 			return tmpResult
@@ -209,7 +209,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 		isForceToOptimizeAndCompress = true
 		const requestParams = {
 			startGenerating,
-			isFirstRequest: true,
+			hasCache,
 			url: url.split('?')[0],
 		}
 
@@ -261,7 +261,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 		Console.log('Create new page success!')
 
 		if (!page) {
-			if (!page && !isFirstRequest) {
+			if (!page && hasCache) {
 				const tmpResult = await cacheManager.achieve(url)
 
 				return tmpResult
@@ -362,6 +362,9 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 				true,
 				isForceToOptimizeAndCompress,
 			])
+
+			if (hasCache)
+				html = await optimizeHTMLContentPool.exec('compressContent', [html])
 		} catch (err) {
 			Console.log('--------------------')
 			Console.log('ISRHandler line 368:')
@@ -374,7 +377,7 @@ const ISRHandler = async ({ isFirstRequest, url }: IISRHandlerParam) => {
 		result = await cacheManager.set({
 			html,
 			url,
-			isRaw: true,
+			isRaw: !hasCache,
 		})
 	} else {
 		await cacheManager.remove(url)

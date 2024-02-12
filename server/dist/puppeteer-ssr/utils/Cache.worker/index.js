@@ -42,7 +42,6 @@ var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _utils = require('./utils')
 var _zlib = require('zlib')
-var _constants3 = require('../../constants')
 
 const maintainFile = _path2.default.resolve(
 	__dirname,
@@ -67,6 +66,9 @@ const get = async (url, options) => {
 	switch (true) {
 		case _fs2.default.existsSync(file):
 			break
+		case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`):
+			file = `${_constants.pagesPath}/${key}.renew.br`
+			break
 		default:
 			file = `${_constants.pagesPath}/${key}.raw.br`
 			isRaw = true
@@ -76,19 +78,21 @@ const get = async (url, options) => {
 	if (!_fs2.default.existsSync(file)) {
 		if (!options.autoCreateIfEmpty) return
 
-		_ConsoleHandler2.default.log(`Tạo mới file ${file}`)
+		_ConsoleHandler2.default.log(`Create file ${file}`)
 
 		try {
 			_fs2.default.writeFileSync(file, '')
 			_ConsoleHandler2.default.log(`File ${key}.br has been created.`)
 
+			const curTime = new Date()
+
 			return {
 				file,
 				response: maintainFile,
 				status: 503,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				requestedAt: new Date(),
+				createdAt: curTime,
+				updatedAt: curTime,
+				requestedAt: curTime,
 				ttRenderMs: 200,
 				available: false,
 				isInit: true,
@@ -110,6 +114,7 @@ const get = async (url, options) => {
 	const info = await _utils.getFileInfo.call(void 0, file)
 
 	if (!info || info.size === 0) {
+		const curTime = new Date()
 		_ConsoleHandler2.default.log(`File ${file} chưa có thông tin`)
 		return {
 			file,
@@ -117,15 +122,15 @@ const get = async (url, options) => {
 			status: 503,
 			createdAt: _nullishCoalesce(
 				_optionalChain([info, 'optionalAccess', (_) => _.createdAt]),
-				() => new Date()
+				() => curTime
 			),
 			updatedAt: _nullishCoalesce(
 				_optionalChain([info, 'optionalAccess', (_2) => _2.updatedAt]),
-				() => new Date()
+				() => curTime
 			),
 			requestedAt: _nullishCoalesce(
 				_optionalChain([info, 'optionalAccess', (_3) => _3.requestedAt]),
-				() => new Date()
+				() => curTime
 			),
 			ttRenderMs: 200,
 			available: false,
@@ -134,7 +139,7 @@ const get = async (url, options) => {
 		}
 	}
 
-	_ConsoleHandler2.default.log(`File ${file} đã có thông tin`)
+	_ConsoleHandler2.default.log(`File ${file} is ready!`)
 
 	return {
 		file,
@@ -151,37 +156,41 @@ const get = async (url, options) => {
 } // get
 
 const set = async ({ html, url, isRaw = false }) => {
+	const key = _utils.getKey.call(void 0, url)
+
 	if (!html) {
 		_ConsoleHandler2.default.error('Need provide "html" param')
 		return
 	}
 
-	const key = _utils.getKey.call(void 0, url)
 	const file = `${_constants.pagesPath}/${key}${isRaw ? '.raw' : ''}.br`
 
-	if (
-		!isRaw &&
-		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`)
-	) {
-		try {
-			_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.br`, file)
-		} catch (err) {
-			_ConsoleHandler2.default.error(err)
-			return
-		}
+	if (!isRaw) {
+		if (_fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`))
+			try {
+				_fs2.default.renameSync(`${_constants.pagesPath}/${key}.renew.br`, file)
+			} catch (err) {
+				_ConsoleHandler2.default.error(err)
+				return
+			}
+		else if (_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`))
+			try {
+				_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.br`, file)
+			} catch (err) {
+				_ConsoleHandler2.default.error(err)
+				return
+			}
 	}
 
 	// NOTE - If file is exist and isRaw or not disable compress process, will be created new or updated
-	if (
-		_fs2.default.existsSync(file) &&
-		(isRaw || !_constants3.DISABLE_COMPRESS_HTML)
-	) {
+	if (_fs2.default.existsSync(file)) {
 		const contentCompression = Buffer.isBuffer(html)
 			? html
 			: _zlib.brotliCompressSync.call(void 0, html)
+
 		try {
 			_fs2.default.writeFileSync(file, contentCompression)
-			_ConsoleHandler2.default.log(`Cập nhật nội dung cho file ${file}`)
+			_ConsoleHandler2.default.log(`File ${file} was updated!`)
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
 			return
@@ -195,13 +204,56 @@ const set = async ({ html, url, isRaw = false }) => {
 	return result
 } // set
 
+const renew = async (url) => {
+	const key = _utils.getKey.call(void 0, url)
+	let hasRenew = true
+
+	const file = `${_constants.pagesPath}/${key}.renew.br`
+
+	if (!_fs2.default.existsSync(file)) {
+		hasRenew = false
+		const curFile = (() => {
+			let tmpCurFile = `${_constants.pagesPath}/${key}.br`
+
+			switch (true) {
+				case _fs2.default.existsSync(tmpCurFile):
+					break
+				default:
+					tmpCurFile = `${_constants.pagesPath}/${key}.raw.br`
+			}
+
+			return tmpCurFile
+		})()
+
+		try {
+			_fs2.default.renameSync(curFile, file)
+		} catch (err) {
+			_ConsoleHandler2.default.error(err)
+			return
+		}
+	}
+
+	const result = await get(url, {
+		autoCreateIfEmpty: false,
+	})
+
+	return { ...result, hasRenew }
+} // renew
+
 const remove = (url) => {
 	if (!url) return _ConsoleHandler2.default.log('Url can not empty!')
 	const key = _utils.getKey.call(void 0, url)
 	let file = `${_constants.pagesPath}/${key}.raw.br`
-	if (!_fs2.default.existsSync(file)) file = `${_constants.pagesPath}/${key}.br`
-	if (!_fs2.default.existsSync(file))
-		return _ConsoleHandler2.default.log('Does not exist file reference url!')
+	switch (true) {
+		case !_fs2.default.existsSync(file):
+			file = `${_constants.pagesPath}/${key}.br`
+		case !_fs2.default.existsSync(file):
+			file = `${_constants.pagesPath}/${key}.renew.br`
+		case !_fs2.default.existsSync(file):
+			return _ConsoleHandler2.default.log('Does not exist file reference url!')
+		default:
+			break
+	}
 
 	try {
 		_fs2.default.unlinkSync(file)
@@ -214,5 +266,6 @@ const remove = (url) => {
 _workerpool2.default.worker({
 	get,
 	set,
+	renew,
 	remove,
 })

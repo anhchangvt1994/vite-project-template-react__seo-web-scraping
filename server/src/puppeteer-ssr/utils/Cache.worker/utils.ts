@@ -6,7 +6,7 @@ import { pagesPath } from '../../../constants'
 export interface ICacheSetParams {
 	html: string
 	url: string
-	isRaw: boolean
+	isRaw?: boolean
 }
 
 export type IFileInfo =
@@ -59,7 +59,7 @@ export const getFileInfo = async (file: string): Promise<IFileInfo> => {
 			res({
 				size: stats.size,
 				createdAt: stats.birthtime,
-				updatedAt: stats.mtime,
+				updatedAt: stats.mtimeMs > stats.ctimeMs ? stats.mtime : stats.ctime,
 				requestedAt: stats.atime,
 			})
 		})

@@ -1,5 +1,6 @@
 import fs from 'fs'
 import WorkerPool from 'workerpool'
+import { brotliDecompressSync } from 'zlib'
 import {
 	BANDWIDTH_LEVEL,
 	BANDWIDTH_LEVEL_LIST,
@@ -83,7 +84,9 @@ const SSRGenerator = async ({
 	result = await cacheManager.achieve(ISRHandlerParams.url)
 
 	if (result) {
-		if (result.isRaw) {
+		const NonNullableResult = result
+
+		if (NonNullableResult.isRaw) {
 			Console.log('File và nội dung đã tồn tại, đang tiến hành Optimize file')
 			const asyncTmpResult = new Promise<ISSRResult>(async (res) => {
 				const optimizeHTMLContentPool = WorkerPool.pool(
@@ -94,10 +97,14 @@ const SSRGenerator = async ({
 					}
 				)
 
-				if (!result || !result.file || !fs.existsSync(result.file))
+				if (
+					!NonNullableResult ||
+					!NonNullableResult.file ||
+					!fs.existsSync(NonNullableResult.file)
+				)
 					res(undefined)
 
-				fs.readFile(result?.file as string, async (err, data) => {
+				fs.readFile(NonNullableResult.file as string, async (err, data) => {
 					if (err) return res(undefined)
 
 					const restOfDuration = (() => {
@@ -106,13 +113,19 @@ const SSRGenerator = async ({
 						return duration > 7000 ? 7000 : duration
 					})()
 
-					let html = data.toString('utf-8')
+					let html = (() => {
+						if (NonNullableResult.file.endsWith('.br'))
+							return brotliDecompressSync(data).toString()
+
+						return data.toString('utf-8')
+					})()
+
 					const timeout = setTimeout(async () => {
 						optimizeHTMLContentPool.terminate()
 						const result = await cacheManager.set({
 							html,
 							url: ISRHandlerParams.url,
-							isRaw: false,
+							isRaw: !NonNullableResult.available,
 						})
 
 						res(result)
@@ -135,7 +148,7 @@ const SSRGenerator = async ({
 						const result = await cacheManager.set({
 							html: tmpHTML,
 							url: ISRHandlerParams.url,
-							isRaw: false,
+							isRaw: !NonNullableResult.available,
 						})
 
 						res(result)
@@ -145,45 +158,37 @@ const SSRGenerator = async ({
 
 			const tmpResult = await asyncTmpResult
 			result = tmpResult || result
-		} else if (Date.now() - new Date(result.updatedAt).getTime() > 300000) {
-			const tmpResult: ISSRResult = await new Promise(async (res) => {
-				const handle = (() => {
-					if (SERVER_LESS)
-						return fetchData(
-							`${PROCESS_ENV.BASE_URL}/web-scraping`,
-							{
-								method: 'GET',
-								headers: new Headers({
-									Authorization: 'web-scraping-service',
-									Accept: 'application/json',
-									service: 'web-scraping-service',
-								}),
-							},
-							{
-								startGenerating,
-								isFirstRequest: true,
-								url: ISRHandlerParams.url,
-							}
-						)
-					else
-						return ISRHandler({
+		} else if (
+			Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
+			300000
+		) {
+			result = (await cacheManager.renew(
+				ISRHandlerParams.url
+			)) as NonNullable<ISSRResult>
+			if (!result.hasRenew)
+				if (SERVER_LESS)
+					fetchData(
+						`${PROCESS_ENV.BASE_URL}/web-scraping`,
+						{
+							method: 'GET',
+							headers: new Headers({
+								Authorization: 'web-scraping-service',
+								Accept: 'application/json',
+								service: 'web-scraping-service',
+							}),
+						},
+						{
 							startGenerating,
-							isFirstRequest: true,
-							...ISRHandlerParams,
-						})
-				})()
-
-				if (isSkipWaiting) return res(undefined)
-				else setTimeout(res, 10000)
-
-				const result = await (async () => {
-					return await handle
-				})()
-
-				res(result)
-			})
-
-			if (tmpResult && tmpResult.status) result = tmpResult
+							hasCache: NonNullableResult.available,
+							url: ISRHandlerParams.url,
+						}
+					)
+				else
+					ISRHandler({
+						startGenerating,
+						hasCache: NonNullableResult.available,
+						...ISRHandlerParams,
+					})
 		}
 	} else {
 		result = await cacheManager.get(ISRHandlerParams.url)
@@ -192,21 +197,20 @@ const SSRGenerator = async ({
 		Console.log('result.available', result?.available)
 
 		if (result) {
+			const NonNullableResult = result
 			const isValidToScraping = (() => {
-				return (
-					result.isInit ||
-					(() => {
-						const createTimeDuration =
-							Date.now() - new Date(result.createdAt).getTime()
-						return (
-							!result.available &&
-							createTimeDuration >=
-								(SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.ONE
-									? 2000
-									: 10000)
-						)
-					})()
-				)
+				return NonNullableResult.isInit
+				// || (() => {
+				// 	const createTimeDuration =
+				// 		Date.now() - new Date(NonNullableResult.createdAt).getTime()
+				// 	return (
+				// 		!NonNullableResult.available &&
+				// 		createTimeDuration >=
+				// 			(SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.ONE
+				// 				? 2000
+				// 				: 10000)
+				// 	)
+				// })()
 			})()
 
 			if (isValidToScraping) {
@@ -225,14 +229,14 @@ const SSRGenerator = async ({
 								},
 								{
 									startGenerating,
-									isFirstRequest: true,
+									hasCache: NonNullableResult.available,
 									url: ISRHandlerParams.url,
 								}
 							)
 						else
 							return ISRHandler({
 								startGenerating,
-								isFirstRequest: true,
+								hasCache: NonNullableResult.available,
 								...ISRHandlerParams,
 							})
 					})()

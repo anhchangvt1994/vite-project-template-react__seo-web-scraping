@@ -11,5 +11,6 @@ export type ISSRResult =
 			ttRenderMs: number
 			isInit: boolean
 			isRaw: boolean
+			hasRenew?: boolean
 	  }
 	| undefined

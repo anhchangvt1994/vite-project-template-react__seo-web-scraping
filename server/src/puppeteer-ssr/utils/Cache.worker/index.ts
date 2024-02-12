@@ -40,6 +40,9 @@ const get = async (
 	switch (true) {
 		case fs.existsSync(file):
 			break
+		case fs.existsSync(`${pagesPath}/${key}.renew.br`):
+			file = `${pagesPath}/${key}.renew.br`
+			break
 		default:
 			file = `${pagesPath}/${key}.raw.br`
 			isRaw = true
@@ -49,19 +52,21 @@ const get = async (
 	if (!fs.existsSync(file)) {
 		if (!options.autoCreateIfEmpty) return
 
-		Console.log(`Tạo mới file ${file}`)
+		Console.log(`Create file ${file}`)
 
 		try {
 			fs.writeFileSync(file, '')
 			Console.log(`File ${key}.br has been created.`)
 
+			const curTime = new Date()
+
 			return {
 				file,
 				response: maintainFile,
 				status: 503,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				requestedAt: new Date(),
+				createdAt: curTime,
+				updatedAt: curTime,
+				requestedAt: curTime,
 				ttRenderMs: 200,
 				available: false,
 				isInit: true,
@@ -83,14 +88,15 @@ const get = async (
 	const info = await getFileInfo(file)
 
 	if (!info || info.size === 0) {
+		const curTime = new Date()
 		Console.log(`File ${file} chưa có thông tin`)
 		return {
 			file,
 			response: maintainFile,
 			status: 503,
-			createdAt: info?.createdAt ?? new Date(),
-			updatedAt: info?.updatedAt ?? new Date(),
-			requestedAt: info?.requestedAt ?? new Date(),
+			createdAt: info?.createdAt ?? curTime,
+			updatedAt: info?.updatedAt ?? curTime,
+			requestedAt: info?.requestedAt ?? curTime,
 			ttRenderMs: 200,
 			available: false,
 			isInit: false,
@@ -98,7 +104,7 @@ const get = async (
 		}
 	}
 
-	Console.log(`File ${file} đã có thông tin`)
+	Console.log(`File ${file} is ready!`)
 
 	return {
 		file,
@@ -119,31 +125,41 @@ const set = async ({
 	url,
 	isRaw = false,
 }: ICacheSetParams): Promise<ISSRResult> => {
+	const key = getKey(url)
+
 	if (!html) {
 		Console.error('Need provide "html" param')
 		return
 	}
 
-	const key = getKey(url)
 	const file = `${pagesPath}/${key}${isRaw ? '.raw' : ''}.br`
 
-	if (!isRaw && fs.existsSync(`${pagesPath}/${key}.raw.br`)) {
-		try {
-			fs.renameSync(`${pagesPath}/${key}.raw.br`, file)
-		} catch (err) {
-			Console.error(err)
-			return
-		}
+	if (!isRaw) {
+		if (fs.existsSync(`${pagesPath}/${key}.renew.br`))
+			try {
+				fs.renameSync(`${pagesPath}/${key}.renew.br`, file)
+			} catch (err) {
+				Console.error(err)
+				return
+			}
+		else if (fs.existsSync(`${pagesPath}/${key}.raw.br`))
+			try {
+				fs.renameSync(`${pagesPath}/${key}.raw.br`, file)
+			} catch (err) {
+				Console.error(err)
+				return
+			}
 	}
 
 	// NOTE - If file is exist and isRaw or not disable compress process, will be created new or updated
-	if (fs.existsSync(file) && (isRaw || !DISABLE_COMPRESS_HTML)) {
+	if (fs.existsSync(file)) {
 		const contentCompression = Buffer.isBuffer(html)
 			? html
 			: brotliCompressSync(html)
+
 		try {
 			fs.writeFileSync(file, contentCompression)
-			Console.log(`Cập nhật nội dung cho file ${file}`)
+			Console.log(`File ${file} was updated!`)
 		} catch (err) {
 			Console.error(err)
 			return
@@ -158,13 +174,56 @@ const set = async ({
 	return result
 } // set
 
+const renew = async (url) => {
+	const key = getKey(url)
+	let hasRenew = true
+
+	const file = `${pagesPath}/${key}.renew.br`
+
+	if (!fs.existsSync(file)) {
+		hasRenew = false
+		const curFile = (() => {
+			let tmpCurFile = `${pagesPath}/${key}.br`
+
+			switch (true) {
+				case fs.existsSync(tmpCurFile):
+					break
+				default:
+					tmpCurFile = `${pagesPath}/${key}.raw.br`
+			}
+
+			return tmpCurFile
+		})()
+
+		try {
+			fs.renameSync(curFile, file)
+		} catch (err) {
+			Console.error(err)
+			return
+		}
+	}
+
+	const result = await get(url, {
+		autoCreateIfEmpty: false,
+	})
+
+	return { ...result, hasRenew }
+} // renew
+
 const remove = (url: string) => {
 	if (!url) return Console.log('Url can not empty!')
 	const key = getKey(url)
 	let file = `${pagesPath}/${key}.raw.br`
-	if (!fs.existsSync(file)) file = `${pagesPath}/${key}.br`
-	if (!fs.existsSync(file))
-		return Console.log('Does not exist file reference url!')
+	switch (true) {
+		case !fs.existsSync(file):
+			file = `${pagesPath}/${key}.br`
+		case !fs.existsSync(file):
+			file = `${pagesPath}/${key}.renew.br`
+		case !fs.existsSync(file):
+			return Console.log('Does not exist file reference url!')
+		default:
+			break
+	}
 
 	try {
 		fs.unlinkSync(file)
@@ -177,5 +236,6 @@ const remove = (url: string) => {
 WorkerPool.worker({
 	get,
 	set,
+	renew,
 	remove,
 })

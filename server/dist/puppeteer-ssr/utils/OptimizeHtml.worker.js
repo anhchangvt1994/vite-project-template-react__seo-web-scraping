@@ -34,15 +34,16 @@ var _constants3 = require('../constants')
 
 const compressContent = (html, isForce = false) => {
 	if (!html) return ''
-	else if (
+	if (Buffer.isBuffer(html))
+		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
+
+	if (
 		(_constants3.DISABLE_COMPRESS_HTML && !isForce) ||
 		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
 	)
 		return html
 
-	if (Buffer.isBuffer(html))
-		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
-	else if (_InitEnv.ENV !== 'development') {
+	if (_InitEnv.ENV !== 'development') {
 		html = _htmlminifier.minify.call(void 0, html, {
 			collapseBooleanAttributes: true,
 			collapseInlineTagWhitespace: true,

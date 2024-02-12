@@ -82,7 +82,7 @@ const getFileInfo = async (file) => {
 			res({
 				size: stats.size,
 				createdAt: stats.birthtime,
-				updatedAt: stats.mtime,
+				updatedAt: stats.mtimeMs > stats.ctimeMs ? stats.mtime : stats.ctime,
 				requestedAt: stats.atime,
 			})
 		})
