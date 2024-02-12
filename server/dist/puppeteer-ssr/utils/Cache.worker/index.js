@@ -183,7 +183,6 @@ const set = async ({ html, url, isRaw = false }) => {
 	}
 
 	// NOTE - If file is exist and isRaw or not disable compress process, will be created new or updated
-	// ERROR - This is issue need to handle if remove (isRaw || !DISABLE_COMPRESS_HTML) browser will download file
 	if (_fs2.default.existsSync(file)) {
 		const contentCompression = Buffer.isBuffer(html)
 			? html
@@ -247,7 +246,7 @@ const remove = (url) => {
 	let file = `${_constants.pagesPath}/${key}.raw.br`
 	switch (true) {
 		case !_fs2.default.existsSync(file):
-			file = `${_constants.pagesPath}/${key}.raw.br`
+			file = `${_constants.pagesPath}/${key}.br`
 		case !_fs2.default.existsSync(file):
 			file = `${_constants.pagesPath}/${key}.renew.br`
 		case !_fs2.default.existsSync(file):

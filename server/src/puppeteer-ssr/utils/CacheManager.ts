@@ -28,7 +28,6 @@ const CacheManager = () => {
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				requestedAt: new Date(),
-				refreshAt: new Date(),
 				ttRenderMs: 200,
 				available: false,
 				isInit: true,
