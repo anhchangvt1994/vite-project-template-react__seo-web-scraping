@@ -7,10 +7,10 @@ export type ISSRResult =
 			createdAt: Date
 			updatedAt: Date
 			requestedAt: Date
-			refreshAt: Date
 			available: boolean
 			ttRenderMs: number
 			isInit: boolean
 			isRaw: boolean
+			hasRenew?: boolean
 	  }
 	| undefined

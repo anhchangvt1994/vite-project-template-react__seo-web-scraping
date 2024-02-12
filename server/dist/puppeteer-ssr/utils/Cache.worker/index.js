@@ -42,7 +42,6 @@ var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _utils = require('./utils')
 var _zlib = require('zlib')
-var _constants3 = require('../../constants')
 
 const maintainFile = _path2.default.resolve(
 	__dirname,
@@ -66,6 +65,9 @@ const get = async (url, options) => {
 
 	switch (true) {
 		case _fs2.default.existsSync(file):
+			break
+		case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`):
+			file = `${_constants.pagesPath}/${key}.renew.br`
 			break
 		default:
 			file = `${_constants.pagesPath}/${key}.raw.br`
@@ -91,7 +93,6 @@ const get = async (url, options) => {
 				createdAt: curTime,
 				updatedAt: curTime,
 				requestedAt: curTime,
-				refreshAt: curTime,
 				ttRenderMs: 200,
 				available: false,
 				isInit: true,
@@ -131,10 +132,6 @@ const get = async (url, options) => {
 				_optionalChain([info, 'optionalAccess', (_3) => _3.requestedAt]),
 				() => curTime
 			),
-			refreshAt: _nullishCoalesce(
-				_optionalChain([info, 'optionalAccess', (_4) => _4.refreshAt]),
-				() => curTime
-			),
 			ttRenderMs: 200,
 			available: false,
 			isInit: false,
@@ -142,7 +139,7 @@ const get = async (url, options) => {
 		}
 	}
 
-	_ConsoleHandler2.default.log(`File ${file} đã có thông tin`)
+	_ConsoleHandler2.default.log(`File ${file} is ready!`)
 
 	return {
 		file,
@@ -151,7 +148,6 @@ const get = async (url, options) => {
 		createdAt: info.createdAt,
 		updatedAt: info.updatedAt,
 		requestedAt: info.requestedAt,
-		refreshAt: info.refreshAt,
 		ttRenderMs: 200,
 		available: true,
 		isInit: false,
@@ -160,37 +156,42 @@ const get = async (url, options) => {
 } // get
 
 const set = async ({ html, url, isRaw = false }) => {
+	const key = _utils.getKey.call(void 0, url)
+
 	if (!html) {
 		_ConsoleHandler2.default.error('Need provide "html" param')
 		return
 	}
 
-	const key = _utils.getKey.call(void 0, url)
 	const file = `${_constants.pagesPath}/${key}${isRaw ? '.raw' : ''}.br`
 
-	if (
-		!isRaw &&
-		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`)
-	) {
-		try {
-			_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.br`, file)
-		} catch (err) {
-			_ConsoleHandler2.default.error(err)
-			return
-		}
+	if (!isRaw) {
+		if (_fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`))
+			try {
+				_fs2.default.renameSync(`${_constants.pagesPath}/${key}.renew.br`, file)
+			} catch (err) {
+				_ConsoleHandler2.default.error(err)
+				return
+			}
+		else if (_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`))
+			try {
+				_fs2.default.renameSync(`${_constants.pagesPath}/${key}.raw.br`, file)
+			} catch (err) {
+				_ConsoleHandler2.default.error(err)
+				return
+			}
 	}
 
 	// NOTE - If file is exist and isRaw or not disable compress process, will be created new or updated
-	if (
-		_fs2.default.existsSync(file) &&
-		(isRaw || !_constants3.DISABLE_COMPRESS_HTML)
-	) {
+	// ERROR - This is issue need to handle if remove (isRaw || !DISABLE_COMPRESS_HTML) browser will download file
+	if (_fs2.default.existsSync(file)) {
 		const contentCompression = Buffer.isBuffer(html)
 			? html
 			: _zlib.brotliCompressSync.call(void 0, html)
+
 		try {
 			_fs2.default.writeFileSync(file, contentCompression)
-			_ConsoleHandler2.default.log(`Cập nhật nội dung cho file ${file}`)
+			_ConsoleHandler2.default.log(`File ${file} was updated!`)
 		} catch (err) {
 			_ConsoleHandler2.default.error(err)
 			return
@@ -204,13 +205,56 @@ const set = async ({ html, url, isRaw = false }) => {
 	return result
 } // set
 
+const renew = async (url) => {
+	const key = _utils.getKey.call(void 0, url)
+	let hasRenew = true
+
+	const file = `${_constants.pagesPath}/${key}.renew.br`
+
+	if (!_fs2.default.existsSync(file)) {
+		hasRenew = false
+		const curFile = (() => {
+			let tmpCurFile = `${_constants.pagesPath}/${key}.br`
+
+			switch (true) {
+				case _fs2.default.existsSync(tmpCurFile):
+					break
+				default:
+					tmpCurFile = `${_constants.pagesPath}/${key}.raw.br`
+			}
+
+			return tmpCurFile
+		})()
+
+		try {
+			_fs2.default.renameSync(curFile, file)
+		} catch (err) {
+			_ConsoleHandler2.default.error(err)
+			return
+		}
+	}
+
+	const result = await get(url, {
+		autoCreateIfEmpty: false,
+	})
+
+	return { ...result, hasRenew }
+} // renew
+
 const remove = (url) => {
 	if (!url) return _ConsoleHandler2.default.log('Url can not empty!')
 	const key = _utils.getKey.call(void 0, url)
 	let file = `${_constants.pagesPath}/${key}.raw.br`
-	if (!_fs2.default.existsSync(file)) file = `${_constants.pagesPath}/${key}.br`
-	if (!_fs2.default.existsSync(file))
-		return _ConsoleHandler2.default.log('Does not exist file reference url!')
+	switch (true) {
+		case !_fs2.default.existsSync(file):
+			file = `${_constants.pagesPath}/${key}.raw.br`
+		case !_fs2.default.existsSync(file):
+			file = `${_constants.pagesPath}/${key}.renew.br`
+		case !_fs2.default.existsSync(file):
+			return _ConsoleHandler2.default.log('Does not exist file reference url!')
+		default:
+			break
+	}
 
 	try {
 		_fs2.default.unlinkSync(file)
@@ -223,5 +267,6 @@ const remove = (url) => {
 _workerpool2.default.worker({
 	get,
 	set,
+	renew,
 	remove,
 })

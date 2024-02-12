@@ -79,22 +79,11 @@ const getFileInfo = async (file) => {
 				return
 			}
 
-			const refreshAt = (() => {
-				let tmpRefreshAt =
-					stats.mtimeMs > stats.ctimeMs ? stats.mtime : stats.ctime
-
-				if (Date.now() - new Date(tmpRefreshAt).getTime() > 5000)
-					tmpRefreshAt = stats.atime
-
-				return tmpRefreshAt
-			})()
-
 			res({
 				size: stats.size,
 				createdAt: stats.birthtime,
 				updatedAt: stats.mtimeMs > stats.ctimeMs ? stats.mtime : stats.ctime,
 				requestedAt: stats.atime,
-				refreshAt,
 			})
 		})
 	})
@@ -123,6 +112,7 @@ const setRequestTimeInfo = async (file, value) => {
 		_fs2.default.futimesSync(
 			fd,
 			value,
+			// value as typeof stats.atime
 			_nullishCoalesce(
 				_optionalChain([info, 'optionalAccess', (_) => _.updatedAt]),
 				() => new Date()
@@ -135,3 +125,37 @@ const setRequestTimeInfo = async (file, value) => {
 	}
 }
 exports.setRequestTimeInfo = setRequestTimeInfo // setRequestTimeInfo
+
+// const fileSystem = (() => {
+// 	const FILE_INFO = new Map()
+
+// 	const getFileInfo = (file: string) => {
+// 		if (!file || !FILE_INFO.has(file)) {
+// 			Console.log('Need provide file name or file does not exist!')
+// 			return
+// 		}
+
+// 		return FILE_INFO.get(file)
+// 	} // getFileInfo
+
+// 	const setFileTimingInfo = (file: string, objectVal) => {} // setTimingInfo
+
+// 	const removeFileInfo = (file: string) => {
+// 		if (!file || !FILE_INFO.has(file)) {
+// 			Console.log('Need provide file name or file does not exist!')
+// 			return
+// 		}
+
+// 		FILE_INFO.delete(file)
+// 	} // removeFileInfo
+
+// 	return {
+// 		initGetFileInfo: () => getFileInfo,
+// 		initSetFileTimingInfo: () => setFileTimingInfo,
+// 		initRemoveFileInfo: () => removeFileInfo,
+// 	}
+// })() // fileSystem
+
+// export const getFileInfo = fileSystem.initGetFileInfo()
+// export const setFileTimingInfo = fileSystem.initSetFileTimingInfo()
+// export const removeFileInfo = fileSystem.initRemoveFileInfo()

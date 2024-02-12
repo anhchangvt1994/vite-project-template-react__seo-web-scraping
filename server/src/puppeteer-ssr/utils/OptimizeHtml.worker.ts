@@ -17,14 +17,15 @@ import {
 
 const compressContent = (html: string, isForce = false): string => {
 	if (!html) return ''
-	else if (
+	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
+
+	if (
 		(DISABLE_COMPRESS_HTML && !isForce) ||
 		POWER_LEVEL === POWER_LEVEL_LIST.ONE
 	)
 		return html
 
-	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
-	else if (ENV !== 'development') {
+	if (ENV !== 'development') {
 		html = minify(html, {
 			collapseBooleanAttributes: true,
 			collapseInlineTagWhitespace: true,

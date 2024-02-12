@@ -6,7 +6,7 @@ import { pagesPath } from '../../../constants'
 export interface ICacheSetParams {
 	html: string
 	url: string
-	isRaw: boolean
+	isRaw?: boolean
 }
 
 export type IFileInfo =
@@ -15,7 +15,6 @@ export type IFileInfo =
 			createdAt: Date
 			updatedAt: Date
 			requestedAt: Date
-			refreshAt: Date
 	  }
 	| undefined
 
@@ -57,22 +56,11 @@ export const getFileInfo = async (file: string): Promise<IFileInfo> => {
 				return
 			}
 
-			const refreshAt = (() => {
-				let tmpRefreshAt =
-					stats.mtimeMs > stats.ctimeMs ? stats.mtime : stats.ctime
-
-				if (Date.now() - new Date(tmpRefreshAt).getTime() > 5000)
-					tmpRefreshAt = stats.atime
-
-				return tmpRefreshAt
-			})()
-
 			res({
 				size: stats.size,
 				createdAt: stats.birthtime,
 				updatedAt: stats.mtimeMs > stats.ctimeMs ? stats.mtime : stats.ctime,
 				requestedAt: stats.atime,
-				refreshAt,
 			})
 		})
 	})
@@ -100,6 +88,7 @@ export const setRequestTimeInfo = async (file: string, value: unknown) => {
 		fs.futimesSync(
 			fd,
 			value as typeof stats.atime,
+			// value as typeof stats.atime
 			info?.updatedAt ?? new Date()
 		)
 		fs.close(fd)
@@ -108,3 +97,37 @@ export const setRequestTimeInfo = async (file: string, value: unknown) => {
 		Console.error(err)
 	}
 } // setRequestTimeInfo
+
+// const fileSystem = (() => {
+// 	const FILE_INFO = new Map()
+
+// 	const getFileInfo = (file: string) => {
+// 		if (!file || !FILE_INFO.has(file)) {
+// 			Console.log('Need provide file name or file does not exist!')
+// 			return
+// 		}
+
+// 		return FILE_INFO.get(file)
+// 	} // getFileInfo
+
+// 	const setFileTimingInfo = (file: string, objectVal) => {} // setTimingInfo
+
+// 	const removeFileInfo = (file: string) => {
+// 		if (!file || !FILE_INFO.has(file)) {
+// 			Console.log('Need provide file name or file does not exist!')
+// 			return
+// 		}
+
+// 		FILE_INFO.delete(file)
+// 	} // removeFileInfo
+
+// 	return {
+// 		initGetFileInfo: () => getFileInfo,
+// 		initSetFileTimingInfo: () => setFileTimingInfo,
+// 		initRemoveFileInfo: () => removeFileInfo,
+// 	}
+// })() // fileSystem
+
+// export const getFileInfo = fileSystem.initGetFileInfo()
+// export const setFileTimingInfo = fileSystem.initSetFileTimingInfo()
+// export const removeFileInfo = fileSystem.initRemoveFileInfo()

@@ -28,6 +28,7 @@ var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
+var _zlib = require('zlib')
 
 var _constants = require('../../constants')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
@@ -102,6 +103,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 
 	if (result) {
 		const NonNullableResult = result
+
 		if (NonNullableResult.isRaw) {
 			_ConsoleHandler2.default.log(
 				'File và nội dung đã tồn tại, đang tiến hành Optimize file'
@@ -131,13 +133,19 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 						return duration > 7000 ? 7000 : duration
 					})()
 
-					let html = data.toString('utf-8')
+					let html = (() => {
+						if (NonNullableResult.file.endsWith('.br'))
+							return _zlib.brotliDecompressSync.call(void 0, data).toString()
+
+						return data.toString('utf-8')
+					})()
+
 					const timeout = setTimeout(async () => {
 						optimizeHTMLContentPool.terminate()
 						const result = await cacheManager.set({
 							html,
 							url: ISRHandlerParams.url,
-							isRaw: false,
+							isRaw: !NonNullableResult.available,
 						})
 
 						res(result)
@@ -160,7 +168,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 						const result = await cacheManager.set({
 							html: tmpHTML,
 							url: ISRHandlerParams.url,
-							isRaw: false,
+							isRaw: !NonNullableResult.available,
 						})
 
 						res(result)
@@ -170,45 +178,35 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 
 			const tmpResult = await asyncTmpResult
 			result = tmpResult || result
-		} else if (NonNullableResult.refreshAt === NonNullableResult.requestedAt) {
-			const tmpResult = await new Promise(async (res) => {
-				const handle = (() => {
-					if (_constants.SERVER_LESS)
-						return fetchData(
-							`${_InitEnv.PROCESS_ENV.BASE_URL}/web-scraping`,
-							{
-								method: 'GET',
-								headers: new Headers({
-									Authorization: 'web-scraping-service',
-									Accept: 'application/json',
-									service: 'web-scraping-service',
-								}),
-							},
-							{
-								startGenerating,
-								hasCache: NonNullableResult.available,
-								url: ISRHandlerParams.url,
-							}
-						)
-					else
-						return _ISRHandler2.default.call(void 0, {
+		} else if (
+			Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
+			300000
+		) {
+			result = await cacheManager.renew(ISRHandlerParams.url)
+			if (!result.hasRenew)
+				if (_constants.SERVER_LESS)
+					fetchData(
+						`${_InitEnv.PROCESS_ENV.BASE_URL}/web-scraping`,
+						{
+							method: 'GET',
+							headers: new Headers({
+								Authorization: 'web-scraping-service',
+								Accept: 'application/json',
+								service: 'web-scraping-service',
+							}),
+						},
+						{
 							startGenerating,
 							hasCache: NonNullableResult.available,
-							...ISRHandlerParams,
-						})
-				})()
-
-				if (isSkipWaiting) return res(undefined)
-				else setTimeout(res, 10000)
-
-				const result = await (async () => {
-					return await handle
-				})()
-
-				res(result)
-			})
-
-			if (tmpResult && tmpResult.status) result = tmpResult
+							url: ISRHandlerParams.url,
+						}
+					)
+				else
+					_ISRHandler2.default.call(void 0, {
+						startGenerating,
+						hasCache: NonNullableResult.available,
+						...ISRHandlerParams,
+					})
 		}
 	} else {
 		result = await cacheManager.get(ISRHandlerParams.url)

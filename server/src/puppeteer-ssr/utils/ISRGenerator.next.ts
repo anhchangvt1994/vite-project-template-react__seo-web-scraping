@@ -1,5 +1,6 @@
 import fs from 'fs'
 import WorkerPool from 'workerpool'
+import { brotliDecompressSync } from 'zlib'
 import {
 	BANDWIDTH_LEVEL,
 	BANDWIDTH_LEVEL_LIST,
@@ -84,6 +85,7 @@ const SSRGenerator = async ({
 
 	if (result) {
 		const NonNullableResult = result
+
 		if (NonNullableResult.isRaw) {
 			Console.log('File và nội dung đã tồn tại, đang tiến hành Optimize file')
 			const asyncTmpResult = new Promise<ISSRResult>(async (res) => {
@@ -111,13 +113,19 @@ const SSRGenerator = async ({
 						return duration > 7000 ? 7000 : duration
 					})()
 
-					let html = data.toString('utf-8')
+					let html = (() => {
+						if (NonNullableResult.file.endsWith('.br'))
+							return brotliDecompressSync(data).toString()
+
+						return data.toString('utf-8')
+					})()
+
 					const timeout = setTimeout(async () => {
 						optimizeHTMLContentPool.terminate()
 						const result = await cacheManager.set({
 							html,
 							url: ISRHandlerParams.url,
-							isRaw: false,
+							isRaw: !NonNullableResult.available,
 						})
 
 						res(result)
@@ -140,7 +148,7 @@ const SSRGenerator = async ({
 						const result = await cacheManager.set({
 							html: tmpHTML,
 							url: ISRHandlerParams.url,
-							isRaw: false,
+							isRaw: !NonNullableResult.available,
 						})
 
 						res(result)
@@ -150,45 +158,37 @@ const SSRGenerator = async ({
 
 			const tmpResult = await asyncTmpResult
 			result = tmpResult || result
-		} else if (NonNullableResult.refreshAt === NonNullableResult.requestedAt) {
-			const tmpResult: ISSRResult = await new Promise(async (res) => {
-				const handle = (() => {
-					if (SERVER_LESS)
-						return fetchData(
-							`${PROCESS_ENV.BASE_URL}/web-scraping`,
-							{
-								method: 'GET',
-								headers: new Headers({
-									Authorization: 'web-scraping-service',
-									Accept: 'application/json',
-									service: 'web-scraping-service',
-								}),
-							},
-							{
-								startGenerating,
-								hasCache: NonNullableResult.available,
-								url: ISRHandlerParams.url,
-							}
-						)
-					else
-						return ISRHandler({
+		} else if (
+			Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
+			300000
+		) {
+			result = (await cacheManager.renew(
+				ISRHandlerParams.url
+			)) as NonNullable<ISSRResult>
+			if (!result.hasRenew)
+				if (SERVER_LESS)
+					fetchData(
+						`${PROCESS_ENV.BASE_URL}/web-scraping`,
+						{
+							method: 'GET',
+							headers: new Headers({
+								Authorization: 'web-scraping-service',
+								Accept: 'application/json',
+								service: 'web-scraping-service',
+							}),
+						},
+						{
 							startGenerating,
 							hasCache: NonNullableResult.available,
-							...ISRHandlerParams,
-						})
-				})()
-
-				if (isSkipWaiting) return res(undefined)
-				else setTimeout(res, 10000)
-
-				const result = await (async () => {
-					return await handle
-				})()
-
-				res(result)
-			})
-
-			if (tmpResult && tmpResult.status) result = tmpResult
+							url: ISRHandlerParams.url,
+						}
+					)
+				else
+					ISRHandler({
+						startGenerating,
+						hasCache: NonNullableResult.available,
+						...ISRHandlerParams,
+					})
 		}
 	} else {
 		result = await cacheManager.get(ISRHandlerParams.url)
