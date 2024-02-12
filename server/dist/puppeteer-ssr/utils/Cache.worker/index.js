@@ -244,15 +244,10 @@ const remove = (url) => {
 	if (!url) return _ConsoleHandler2.default.log('Url can not empty!')
 	const key = _utils.getKey.call(void 0, url)
 	let file = `${_constants.pagesPath}/${key}.raw.br`
-	switch (true) {
-		case !_fs2.default.existsSync(file):
-			file = `${_constants.pagesPath}/${key}.br`
-		case !_fs2.default.existsSync(file):
-			file = `${_constants.pagesPath}/${key}.renew.br`
-		case !_fs2.default.existsSync(file):
-			return _ConsoleHandler2.default.log('Does not exist file reference url!')
-		default:
-			break
+
+	if (!_fs2.default.existsSync(file)) {
+		_ConsoleHandler2.default.log('Does not exist file reference url!')
+		return
 	}
 
 	try {

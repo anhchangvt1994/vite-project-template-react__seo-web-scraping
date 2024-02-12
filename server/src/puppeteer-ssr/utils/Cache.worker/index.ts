@@ -214,15 +214,10 @@ const remove = (url: string) => {
 	if (!url) return Console.log('Url can not empty!')
 	const key = getKey(url)
 	let file = `${pagesPath}/${key}.raw.br`
-	switch (true) {
-		case !fs.existsSync(file):
-			file = `${pagesPath}/${key}.br`
-		case !fs.existsSync(file):
-			file = `${pagesPath}/${key}.renew.br`
-		case !fs.existsSync(file):
-			return Console.log('Does not exist file reference url!')
-		default:
-			break
+
+	if (!fs.existsSync(file)) {
+		Console.log('Does not exist file reference url!')
+		return
 	}
 
 	try {
