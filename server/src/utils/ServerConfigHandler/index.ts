@@ -74,15 +74,17 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 		} // isr
 	}
 
-	serverConfigDefined.crawler =
-		ENV_MODE === 'development'
-			? serverConfigDefined.crawler
-			: PROCESS_ENV.CRAWLER || serverConfigDefined.crawler
+	serverConfigDefined.crawler = PROCESS_ENV.IS_REMOTE_CRAWLER
+		? ''
+		: ENV_MODE === 'development'
+		? serverConfigDefined.crawler
+		: PROCESS_ENV.CRAWLER || serverConfigDefined.crawler
 
-	serverConfigDefined.crawlerSecretKey =
-		ENV_MODE === 'development'
-			? serverConfigDefined.crawlerSecretKey
-			: PROCESS_ENV.CRAWLER_SECRET_KEY || undefined
+	serverConfigDefined.crawlerSecretKey = PROCESS_ENV.IS_REMOTE_CRAWLER
+		? ''
+		: ENV_MODE === 'development'
+		? serverConfigDefined.crawlerSecretKey
+		: PROCESS_ENV.CRAWLER_SECRET_KEY || undefined
 
 	return serverConfigDefined as IServerConfig
 }

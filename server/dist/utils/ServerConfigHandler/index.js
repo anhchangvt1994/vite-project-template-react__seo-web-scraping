@@ -159,15 +159,17 @@ const defineServerConfig = (options) => {
 		} // isr
 	}
 
-	serverConfigDefined.crawler =
-		_InitEnv.ENV_MODE === 'development'
-			? serverConfigDefined.crawler
-			: _InitEnv.PROCESS_ENV.CRAWLER || serverConfigDefined.crawler
+	serverConfigDefined.crawler = _InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER
+		? ''
+		: _InitEnv.ENV_MODE === 'development'
+		? serverConfigDefined.crawler
+		: _InitEnv.PROCESS_ENV.CRAWLER || serverConfigDefined.crawler
 
-	serverConfigDefined.crawlerSecretKey =
-		_InitEnv.ENV_MODE === 'development'
-			? serverConfigDefined.crawlerSecretKey
-			: _InitEnv.PROCESS_ENV.CRAWLER_SECRET_KEY || undefined
+	serverConfigDefined.crawlerSecretKey = _InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER
+		? ''
+		: _InitEnv.ENV_MODE === 'development'
+		? serverConfigDefined.crawlerSecretKey
+		: _InitEnv.PROCESS_ENV.CRAWLER_SECRET_KEY || undefined
 
 	return serverConfigDefined
 }
