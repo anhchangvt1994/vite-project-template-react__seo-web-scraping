@@ -197,13 +197,12 @@ const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
 									)
 							}
 
-							// if (curAttrs.indexOf('aria-label=') === -1)
-							// 	newAttrs = `aria-label="welcome" ${newAttrs}`
 							break
 						case newTag === 'button':
 							const tmpContentWithoutHTMLTags = tmpContent
 								.replace(/<[^>]*>|[\n]/g, '')
 								.trim()
+
 							if (!tmpContentWithoutHTMLTags) return ''
 							if (curAttrs.indexOf('type=') === -1)
 								newAttrs = `type="button" ${newAttrs}`

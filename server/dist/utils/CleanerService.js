@@ -100,13 +100,13 @@ const CleanerService = async () => {
 
 			if (!_constants.SERVER_LESS)
 				setTimeout(() => {
-					cleanPages(5)
-				}, 300000)
+					cleanPages(360)
+				}, 21600000)
 		}
 	}
 
-	if (_constants.SERVER_LESS) cleanPages(10)
-	else await cleanPages()
+	if (_constants.SERVER_LESS) cleanPages(360)
+	else await cleanPages(360)
 }
 
 if (!_constants.SERVER_LESS) CleanerService()

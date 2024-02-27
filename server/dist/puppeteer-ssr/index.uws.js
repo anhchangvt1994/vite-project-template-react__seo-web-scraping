@@ -125,7 +125,7 @@ const puppeteerSSRService = (async () => {
 
 						const result = await _ISRHandler2.default.call(void 0, {
 							startGenerating,
-							isFirstRequest,
+							hasCache: isFirstRequest,
 							url,
 						})
 
@@ -293,7 +293,9 @@ const puppeteerSSRService = (async () => {
 								 * calc by using:
 								 * https://www.inchcalculator.com/convert/year-to-second/
 								 */
-								res.writeStatus(String(result.status))
+								res
+									.writeStatus(String(result.status))
+									.writeHeader('Content-Type', 'text/html; charset=utf-8')
 
 								if (enableContentEncoding && result.status === 200) {
 									res.writeHeader('Content-Encoding', contentEncoding)
@@ -357,7 +359,10 @@ const puppeteerSSRService = (async () => {
 
 										res.end(body, true)
 									} catch (e) {
-										res.writeStatus('404').end('Page not found!', true)
+										res
+											.writeStatus('404')
+											.writeHeader('Content-Type', 'text/html; charset=utf-8')
+											.end('Page not found!', true)
 									}
 								} else if (result.html) {
 									if (result.status === 200) {
@@ -378,7 +383,10 @@ const puppeteerSSRService = (async () => {
 									res.end(`${result.status} Error`, true)
 								}
 							} else {
-								res.writeStatus('504').end('504 Gateway Timeout', true)
+								res
+									.writeStatus('504')
+									.writeHeader('Content-Type', 'text/html; charset=utf-8')
+									.end('504 Gateway Timeout', true)
 							}
 						})
 					} catch (err) {

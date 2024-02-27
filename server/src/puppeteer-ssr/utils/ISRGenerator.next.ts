@@ -86,111 +86,109 @@ const SSRGenerator = async ({
 	if (result) {
 		const NonNullableResult = result
 
-		if (NonNullableResult.isRaw) {
-			Console.log('File và nội dung đã tồn tại, đang tiến hành Optimize file')
-			const asyncTmpResult = new Promise<ISSRResult>(async (res) => {
-				const optimizeHTMLContentPool = WorkerPool.pool(
-					__dirname + `/OptimizeHtml.worker.${resourceExtension}`,
-					{
-						minWorkers: 1,
-						maxWorkers: MAX_WORKERS,
-					}
-				)
+		// if (NonNullableResult.isRaw) {
+		// 	Console.log('Optimize content!')
+		// 	const asyncTmpResult = new Promise<ISSRResult>(async (res) => {
+		// 		const optimizeHTMLContentPool = WorkerPool.pool(
+		// 			__dirname + `/OptimizeHtml.worker.${resourceExtension}`,
+		// 			{
+		// 				minWorkers: 1,
+		// 				maxWorkers: MAX_WORKERS,
+		// 			}
+		// 		)
 
-				if (
-					!NonNullableResult ||
-					!NonNullableResult.file ||
-					!fs.existsSync(NonNullableResult.file)
-				)
-					res(undefined)
+		// 		if (
+		// 			!NonNullableResult ||
+		// 			!NonNullableResult.file ||
+		// 			!fs.existsSync(NonNullableResult.file)
+		// 		)
+		// 			res(undefined)
 
-				fs.readFile(NonNullableResult.file as string, async (err, data) => {
-					if (err) return res(undefined)
+		// 		fs.readFile(NonNullableResult.file as string, async (err, data) => {
+		// 			if (err) return res(undefined)
 
-					const restOfDuration = (() => {
-						const duration = getRestOfDuration(startGenerating, 2000)
+		// 			const restOfDuration = (() => {
+		// 				const duration = getRestOfDuration(startGenerating, 2000)
 
-						return duration > 7000 ? 7000 : duration
-					})()
+		// 				return duration > 7000 ? 7000 : duration
+		// 			})()
 
-					let html = (() => {
-						if (NonNullableResult.file.endsWith('.br'))
-							return brotliDecompressSync(data).toString()
+		// 			let html = (() => {
+		// 				if (NonNullableResult.file.endsWith('.br'))
+		// 					return brotliDecompressSync(data).toString()
 
-						return data.toString('utf-8')
-					})()
+		// 				return data.toString('utf-8')
+		// 			})()
 
-					const timeout = setTimeout(async () => {
-						optimizeHTMLContentPool.terminate()
-						const result = await cacheManager.set({
-							html,
-							url: ISRHandlerParams.url,
-							isRaw: !NonNullableResult.available,
-						})
+		// 			const timeout = setTimeout(async () => {
+		// 				optimizeHTMLContentPool.terminate()
+		// 				const result = await cacheManager.set({
+		// 					html,
+		// 					url: ISRHandlerParams.url,
+		// 					isRaw: !NonNullableResult.available,
+		// 				})
 
-						res(result)
-					}, restOfDuration)
+		// 				res(result)
+		// 			}, restOfDuration)
 
-					let tmpHTML = ''
+		// 			let tmpHTML = ''
 
-					try {
-						if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
-							tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
-								html,
-							])
-					} catch (err) {
-						tmpHTML = html
-						// Console.error(err)
-					} finally {
-						clearTimeout(timeout)
-						optimizeHTMLContentPool.terminate()
+		// 			try {
+		// 				if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
+		// 					tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
+		// 						html,
+		// 					])
+		// 			} catch (err) {
+		// 				tmpHTML = html
+		// 				// Console.error(err)
+		// 			} finally {
+		// 				clearTimeout(timeout)
+		// 				optimizeHTMLContentPool.terminate()
 
-						const result = await cacheManager.set({
-							html: tmpHTML,
-							url: ISRHandlerParams.url,
-							isRaw: !NonNullableResult.available,
-						})
+		// 				const result = await cacheManager.set({
+		// 					html: tmpHTML,
+		// 					url: ISRHandlerParams.url,
+		// 					isRaw: !NonNullableResult.available,
+		// 				})
 
-						res(result)
-					}
-				})
-			})
+		// 				res(result)
+		// 			}
+		// 		})
+		// 	})
 
-			const tmpResult = await asyncTmpResult
-			result = tmpResult || result
-		} else if (
-			Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
-			300000
-		) {
-			result = (await cacheManager.renew(
-				ISRHandlerParams.url
-			)) as NonNullable<ISSRResult>
-			if (!result.hasRenew)
-				if (SERVER_LESS)
-					fetchData(
-						`${PROCESS_ENV.BASE_URL}/web-scraping`,
-						{
-							method: 'GET',
-							headers: new Headers({
-								Authorization: 'web-scraping-service',
-								Accept: 'application/json',
-								service: 'web-scraping-service',
-							}),
-						},
-						{
+		// 	const tmpResult = await asyncTmpResult
+		// 	result = tmpResult || result
+		// } else
+		if (Date.now() - new Date(NonNullableResult.updatedAt).getTime() > 180000) {
+			cacheManager.renew(ISRHandlerParams.url).then((result) => {
+				if (!result.hasRenew)
+					if (SERVER_LESS)
+						fetchData(
+							`${PROCESS_ENV.BASE_URL}/web-scraping`,
+							{
+								method: 'GET',
+								headers: new Headers({
+									Authorization: 'web-scraping-service',
+									Accept: 'application/json',
+									service: 'web-scraping-service',
+								}),
+							},
+							{
+								startGenerating,
+								hasCache: NonNullableResult.available,
+								url: ISRHandlerParams.url,
+							}
+						)
+					else
+						ISRHandler({
 							startGenerating,
 							hasCache: NonNullableResult.available,
-							url: ISRHandlerParams.url,
-						}
-					)
-				else
-					ISRHandler({
-						startGenerating,
-						hasCache: NonNullableResult.available,
-						...ISRHandlerParams,
-					})
+							...ISRHandlerParams,
+						})
+			})
 		}
-	} else {
+	}
+	if (!result) {
 		result = await cacheManager.get(ISRHandlerParams.url)
 
 		Console.log('Check for condition to create new page.')
@@ -198,20 +196,7 @@ const SSRGenerator = async ({
 
 		if (result) {
 			const NonNullableResult = result
-			const isValidToScraping = (() => {
-				return NonNullableResult.isInit
-				// || (() => {
-				// 	const createTimeDuration =
-				// 		Date.now() - new Date(NonNullableResult.createdAt).getTime()
-				// 	return (
-				// 		!NonNullableResult.available &&
-				// 		createTimeDuration >=
-				// 			(SERVER_LESS && BANDWIDTH_LEVEL === BANDWIDTH_LEVEL_LIST.ONE
-				// 				? 2000
-				// 				: 10000)
-				// 	)
-				// })()
-			})()
+			const isValidToScraping = NonNullableResult.isInit
 
 			if (isValidToScraping) {
 				const tmpResult: ISSRResult = await new Promise(async (res) => {

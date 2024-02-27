@@ -31,15 +31,11 @@ export const getKey = (url) => {
 		return
 	}
 
-	// return url
-	// 	.replace(regexKeyConverter, '')
-	// 	.replace(/\//g, '|')
-	// 	.replace('?|?&', '')
-	// return url.split('?')[0].replace(/^https?:\/\/(www\.)?|^www\.|\/$/, '')
-	return crypto
-		.createHash('md5')
-		.update(url.replace(regexKeyConverter, ''))
-		.digest('hex')
+	url = url
+		.replace('/?', '?')
+		.replace(regexKeyConverter, '')
+		.replace(/\?(?:\&|)$/g, '')
+	return crypto.createHash('md5').update(url).digest('hex')
 } // getKey
 
 export const getFileInfo = async (file: string): Promise<IFileInfo> => {

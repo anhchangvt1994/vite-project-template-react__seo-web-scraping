@@ -203,11 +203,7 @@ const renew = async (url) => {
 		}
 	}
 
-	const result = await get(url, {
-		autoCreateIfEmpty: false,
-	})
-
-	return { ...result, hasRenew }
+	return hasRenew
 } // renew
 
 const remove = (url: string) => {

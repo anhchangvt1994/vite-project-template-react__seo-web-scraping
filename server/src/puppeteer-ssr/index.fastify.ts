@@ -45,7 +45,7 @@ const puppeteerSSRService = (async () => {
 
 					const result = await ISRHandler({
 						startGenerating,
-						isFirstRequest,
+						hasCache: isFirstRequest,
 						url,
 					})
 

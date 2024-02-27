@@ -70,9 +70,16 @@ const CacheManager = () => {
 		let file = `${_constants.pagesPath}/${key}.br`
 		let isRaw = false
 
-		if (!_fs2.default.existsSync(file)) {
-			file = `${_constants.pagesPath}/${key}.raw.br`
-			isRaw = true
+		switch (true) {
+			case _fs2.default.existsSync(file):
+				break
+			case _fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`):
+				file = `${_constants.pagesPath}/${key}.renew.br`
+				break
+			default:
+				file = `${_constants.pagesPath}/${key}.raw.br`
+				isRaw = true
+				break
 		}
 
 		if (!_fs2.default.existsSync(file)) return

@@ -117,7 +117,7 @@ const waitResponse = (() => {
 				const result = await new Promise<any>((resolveAfterPageLoad) => {
 					safePage()
 						?.goto(url.split('?')[0], {
-							waitUntil: 'domcontentloaded',
+							waitUntil: 'networkidle2',
 							timeout: 0,
 						})
 						.then((res) => {
@@ -307,7 +307,7 @@ const ISRHandler = async ({ hasCache, url }: IISRHandlerParam) => {
 						isGetHtmlProcessError = true
 						Console.log('ISRHandler line 285:')
 						Console.error(err)
-						await safePage()?.close()
+						safePage()?.close()
 						return res(false)
 					}
 				} finally {
@@ -321,20 +321,23 @@ const ISRHandler = async ({ hasCache, url }: IISRHandlerParam) => {
 			Console.log('ISRHandler line 297:')
 			Console.log('Crawler is fail!')
 			Console.error(err)
-			await safePage()?.close()
+			cacheManager.remove(url)
+			safePage()?.close()
 			return {
 				status: 500,
 			}
 		}
 
-		if (isGetHtmlProcessError)
+		if (isGetHtmlProcessError) {
+			cacheManager.remove(url)
 			return {
 				status: 500,
 			}
+		}
 
 		try {
 			html = (await safePage()?.content()) ?? '' // serialized HTML of page DOM.
-			await safePage()?.close()
+			safePage()?.close()
 		} catch (err) {
 			Console.log('ISRHandler line 315:')
 			Console.error(err)
@@ -356,16 +359,17 @@ const ISRHandler = async ({ hasCache, url }: IISRHandlerParam) => {
 			}
 		)
 
+		let isRaw = false
+
 		try {
 			html = await optimizeHTMLContentPool.exec('optimizeContent', [
 				html,
 				true,
 				isForceToOptimizeAndCompress,
 			])
-
-			if (hasCache)
-				html = await optimizeHTMLContentPool.exec('compressContent', [html])
+			html = await optimizeHTMLContentPool.exec('compressContent', [html])
 		} catch (err) {
+			isRaw = true
 			Console.log('--------------------')
 			Console.log('ISRHandler line 368:')
 			Console.log('error url', url.split('?')[0])
@@ -377,10 +381,10 @@ const ISRHandler = async ({ hasCache, url }: IISRHandlerParam) => {
 		result = await cacheManager.set({
 			html,
 			url,
-			isRaw: !hasCache,
+			isRaw,
 		})
 	} else {
-		await cacheManager.remove(url)
+		cacheManager.remove(url)
 		return {
 			status,
 			html: status === 404 ? 'Page not found!' : html,

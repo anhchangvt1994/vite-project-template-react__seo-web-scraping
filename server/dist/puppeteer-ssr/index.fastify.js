@@ -110,7 +110,7 @@ const puppeteerSSRService = (async () => {
 
 					const result = await _ISRHandler2.default.call(void 0, {
 						startGenerating,
-						isFirstRequest,
+						hasCache: isFirstRequest,
 						url,
 					})
 

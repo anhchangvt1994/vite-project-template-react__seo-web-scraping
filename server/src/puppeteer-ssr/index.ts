@@ -44,7 +44,7 @@ const puppeteerSSRService = (async () => {
 
 					const result = await SSRHandler({
 						startGenerating,
-						isFirstRequest,
+						hasCache: isFirstRequest,
 						url,
 					})
 
