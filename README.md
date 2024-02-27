@@ -12,7 +12,7 @@ Specifically, the system will transform your client side rendering project so th
 ## Table of contents
 
 1. [Install](#install)
-2. [Try for fun](#try-some-fun)
+2. [Try for fun](#try-for-fun)
 3. [Detail setup](#detail-setup)
 
 <h2 id="install">Install</h2>
@@ -89,7 +89,7 @@ But wait, you still haven’t checked the light-house score yet. Right now, open
 
 How did you score? both mobile and desktop. Enough to impress you, right? I’m sure Search Engine will be very impressed too.
 
-But wait, the content of this page is too little, it’s not enough to say anything, except that it can make a web page using CSR SEO possible. So let’s test it on a web page with more content and running in real time. Here I will choose Tiki. Let’s do it.
+But wait, the content of this page is too little, it’s not enough to say anything, except that it can make a web page using CSR with SEO possible. So let’s test it on a web page with more content and running in real time. Here I will choose Tiki. Let’s do it.
 
 6. Adding some special testing queryString and enter
 `?urlTesting=https://tiki.vn`
