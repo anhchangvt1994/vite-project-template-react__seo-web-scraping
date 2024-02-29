@@ -8,9 +8,9 @@ export interface IRedirectResult {
 	status: number
 }
 export interface IRedirectInfoItem {
-	statusCode: number
 	path: string
 	targetPath: string
+	statusCode: number
 }
 
 // NOTE - Declare redirects

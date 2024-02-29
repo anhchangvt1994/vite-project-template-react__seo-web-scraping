@@ -27,7 +27,7 @@ export const setLinkNextTag = SeoTags[SeoTagsEnum.next]
 export const setLinkPrevTag = SeoTags[SeoTagsEnum.prev]
 export const setLinkAuthorTag = SeoTags[SeoTagsEnum.author_link]
 export const setLinkAmphtmlTag = SeoTags[SeoTagsEnum.amphtml]
-export const setLinkTwitterTitleTag = SeoTags[SeoTagsEnum.twitter_title]
+export const setMetaTwitterTitleTag = SeoTags[SeoTagsEnum.twitter_title]
 export const setMetaTwitterDescriptionTag =
 	SeoTags[SeoTagsEnum.twitter_description]
 export const setMetaTwitterImageTag = SeoTags[SeoTagsEnum.twitter_image]

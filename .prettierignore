@@ -1,4 +1,4 @@
 # Ignore all HTML files:
 *.html
 config/**/*.d.ts
-README.md
+*.md

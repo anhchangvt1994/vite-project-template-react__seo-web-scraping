@@ -2,8 +2,8 @@
 
 Hey guys, what awesome thing brought you here? … Whatever it is, I think your day has started to get better. Before exploring further, let’s identify some important things together.
 
-1. Are you looking for an optimal solution for light-house score?
-2. Have you tried many ways to optimize but still not satisfactory?
+1. Are you looking for an optimal solution for light-house score ?
+2. Have you tried many ways to optimize but still not satisfactory ?
 
 If so, I think this project can help you. All you need to do is know how to use VueJS / ReactJS (I bet it’s much easier to use than NuxtJS and NextJS) and done, leave the rest to the system.
 
@@ -13,23 +13,16 @@ Specifically, the system will transform your client side rendering project so th
 
 1. [Install](#install)
 2. [Try for fun](#try-for-fun)
-3. [Detail setup](#detail-setup)
+3. Detail and Setup
+    - [How it works ?](/READMORE/how-it-works.md)
+    - [Setup meta SEO tags](/READMORE/how-to-setup-meta-seo-tags.md)
+    - [Setup link SEO tags](/READMORE/how-to-setup-link-seo-tags.md)
+    - [Config redirect](/READMORE/redirect-config.md)
+    - [Config server](/READMORE/server-config.md)
 
 <h2 id="install">Install</h2>
 
 ##### Expect Node 18.18.x or higher
-
-Clone source with SSH url:
-
-```bash
-git clone git@github.com:anhchangvt1994/vite-project-template-react__seo-web-scraping.git
-```
-
-Install:
-
-```bash
-cd vite-project-template-react__seo-web-scraping
-```
 
 If use npm
 
@@ -51,7 +44,7 @@ bun install
 
 <h2 id="try-for-fun">Try for fun</h2>
 
-Hey guys, have you completed the installation step? I hope everything works well and smoothly, if you have any issues, don’t hesitate to create a github issue or contact me directly via these socials: [facebook](), [linkedin](). I will try my best to support you as much as possible.
+Hey guys, have you completed the installation step? I hope everything works well and smoothly, if you have any issues, don’t hesitate to create a github issue or contact me directly via these socials: [facebook](https://www.facebook.com/truong.nguyen.3382), [linkedin](https://www.linkedin.com/in/truong-nguyen-8780a523a). I will try my best to support you as much as possible.
 
 If you have finished the installation step, let’s start the fun. Follow these steps and enjoy.
 
