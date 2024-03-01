@@ -13,12 +13,19 @@ Specifically, the system will transform your client side rendering project so th
 
 1. [Install](#install)
 2. [Try for fun](#try-for-fun)
-3. Detail and Setup
-    - [How it works ?](/READMORE/how-it-works.md)
-    - [Setup meta SEO tags](/READMORE/how-to-setup-meta-seo-tags.md)
-    - [Setup link SEO tags](/READMORE/how-to-setup-link-seo-tags.md)
-    - [Config redirect](/READMORE/redirect-config.md)
-    - [Config server](/READMORE/server-config.md)
+3. [How it works ?](/READMORE/how-it-works.md)
+4. Configuration
+  - [Config redirect](/READMORE/redirect-config.md)
+  - [Config server](/READMORE/server-config.md)
+  - [Config by using environment variable](/READMORE/config-by-using-environment-variable.md)
+5. Utilities
+  - [Meta SEO tags](/READMORE/meta-seo-tags.md)
+  - [Link SEO tags](/READMORE/link-seo-tags.md)
+  - [`seo-tag` attribute](/READMORE/seo-tag-attribute.md)
+  - [BotInfo variable](/READMORE/botinfo-variable.md)
+  - [DeviceInfo variable](/READMORE/deviceinfo-variable.md)
+  - [LocaleInfo variable](/READMORE/localeinfo-variable.md)
+  - [Remote crawler](/READMORE/remote-crawler.md)
 
 <h2 id="install">Install</h2>
 
