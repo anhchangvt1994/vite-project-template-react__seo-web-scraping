@@ -6,21 +6,49 @@ export interface IServerConfigOptional {
 		hideDefaultLocale?: boolean
 
 		routes?: {
-			[key: string]: {
-				enable: boolean
-				defaultLang?: string | undefined
-				defaultCountry?: string | undefined
-				hideDefaultLocale?: boolean
-			}
+			[key: string]: Omit<
+				NonNullable<IServerConfigOptional['locale']>,
+				'routes' | 'custom'
+			>
 		}
+
+		custom?: (
+			path: string
+		) => Omit<NonNullable<IServerConfigOptional['locale']>, 'routes' | 'custom'>
 	}
-	isr?: {
+
+	isRemoteCrawler?: boolean
+
+	crawl?: {
 		enable: boolean
 
+		optimize?: boolean
+
+		compress?: boolean
+
+		cache?: {
+			enable: boolean
+			time?: number
+			renewTime?: number
+		}
+
 		routes?: {
-			[key: string]: {
-				enable: boolean
+			[key: string]: Omit<
+				NonNullable<IServerConfigOptional['crawl']>,
+				'routes' | 'custom' | 'cache'
+			> & {
+				cache: Omit<
+					NonNullable<IServerConfigOptional['crawl']>['cache'],
+					'time'
+				>
 			}
+		}
+
+		custom?: (path: string) => Omit<
+			NonNullable<IServerConfigOptional['crawl']>,
+			'routes' | 'custom' | 'cache'
+		> & {
+			cache: Omit<NonNullable<IServerConfigOptional['crawl']>['cache'], 'time'>
 		}
 	}
 	crawler?: string
@@ -34,22 +62,47 @@ export interface IServerConfig extends IServerConfigOptional {
 		defaultCountry?: string | undefined
 		hideDefaultLocale?: boolean
 
-		routes?: {
-			[key: string]: {
-				enable: boolean
-				defaultLang?: string | undefined
-				defaultCountry?: string | undefined
-				hideDefaultLocale?: boolean
-			}
+		routes: {
+			[key: string]: Omit<
+				NonNullable<IServerConfig['locale']>,
+				'routes' | 'custom'
+			>
 		}
+
+		custom?: (
+			path: string
+		) => Omit<NonNullable<IServerConfig['locale']>, 'routes' | 'custom'>
 	}
-	isr: {
+
+	isRemoteCrawler: boolean
+
+	crawl: {
 		enable: boolean
 
-		routes?: {
-			[key: string]: {
-				enable: boolean
+		optimize: boolean
+
+		compress: boolean
+
+		cache: {
+			enable: boolean
+			time: number
+			renewTime: number
+		}
+
+		routes: {
+			[key: string]: Omit<
+				IServerConfig['crawl'],
+				'routes' | 'custom' | 'cache'
+			> & {
+				cache: Omit<IServerConfig['crawl']['cache'], 'time'>
 			}
+		}
+
+		custom?: (path: string) => Omit<
+			IServerConfig['crawl'],
+			'routes' | 'custom' | 'cache'
+		> & {
+			cache: Omit<IServerConfig['crawl']['cache'], 'time'>
 		}
 	}
 }

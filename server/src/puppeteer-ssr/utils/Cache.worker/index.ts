@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import WorkerPool from 'workerpool'
+import { brotliCompressSync } from 'zlib'
 import { pagesPath } from '../../../constants'
 import Console from '../../../utils/ConsoleHandler'
 import { ISSRResult } from '../../types'
@@ -10,8 +11,6 @@ import {
 	getKey,
 	setRequestTimeInfo,
 } from './utils'
-import { brotliCompressSync } from 'zlib'
-import { DISABLE_COMPRESS_HTML } from '../../constants'
 
 const maintainFile = path.resolve(__dirname, '../../../../maintain.html')
 

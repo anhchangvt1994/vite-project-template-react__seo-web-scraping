@@ -42,7 +42,7 @@ const startServer = async () => {
 		passphrase: '1234',
 	})
 
-	if (ServerConfig.crawler && !PROCESS_ENV.IS_REMOTE_CRAWLER) {
+	if (ServerConfig.crawler && !ServerConfig.isRemoteCrawler) {
 		app.get('/robots.txt', (res, req) => {
 			try {
 				const body = fs.readFileSync(path.resolve(__dirname, '../robots.txt'))
@@ -69,7 +69,7 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (!PROCESS_ENV.IS_REMOTE_CRAWLER) {
+	if (!ServerConfig.isRemoteCrawler) {
 		if (ENV === 'development') {
 			const serverIndexFilePath = path.resolve(__dirname, './index.uws.ts')
 			// NOTE - restart server onchange

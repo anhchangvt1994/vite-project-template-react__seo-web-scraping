@@ -2,15 +2,14 @@ import fs from 'fs'
 import path from 'path'
 import WorkerPool from 'workerpool'
 import { pagesPath, resourceExtension } from '../../constants'
+import ServerConfig from '../../server.config'
 import Console from '../../utils/ConsoleHandler'
 import { PROCESS_ENV } from '../../utils/InitEnv'
-import { DISABLE_SSR_CACHE } from '../constants'
 import { ISSRResult } from '../types'
 import {
 	ICacheSetParams,
 	getKey as getCacheKey,
 	getFileInfo,
-	setRequestTimeInfo,
 } from './Cache.worker/utils'
 
 const MAX_WORKERS = PROCESS_ENV.MAX_WORKERS
@@ -19,9 +18,15 @@ const MAX_WORKERS = PROCESS_ENV.MAX_WORKERS
 
 const maintainFile = path.resolve(__dirname, '../../../maintain.html')
 
-const CacheManager = () => {
-	const get = async (url: string) => {
-		if (DISABLE_SSR_CACHE)
+const CacheManager = (url: string) => {
+	const pathname = new URL(url).pathname
+	const enableToCache =
+		ServerConfig.crawl.routes[pathname]?.compress ||
+		ServerConfig.crawl.custom?.(pathname)?.compress ||
+		ServerConfig.crawl.compress
+
+	const get = async () => {
+		if (!enableToCache)
 			return {
 				response: maintainFile,
 				status: 503,
@@ -52,8 +57,8 @@ const CacheManager = () => {
 		}
 	} // get
 
-	const achieve = async (url: string): Promise<ISSRResult> => {
-		if (DISABLE_SSR_CACHE) return
+	const achieve = async (): Promise<ISSRResult> => {
+		if (!enableToCache) return
 		if (!url) {
 			Console.error('Need provide "url" param!')
 			return
@@ -98,7 +103,7 @@ const CacheManager = () => {
 	} // achieve
 
 	const set = async (params: ICacheSetParams) => {
-		if (DISABLE_SSR_CACHE)
+		if (!enableToCache)
 			return {
 				html: params.html,
 				response: maintainFile,
@@ -124,7 +129,7 @@ const CacheManager = () => {
 		}
 	} // set
 
-	const renew = async (url: string) => {
+	const renew = async () => {
 		const pool = WorkerPool.pool(
 			path.resolve(__dirname, `./Cache.worker/index.${resourceExtension}`),
 			{
@@ -145,7 +150,7 @@ const CacheManager = () => {
 	} // renew
 
 	const remove = async (url: string) => {
-		if (DISABLE_SSR_CACHE) return
+		if (!enableToCache) return
 		const pool = WorkerPool.pool(
 			path.resolve(__dirname, `./Cache.worker/index.${resourceExtension}`),
 			{

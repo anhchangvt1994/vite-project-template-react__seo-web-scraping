@@ -1,6 +1,4 @@
-import fs from 'fs'
 import WorkerPool from 'workerpool'
-import { brotliDecompressSync } from 'zlib'
 import {
 	BANDWIDTH_LEVEL,
 	BANDWIDTH_LEVEL_LIST,
@@ -9,14 +7,13 @@ import {
 	SERVER_LESS,
 	resourceExtension,
 } from '../../constants'
+import ServerConfig from '../../server.config'
 import Console from '../../utils/ConsoleHandler'
 import { PROCESS_ENV } from '../../utils/InitEnv'
 import { DISABLE_SSR_CACHE, DURATION_TIMEOUT, MAX_WORKERS } from '../constants'
 import { ISSRResult } from '../types'
 import CacheManager from './CacheManager'
 import ISRHandler from './ISRHandler'
-
-const cacheManager = CacheManager()
 
 const fetchData = async (
 	input: RequestInfo | URL,
@@ -59,6 +56,8 @@ const SSRGenerator = async ({
 	isSkipWaiting = false,
 	...ISRHandlerParams
 }: IISRGeneratorParams): Promise<ISSRResult> => {
+	const cacheManager = CacheManager(ISRHandlerParams.url)
+
 	if (!PROCESS_ENV.BASE_URL) {
 		Console.error('Missing base url!')
 		return
@@ -81,10 +80,15 @@ const SSRGenerator = async ({
 		})
 
 	let result: ISSRResult
-	result = await cacheManager.achieve(ISRHandlerParams.url)
+	result = await cacheManager.achieve()
 
 	if (result) {
 		const NonNullableResult = result
+		const pathname = new URL(ISRHandlerParams.url).pathname
+		const renewTime =
+			(ServerConfig.crawl.routes[pathname]?.cache.renewTime ||
+				ServerConfig.crawl.custom?.(pathname)?.cache.renewTime ||
+				ServerConfig.crawl.cache.renewTime) * 1000
 
 		// if (NonNullableResult.isRaw) {
 		// 	Console.log('Optimize content!')
@@ -159,8 +163,11 @@ const SSRGenerator = async ({
 		// 	const tmpResult = await asyncTmpResult
 		// 	result = tmpResult || result
 		// } else
-		if (Date.now() - new Date(NonNullableResult.updatedAt).getTime() > 180000) {
-			cacheManager.renew(ISRHandlerParams.url).then((result) => {
+		if (
+			Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
+			renewTime
+		) {
+			cacheManager.renew().then((result) => {
 				if (!result.hasRenew)
 					if (SERVER_LESS)
 						fetchData(
@@ -189,7 +196,7 @@ const SSRGenerator = async ({
 		}
 	}
 	if (!result) {
-		result = await cacheManager.get(ISRHandlerParams.url)
+		result = await cacheManager.get()
 
 		Console.log('Check for condition to create new page.')
 		Console.log('result.available', result?.available)
@@ -246,7 +253,7 @@ const SSRGenerator = async ({
 
 				if (tmpResult && tmpResult.status) result = tmpResult
 				else {
-					const tmpResult = await cacheManager.achieve(ISRHandlerParams.url)
+					const tmpResult = await cacheManager.achieve()
 					result = tmpResult || result
 				}
 
@@ -285,7 +292,7 @@ const SSRGenerator = async ({
 								: 200
 
 						setTimeout(async () => {
-							const tmpResult = await cacheManager.achieve(ISRHandlerParams.url)
+							const tmpResult = await cacheManager.achieve()
 
 							if (tmpResult && tmpResult.response) return res(tmpResult)
 
