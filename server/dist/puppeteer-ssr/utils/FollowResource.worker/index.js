@@ -226,7 +226,7 @@ const scanToCleanPages = async (dirPath, durationValidToKeep = 1) => {
 				const dirExistDurationInMinutes =
 					(Date.now() -
 						new Date(_fs2.default.statSync(absolutePath).atime).getTime()) /
-					60000
+					1000
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
 					try {

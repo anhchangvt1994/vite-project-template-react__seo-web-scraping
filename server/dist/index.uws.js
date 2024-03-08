@@ -79,7 +79,7 @@ const startServer = async () => {
 
 	if (
 		_serverconfig2.default.crawler &&
-		!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER
+		!_serverconfig2.default.isRemoteCrawler
 	) {
 		app.get('/robots.txt', (res, req) => {
 			try {
@@ -115,7 +115,7 @@ const startServer = async () => {
 		process.exit(0)
 	})
 
-	if (!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER) {
+	if (!_serverconfig2.default.isRemoteCrawler) {
 		if (_InitEnv.ENV === 'development') {
 			const serverIndexFilePath = _path2.default.resolve(
 				__dirname,

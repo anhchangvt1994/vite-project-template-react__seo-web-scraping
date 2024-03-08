@@ -17,7 +17,7 @@ Specifically, the system will transform your client side rendering project so th
 4. Configuration
   - [Config redirect](/READMORE/redirect-config.md)
   - [Config server](/READMORE/server-config.md)
-  - [Config by using environment variable](/READMORE/config-by-using-environment-variable.md)
+  - [Server environment variables](/READMORE/server-enviroment-variables.md)
 5. Utilities
   - [Meta SEO tags](/READMORE/meta-seo-tags.md)
   - [Link SEO tags](/READMORE/link-seo-tags.md)
@@ -83,7 +83,7 @@ What do you see now? Just text and text, right? There is no style at all, how ug
 
 But wait, you still haven’t checked the light-house score yet. Right now, open the incognito browser (slowly, don’t make it a habit like that … I like that). Open incognito and go back to localhost:\<port\> where the project is running, this will help ensure that the lighthouse testing process will minimize the impact of the chrome-extensions that you installed before, helping the light-house system to give the most accurate results possible. Let’s check it out.
 
-5. Open incognito browser > Open localhost:\<port\> > Open browser devtool > select lighthouse tab > start light-house checking.
+5. Open **incognito browser** > Open localhost:\<port\> > Open browser devtool > select lighthouse tab > start light-house checking.
 
 ![step 05](/src/assets/static/images/readme/step_05.jpg)
 

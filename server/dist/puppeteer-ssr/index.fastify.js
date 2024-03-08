@@ -137,222 +137,262 @@ const puppeteerSSRService = (async () => {
 					res.status(200).send('Finish clean service!')
 				})
 		}
-		_app.get('*', async function (req, res) {
-			const pathname = _optionalChain([
+		_app.get(
+			'*',
+			async function (
 				req,
-				'access',
-				(_9) => _9.url,
-				'optionalAccess',
-				(_10) => _10.split,
-				'call',
-				(_11) => _11('?'),
-				'access',
-				(_12) => _12[0],
-			])
-			const cookies = _CookieHandler.getCookieFromResponse.call(void 0, res)
-			const botInfo = _optionalChain([
-				cookies,
-				'optionalAccess',
-				(_13) => _13['BotInfo'],
-			])
-			const enableISR =
-				_serverconfig2.default.isr.enable &&
-				Boolean(
-					!_serverconfig2.default.isr.routes ||
-						!_serverconfig2.default.isr.routes[pathname] ||
-						_serverconfig2.default.isr.routes[pathname].enable
-				)
-			const headers = req.headers
-			const enableContentEncoding = Boolean(headers['accept-encoding'])
-			const contentEncoding = (() => {
-				const tmpHeaderAcceptEncoding = headers['accept-encoding'] || ''
-				if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
-				else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1) return 'gzip'
-				return ''
-			})()
 
-			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
-			_ConsoleHandler2.default.log(
-				'enableContentEncoding: ',
-				enableContentEncoding
-			)
-			_ConsoleHandler2.default.log(
-				`headers['accept-encoding']: `,
-				headers['accept-encoding']
-			)
-			_ConsoleHandler2.default.log('contentEncoding: ', contentEncoding)
-			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
-
-			res.raw.setHeader(
-				'Content-Type',
-				headers.accept === 'application/json'
-					? 'application/json'
-					: 'text/html; charset=utf-8'
-			)
-
-			if (
-				_InitEnv.ENV_MODE !== 'development' &&
-				enableISR &&
-				headers.service !== 'puppeteer'
+				res
 			) {
-				const url = _ForamatUrl.convertUrlHeaderToQueryString.call(
-					void 0,
-					_ForamatUrl.getUrl.call(void 0, req),
-					res,
-					!botInfo.isBot
-				)
-				if (!req.headers['redirect'] && botInfo.isBot) {
-					try {
-						const result = await _ISRGeneratornext2.default.call(void 0, {
-							url,
-						})
+				const pathname = _optionalChain([
+					req,
+					'access',
+					(_9) => _9.url,
+					'optionalAccess',
+					(_10) => _10.split,
+					'call',
+					(_11) => _11('?'),
+					'access',
+					(_12) => _12[0],
+				])
+				const cookies = _CookieHandler.getCookieFromResponse.call(void 0, res)
+				const botInfo = _optionalChain([
+					cookies,
+					'optionalAccess',
+					(_13) => _13['BotInfo'],
+				])
+				const { enableToCrawl, enableToCache } = (() => {
+					let enableToCrawl = _serverconfig2.default.crawl.enable
+					let enableToCache =
+						enableToCrawl && _serverconfig2.default.crawl.cache.enable
 
-						if (result) {
-							/**
-							 * NOTE
-							 * calc by using:
-							 * https://www.inchcalculator.com/convert/year-to-second/
-							 */
-							res.raw.setHeader(
-								'Server-Timing',
-								`Prerender;dur=50;desc="Headless render time (ms)"`
-							)
-							res.raw.setHeader('Cache-Control', 'no-store')
-							res.raw.statusCode = result.status
-							if (enableContentEncoding && result.status === 200) {
-								res.raw.setHeader('Content-Encoding', contentEncoding)
+					const crawlOptionPerRoute =
+						_serverconfig2.default.crawl.routes[pathname] ||
+						_optionalChain([
+							_serverconfig2.default,
+							'access',
+							(_14) => _14.crawl,
+							'access',
+							(_15) => _15.custom,
+							'optionalCall',
+							(_16) => _16(pathname),
+						])
+
+					if (crawlOptionPerRoute) {
+						enableToCrawl = crawlOptionPerRoute.enable
+						enableToCache = enableToCrawl && crawlOptionPerRoute.cache.enable
+					}
+					return {
+						enableToCrawl,
+						enableToCache,
+					}
+				})()
+
+				const headers = req.headers
+				const enableContentEncoding = Boolean(headers['accept-encoding'])
+				const contentEncoding = (() => {
+					const tmpHeaderAcceptEncoding = headers['accept-encoding'] || ''
+					if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+					else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1) return 'gzip'
+					return ''
+				})()
+
+				_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
+				_ConsoleHandler2.default.log(
+					'enableContentEncoding: ',
+					enableContentEncoding
+				)
+				_ConsoleHandler2.default.log(
+					`headers['accept-encoding']: `,
+					headers['accept-encoding']
+				)
+				_ConsoleHandler2.default.log('contentEncoding: ', contentEncoding)
+				_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
+
+				res.raw.setHeader(
+					'Content-Type',
+					headers.accept === 'application/json'
+						? 'application/json'
+						: 'text/html; charset=utf-8'
+				)
+
+				if (
+					_serverconfig2.default.isRemoteCrawler &&
+					((_serverconfig2.default.crawlerSecretKey &&
+						req.query.crawlerSecretKey !==
+							_serverconfig2.default.crawlerSecretKey) ||
+						(!botInfo.isBot && enableToCache))
+				) {
+					return res.status(403).send('403 Forbidden')
+				}
+
+				if (
+					_InitEnv.ENV_MODE !== 'development' &&
+					enableToCrawl &&
+					headers.service !== 'puppeteer'
+				) {
+					const url = _ForamatUrl.convertUrlHeaderToQueryString.call(
+						void 0,
+						_ForamatUrl.getUrl.call(void 0, req),
+						res,
+						!botInfo.isBot
+					)
+					if (!req.headers['redirect'] && botInfo.isBot) {
+						try {
+							const result = await _ISRGeneratornext2.default.call(void 0, {
+								url,
+							})
+
+							if (result) {
+								/**
+								 * NOTE
+								 * calc by using:
+								 * https://www.inchcalculator.com/convert/year-to-second/
+								 */
+								res.raw.setHeader(
+									'Server-Timing',
+									`Prerender;dur=50;desc="Headless render time (ms)"`
+								)
+								res.raw.setHeader('Cache-Control', 'no-store')
+								res.raw.statusCode = result.status
+								if (enableContentEncoding && result.status === 200) {
+									res.raw.setHeader('Content-Encoding', contentEncoding)
+								}
+
+								if (result.status === 503) res.header('Retry-After', '120')
+							} else {
+								return res.status(504).send('504 Gateway Timeout')
 							}
 
-							if (result.status === 503) res.header('Retry-After', '120')
-						} else {
-							return res.status(504).send('504 Gateway Timeout')
+							if (
+								(_constants3.CACHEABLE_STATUS_CODE[result.status] ||
+									result.status === 503) &&
+								result.response
+							) {
+								const body = (() => {
+									let tmpBody = ''
+
+									if (enableContentEncoding) {
+										tmpBody = result.html
+											? contentEncoding === 'br'
+												? _zlib.brotliCompressSync.call(void 0, result.html)
+												: contentEncoding === 'gzip'
+												? _zlib.gzipSync.call(void 0, result.html)
+												: result.html
+											: (() => {
+													let tmpContent = _fs2.default.readFileSync(
+														result.response
+													)
+
+													if (contentEncoding === 'br') return tmpContent
+													else
+														tmpContent = _zlib.brotliDecompressSync
+															.call(void 0, tmpContent)
+															.toString()
+
+													if (result.status === 200) {
+														if (contentEncoding === 'gzip')
+															tmpContent = _zlib.gzipSync.call(
+																void 0,
+																tmpContent
+															)
+													}
+
+													return tmpContent
+											  })()
+									} else if (result.response.indexOf('.br') !== -1) {
+										const content = _fs2.default.readFileSync(result.response)
+
+										tmpBody = _zlib.brotliDecompressSync
+											.call(void 0, content)
+											.toString()
+									} else {
+										tmpBody = _fs2.default.readFileSync(result.response)
+									}
+
+									return tmpBody
+								})()
+
+								return res.send(body)
+							}
+							// Serve prerendered page as response.
+							else {
+								const body = (() => {
+									let tmpBody = ''
+
+									if (enableContentEncoding) {
+										tmpBody = result.html
+											? contentEncoding === 'br'
+												? _zlib.brotliCompressSync.call(void 0, result.html)
+												: contentEncoding === 'gzip'
+												? _zlib.gzipSync.call(void 0, result.html)
+												: result.html
+											: _fs2.default.readFileSync(result.response)
+									} else if (result.response.indexOf('.br') !== -1) {
+										const content = _fs2.default.readFileSync(result.response)
+
+										tmpBody = _zlib.brotliDecompressSync
+											.call(void 0, content)
+											.toString()
+									} else {
+										tmpBody = _fs2.default.readFileSync(result.response)
+									}
+
+									return tmpBody
+								})()
+
+								res.send(body)
+							}
+						} catch (err) {
+							_ConsoleHandler2.default.error('url', url)
+							_ConsoleHandler2.default.error(err)
 						}
 
-						if (
-							(_constants3.CACHEABLE_STATUS_CODE[result.status] ||
-								result.status === 503) &&
-							result.response
-						) {
-							const body = (() => {
-								let tmpBody = ''
-
-								if (enableContentEncoding) {
-									tmpBody = result.html
-										? contentEncoding === 'br'
-											? _zlib.brotliCompressSync.call(void 0, result.html)
-											: contentEncoding === 'gzip'
-											? _zlib.gzipSync.call(void 0, result.html)
-											: result.html
-										: (() => {
-												let tmpContent = _fs2.default.readFileSync(
-													result.response
-												)
-
-												if (contentEncoding === 'br') return tmpContent
-												else
-													tmpContent = _zlib.brotliDecompressSync
-														.call(void 0, tmpContent)
-														.toString()
-
-												if (result.status === 200) {
-													if (contentEncoding === 'gzip')
-														tmpContent = _zlib.gzipSync.call(void 0, tmpContent)
-												}
-
-												return tmpContent
-										  })()
-								} else if (result.response.indexOf('.br') !== -1) {
-									const content = _fs2.default.readFileSync(result.response)
-
-									tmpBody = _zlib.brotliDecompressSync
-										.call(void 0, content)
-										.toString()
-								} else {
-									tmpBody = _fs2.default.readFileSync(result.response)
-								}
-
-								return tmpBody
-							})()
-
-							return res.send(body)
+						return
+					} else if (!botInfo.isBot) {
+						try {
+							if (_constants.SERVER_LESS) {
+								await _ISRGeneratornext2.default.call(void 0, {
+									url,
+									isSkipWaiting: true,
+								})
+							} else {
+								_ISRGeneratornext2.default.call(void 0, {
+									url,
+									isSkipWaiting: true,
+								})
+							}
+						} catch (err) {
+							_ConsoleHandler2.default.error('url', url)
+							_ConsoleHandler2.default.error(err)
 						}
-						// Serve prerendered page as response.
-						else {
-							const body = (() => {
-								let tmpBody = ''
-
-								if (enableContentEncoding) {
-									tmpBody = result.html
-										? contentEncoding === 'br'
-											? _zlib.brotliCompressSync.call(void 0, result.html)
-											: contentEncoding === 'gzip'
-											? _zlib.gzipSync.call(void 0, result.html)
-											: result.html
-										: _fs2.default.readFileSync(result.response)
-								} else if (result.response.indexOf('.br') !== -1) {
-									const content = _fs2.default.readFileSync(result.response)
-
-									tmpBody = _zlib.brotliDecompressSync
-										.call(void 0, content)
-										.toString()
-								} else {
-									tmpBody = _fs2.default.readFileSync(result.response)
-								}
-
-								return tmpBody
-							})()
-
-							res.send(body)
-						}
-					} catch (err) {
-						_ConsoleHandler2.default.error('url', url)
-						_ConsoleHandler2.default.error(err)
-					}
-
-					return
-				} else if (!botInfo.isBot) {
-					try {
-						if (_constants.SERVER_LESS) {
-							await _ISRGeneratornext2.default.call(void 0, {
-								url,
-								isSkipWaiting: true,
-							})
-						} else {
-							_ISRGeneratornext2.default.call(void 0, {
-								url,
-								isSkipWaiting: true,
-							})
-						}
-					} catch (err) {
-						_ConsoleHandler2.default.error('url', url)
-						_ConsoleHandler2.default.error(err)
 					}
 				}
-			}
 
-			/**
-			 * NOTE
-			 * Cache-Control max-age is 1 year
-			 * calc by using:
-			 * https://www.inchcalculator.com/convert/year-to-second/
-			 */
-			if (headers.accept === 'application/json') {
-				_resetCookie(res)
-				res
-					.header('Cache-Control', 'no-store')
-					.send(
-						req.headers['redirect']
-							? JSON.parse(req.headers['redirect'])
-							: { status: 200, originPath: pathname, path: pathname }
-					)
-			} else {
-				const filePath =
-					req.headers['static-html-path'] ||
-					_path2.default.resolve(__dirname, '../../../dist/index.html')
-				res.raw.setHeader('Cache-Control', 'no-store')
-				return _SendFile2.default.call(void 0, filePath, res.raw)
+				/**
+				 * NOTE
+				 * Cache-Control max-age is 1 year
+				 * calc by using:
+				 * https://www.inchcalculator.com/convert/year-to-second/
+				 */
+				if (headers.accept === 'application/json') {
+					_resetCookie(res)
+					res
+						.header('Cache-Control', 'no-store')
+						.send(
+							req.headers['redirect']
+								? JSON.parse(req.headers['redirect'])
+								: { status: 200, originPath: pathname, path: pathname }
+						)
+				} else {
+					const filePath =
+						req.headers['static-html-path'] ||
+						_path2.default.resolve(__dirname, '../../../dist/index.html')
+					res.raw.setHeader('Cache-Control', 'no-store')
+					return _SendFile2.default.call(void 0, filePath, res.raw)
+				}
 			}
-		})
+		)
 	}
 
 	return {

@@ -62,6 +62,19 @@ const PROCESS_ENV = (() => {
 			break
 	}
 
-	return process.env
+	const tmpProcessEnv = process.env
+
+	tmpProcessEnv.BUILD_TOOL = 'vite'
+	tmpProcessEnv.RESET_RESOURCE = true
+
+	if (process.env.IS_REMOTE_CRAWLER !== undefined) {
+		tmpProcessEnv.IS_REMOTE_CRAWLER = ['false', '0', ''].includes(
+			process.env.IS_REMOTE_CRAWLER
+		)
+			? false
+			: true
+	}
+
+	return tmpProcessEnv
 })()
 exports.PROCESS_ENV = PROCESS_ENV
