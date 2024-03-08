@@ -123,13 +123,33 @@ const puppeteerSSRService = (async () => {
 				'optionalAccess',
 				(_5) => _5['BotInfo'],
 			])
-			const enableISR =
-				_serverconfig2.default.isr.enable &&
-				Boolean(
-					!_serverconfig2.default.isr.routes ||
-						!_serverconfig2.default.isr.routes[pathname] ||
-						_serverconfig2.default.isr.routes[pathname].enable
-				)
+			const { enableToCrawl, enableToCache } = (() => {
+				let enableToCrawl = _serverconfig2.default.crawl.enable
+				let enableToCache =
+					enableToCrawl && _serverconfig2.default.crawl.cache.enable
+
+				const crawlOptionPerRoute =
+					_serverconfig2.default.crawl.routes[pathname] ||
+					_optionalChain([
+						_serverconfig2.default,
+						'access',
+						(_6) => _6.crawl,
+						'access',
+						(_7) => _7.custom,
+						'optionalCall',
+						(_8) => _8(pathname),
+					])
+
+				if (crawlOptionPerRoute) {
+					enableToCrawl = crawlOptionPerRoute.enable
+					enableToCache = enableToCrawl && crawlOptionPerRoute.cache.enable
+				}
+				return {
+					enableToCrawl,
+					enableToCache,
+				}
+			})()
+
 			const headers = req.headers
 			const enableContentEncoding = Boolean(headers['accept-encoding'])
 			const contentEncoding = (() => {
@@ -159,18 +179,18 @@ const puppeteerSSRService = (async () => {
 			})
 
 			if (
-				_constants.IS_REMOTE_CRAWLER &&
+				_serverconfig2.default.isRemoteCrawler &&
 				((_serverconfig2.default.crawlerSecretKey &&
 					req.query.crawlerSecretKey !==
 						_serverconfig2.default.crawlerSecretKey) ||
-					(!botInfo.isBot && _constants3.DISABLE_SSR_CACHE))
+					(!botInfo.isBot && enableToCache))
 			) {
 				return res.status(403).send('403 Forbidden')
 			}
 
 			if (
 				_InitEnv.ENV_MODE !== 'development' &&
-				enableISR &&
+				enableToCrawl &&
 				req.headers.service !== 'puppeteer'
 			) {
 				const url = _ForamatUrl.convertUrlHeaderToQueryString.call(
@@ -287,10 +307,7 @@ const puppeteerSSRService = (async () => {
 					}
 
 					return
-				} else if (
-					!botInfo.isBot &&
-					(!_constants3.DISABLE_SSR_CACHE || _serverconfig2.default.crawler)
-				) {
+				} else if (!botInfo.isBot && enableToCache) {
 					try {
 						if (_constants.SERVER_LESS) {
 							await _ISRGeneratornext2.default.call(void 0, {

@@ -191,13 +191,50 @@ const puppeteerSSRService = (async () => {
 				'optionalAccess',
 				(_2) => _2.botInfo,
 			])
+			const { enableToCrawl, enableToCache } = (() => {
+				let enableToCrawl = _serverconfig2.default.crawl.enable
+				let enableToCache =
+					enableToCrawl && _serverconfig2.default.crawl.cache.enable
+
+				const crawlOptionPerRoute =
+					_serverconfig2.default.crawl.routes[req.getUrl()] ||
+					_serverconfig2.default.crawl.routes[res.urlForCrawler] ||
+					_optionalChain([
+						_serverconfig2.default,
+						'access',
+						(_3) => _3.crawl,
+						'access',
+						(_4) => _4.custom,
+						'optionalCall',
+						(_5) => _5(req.getUrl()),
+					]) ||
+					_optionalChain([
+						_serverconfig2.default,
+						'access',
+						(_6) => _6.crawl,
+						'access',
+						(_7) => _7.custom,
+						'optionalCall',
+						(_8) => _8(res.urlForCrawler),
+					])
+
+				if (crawlOptionPerRoute) {
+					enableToCrawl = crawlOptionPerRoute.enable
+					enableToCache = enableToCrawl && crawlOptionPerRoute.cache.enable
+				}
+
+				return {
+					enableToCrawl,
+					enableToCache,
+				}
+			})()
 
 			if (
-				_constants.IS_REMOTE_CRAWLER &&
+				_serverconfig2.default.isRemoteCrawler &&
 				((_serverconfig2.default.crawlerSecretKey &&
 					req.getQuery('crawlerSecretKey') !==
 						_serverconfig2.default.crawlerSecretKey) ||
-					(!botInfo.isBot && _constants3.DISABLE_SSR_CACHE))
+					(!botInfo.isBot && !enableToCache))
 			) {
 				return res.writeStatus('403').end('403 Forbidden', true)
 			}
@@ -233,16 +270,6 @@ const puppeteerSSRService = (async () => {
 				}
 			})()
 
-			const enableISR =
-				_serverconfig2.default.isr.enable &&
-				Boolean(
-					!_serverconfig2.default.isr.routes ||
-						!_serverconfig2.default.isr.routes[req.getUrl()] ||
-						_serverconfig2.default.isr.routes[req.getUrl()].enable ||
-						!_serverconfig2.default.isr.routes[res.urlForCrawler] ||
-						_serverconfig2.default.isr.routes[res.urlForCrawler].enable
-				)
-
 			const enableContentEncoding = Boolean(req.getHeader('accept-encoding'))
 			const contentEncoding = (() => {
 				const tmpHeaderAcceptEncoding = req.getHeader('accept-encoding') || ''
@@ -265,7 +292,7 @@ const puppeteerSSRService = (async () => {
 
 			if (
 				_InitEnv.ENV_MODE !== 'development' &&
-				enableISR &&
+				enableToCrawl &&
 				req.getHeader('service') !== 'puppeteer'
 			) {
 				const url = _ForamatUrluws.convertUrlHeaderToQueryString.call(
@@ -398,10 +425,7 @@ const puppeteerSSRService = (async () => {
 					}
 
 					res.writableEnded = true
-				} else if (
-					!botInfo.isBot &&
-					(!_constants3.DISABLE_SSR_CACHE || _serverconfig2.default.crawler)
-				) {
+				} else if (!botInfo.isBot && enableToCache) {
 					try {
 						if (_constants.SERVER_LESS) {
 							await _ISRGeneratornext2.default.call(void 0, {

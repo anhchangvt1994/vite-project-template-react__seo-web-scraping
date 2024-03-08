@@ -4,9 +4,6 @@ import { brotliDecompressSync } from 'zlib'
 import { POWER_LEVEL, POWER_LEVEL_LIST } from '../../constants'
 import { ENV } from '../../utils/InitEnv'
 import {
-	DISABLE_COMPRESS_HTML,
-	DISABLE_DEEP_OPTIMIZE,
-	DISABLE_OPTIMIZE,
 	regexHandleAttrsHtmlTag,
 	regexHandleAttrsImageTag,
 	regexHandleAttrsInteractiveTag,
@@ -15,15 +12,11 @@ import {
 	regexOptimizeForScriptBlockPerformance,
 } from '../constants'
 
-const compressContent = (html: string, isForce = false): string => {
+const compressContent = (html: string, enable = true): string => {
 	if (!html) return ''
 	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
 
-	if (
-		(DISABLE_COMPRESS_HTML && !isForce) ||
-		POWER_LEVEL === POWER_LEVEL_LIST.ONE
-	)
-		return html
+	if (!enable || POWER_LEVEL === POWER_LEVEL_LIST.ONE) return html
 
 	if (ENV !== 'development') {
 		html = minify(html, {
@@ -44,21 +37,17 @@ const compressContent = (html: string, isForce = false): string => {
 const optimizeContent = (
 	html: string,
 	isFullOptimize = false,
-	isForce = false
+	enable = true
 ): string => {
 	if (!html) return ''
 	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
 
-	if (DISABLE_OPTIMIZE && !isForce) return html
+	if (!enable) return html
 
 	html = html.replace(regexOptimizeForScriptBlockPerformance, '')
 	html = html.replace(regexOptimizeForPerformanceNormally, '')
 
-	if (
-		(DISABLE_DEEP_OPTIMIZE && !isForce) ||
-		POWER_LEVEL === POWER_LEVEL_LIST.ONE
-	)
-		return html
+	if (!enable || POWER_LEVEL === POWER_LEVEL_LIST.ONE) return html
 	else if (isFullOptimize) {
 		html = html
 			.replace(regexOptimizeForPerformanceHardly, '')

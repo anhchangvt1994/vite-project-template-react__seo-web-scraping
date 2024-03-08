@@ -5,7 +5,7 @@ import { HttpRequest, HttpResponse } from 'uWebSockets.js'
 import { brotliCompressSync, gzipSync } from 'zlib'
 import ServerConfig from '../../server.config'
 import detectStaticExtension from '../../utils/DetectStaticExtension.uws'
-import { ENV, PROCESS_ENV } from '../../utils/InitEnv'
+import { ENV } from '../../utils/InitEnv'
 
 const DetectStaticMiddle = (res: HttpResponse, req: HttpRequest) => {
 	const isStatic = detectStaticExtension(req)
@@ -16,7 +16,7 @@ const DetectStaticMiddle = (res: HttpResponse, req: HttpRequest) => {
 	 * https://www.inchcalculator.com/convert/month-to-second/
 	 */
 
-	if (isStatic && ServerConfig.crawler && !PROCESS_ENV.IS_REMOTE_CRAWLER) {
+	if (isStatic && ServerConfig.crawler && !ServerConfig.isRemoteCrawler) {
 		const staticPath = path.resolve(
 			__dirname,
 			`../../../../dist/${req.getUrl()}`

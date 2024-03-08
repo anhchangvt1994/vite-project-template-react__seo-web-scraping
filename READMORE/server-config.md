@@ -8,16 +8,58 @@ You can config some behavior for server to match with your necessary, to do it, 
 import { defineServerConfig } from './utils/ServerConfigHandler'
 
 const ServerConfig = defineServerConfig({
-  isr: true, // enable ISR (default true)
+  /* optional - default enable : false */
   locale: {
-    enable: true, // enable use /:locale dispatcher param (default false)
+    /* required */
+    enable: true, // enable use /:locale dispatcher param
+    /* optional */
     defaultLang: 'en', // default language for website
+    /* optional */
     defaultCountry: 'us', // default country for website (set it empty if you just use language)
-    // hideDefaultLocale: false // hide the default locale or show it such as other locales (default false)
+    /* optional */
+    routes: {
+      '/login': {
+        /* required */
+        enable: false // disable use /:locale dispatcher param
+      }
+    }
   },
 
-  crawler: 'http://localhost:8084', // optional - setup remote crawler
-  crawlerSecretKey: 'ABC' // optional - setup remote crawler secret key to access
+  /* optional - default enable : true */
+  crawl: {
+    /* required */
+    enable: true, // enable to crawl
+    /* optional */
+    optimize: true, // enable to optimize HTML content
+    /* optional */
+    compress: true, // enable to compress HTML content
+    /* optional */
+    cache: {
+      /* required */
+      enable: true, // enable to cache after crawl success
+      /* optional */
+      time: 4 * 3600, // cache will be cleared after 4 hours
+      /* optional */
+      renewTime: 3 * 60, // cache need to be renewed if current time - update time > 3 minutes
+    },
+    /* optional */
+    routes: {
+      '/list': {
+        /* required */
+        enable: true, // enable to cache after crawl success
+        /* optional */
+        time: 4 * 3600, // cache will be cleared after 4 hours
+      },
+      ...
+    },
+  },
+
+  /* optional */
+  isRemoteCrawler: false, // setup this project is a remote crawler (if true, crawler, and crawlerSecretKey will be ignored)
+  /* optional */
+  crawler: 'http://localhost:8084', // setup remote crawler
+  /* optional */
+  crawlerSecretKey: '***' // setup remote crawler secret key to access
 })
 
 export default ServerConfig

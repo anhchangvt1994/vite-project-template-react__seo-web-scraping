@@ -4,10 +4,19 @@ Object.defineProperty(exports, '__esModule', { value: true })
 const defaultServerConfig = {
 	locale: {
 		enable: false,
-		hideDefaultLocale: false,
+		routes: {},
 	},
-	isr: {
+	isRemoteCrawler: false,
+	crawl: {
 		enable: true,
+		cache: {
+			enable: true,
+			time: 4 * 3600,
+			renewTime: 3 * 60,
+		},
+		compress: true,
+		optimize: true,
+		routes: {},
 	},
 }
 exports.defaultServerConfig = defaultServerConfig

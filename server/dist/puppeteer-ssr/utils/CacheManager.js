@@ -3,6 +3,27 @@ Object.defineProperty(exports, '__esModule', { value: true })
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj }
 }
+function _optionalChain(ops) {
+	let lastAccessLHS = undefined
+	let value = ops[0]
+	let i = 1
+	while (i < ops.length) {
+		const op = ops[i]
+		const fn = ops[i + 1]
+		i += 2
+		if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) {
+			return undefined
+		}
+		if (op === 'access' || op === 'optionalAccess') {
+			lastAccessLHS = value
+			value = fn(value)
+		} else if (op === 'call' || op === 'optionalCall') {
+			value = fn((...args) => value.call(lastAccessLHS, ...args))
+			lastAccessLHS = undefined
+		}
+	}
+	return value
+}
 var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
@@ -10,10 +31,11 @@ var _path2 = _interopRequireDefault(_path)
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('../../constants')
+var _serverconfig = require('../../server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _InitEnv = require('../../utils/InitEnv')
-var _constants3 = require('../constants')
 
 var _utils = require('./Cache.worker/utils')
 
@@ -23,9 +45,35 @@ const MAX_WORKERS = _InitEnv.PROCESS_ENV.MAX_WORKERS
 
 const maintainFile = _path2.default.resolve(__dirname, '../../../maintain.html')
 
-const CacheManager = () => {
-	const get = async (url) => {
-		if (_constants3.DISABLE_SSR_CACHE)
+const CacheManager = (url) => {
+	const pathname = new URL(url).pathname
+	const enableToCache =
+		_optionalChain([
+			_serverconfig2.default,
+			'access',
+			(_) => _.crawl,
+			'access',
+			(_2) => _2.routes,
+			'access',
+			(_3) => _3[pathname],
+			'optionalAccess',
+			(_4) => _4.compress,
+		]) ||
+		_optionalChain([
+			_serverconfig2.default,
+			'access',
+			(_5) => _5.crawl,
+			'access',
+			(_6) => _6.custom,
+			'optionalCall',
+			(_7) => _7(pathname),
+			'optionalAccess',
+			(_8) => _8.compress,
+		]) ||
+		_serverconfig2.default.crawl.compress
+
+	const get = async () => {
+		if (!enableToCache)
 			return {
 				response: maintainFile,
 				status: 503,
@@ -59,8 +107,8 @@ const CacheManager = () => {
 		}
 	} // get
 
-	const achieve = async (url) => {
-		if (_constants3.DISABLE_SSR_CACHE) return
+	const achieve = async () => {
+		if (!enableToCache) return
 		if (!url) {
 			_ConsoleHandler2.default.error('Need provide "url" param!')
 			return
@@ -105,7 +153,7 @@ const CacheManager = () => {
 	} // achieve
 
 	const set = async (params) => {
-		if (_constants3.DISABLE_SSR_CACHE)
+		if (!enableToCache)
 			return {
 				html: params.html,
 				response: maintainFile,
@@ -134,7 +182,7 @@ const CacheManager = () => {
 		}
 	} // set
 
-	const renew = async (url) => {
+	const renew = async () => {
 		const pool = _workerpool2.default.pool(
 			_path2.default.resolve(
 				__dirname,
@@ -158,7 +206,7 @@ const CacheManager = () => {
 	} // renew
 
 	const remove = async (url) => {
-		if (_constants3.DISABLE_SSR_CACHE) return
+		if (!enableToCache) return
 		const pool = _workerpool2.default.pool(
 			_path2.default.resolve(
 				__dirname,

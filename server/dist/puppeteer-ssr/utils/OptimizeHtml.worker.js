@@ -32,15 +32,12 @@ var _InitEnv = require('../../utils/InitEnv')
 
 var _constants3 = require('../constants')
 
-const compressContent = (html, isForce = false) => {
+const compressContent = (html, enable = true) => {
 	if (!html) return ''
 	if (Buffer.isBuffer(html))
 		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
 
-	if (
-		(_constants3.DISABLE_COMPRESS_HTML && !isForce) ||
-		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
-	)
+	if (!enable || _constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE)
 		return html
 
 	if (_InitEnv.ENV !== 'development') {
@@ -59,20 +56,17 @@ const compressContent = (html, isForce = false) => {
 	return html
 } // compressContent
 
-const optimizeContent = (html, isFullOptimize = false, isForce = false) => {
+const optimizeContent = (html, isFullOptimize = false, enable = true) => {
 	if (!html) return ''
 	if (Buffer.isBuffer(html))
 		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
 
-	if (_constants3.DISABLE_OPTIMIZE && !isForce) return html
+	if (!enable) return html
 
 	html = html.replace(_constants3.regexOptimizeForScriptBlockPerformance, '')
 	html = html.replace(_constants3.regexOptimizeForPerformanceNormally, '')
 
-	if (
-		(_constants3.DISABLE_DEEP_OPTIMIZE && !isForce) ||
-		_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE
-	)
+	if (!enable || _constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE)
 		return html
 	else if (isFullOptimize) {
 		html = html

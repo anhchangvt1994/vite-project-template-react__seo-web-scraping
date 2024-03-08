@@ -16,6 +16,8 @@ var _store = require('../store')
 var _ConsoleHandler = require('./ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _InitEnv = require('./InitEnv')
+var _serverconfig = require('../server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
 const CleanerService = async () => {
 	// NOTE - Browsers Cleaner
@@ -100,7 +102,8 @@ const CleanerService = async () => {
 
 			if (!_constants.SERVER_LESS)
 				setTimeout(() => {
-					cleanPages(360)
+					console.log(_serverconfig2.default.crawl.cache.time)
+					cleanPages(_serverconfig2.default.crawl.cache.time)
 				}, 21600000)
 		}
 	}

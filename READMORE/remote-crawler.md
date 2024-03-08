@@ -21,8 +21,28 @@ CRAWLER=<remote-crawler-url>
 CRAWLER_SECRET_KEY=<remote-crawler-url> // optional
 ```
 
-##### If you use [ngrok](https://ngrok.com/)
+**If you use [ngrok](https://ngrok.com/)**
 1. Run build and run start
 2. Run ngrok script right way in docs of `ngrok`.
 > Notice that `ngrok` will generate a random domain name at each start time, if you need a static domain name, you can research this [solution](https://dashboard.ngrok.com/cloud-edge/domains) in `ngrok` docs, don't forget register an account.
 3. Copy `remote crawler url` of ngrok and paste it into value of `process.env.CRAWLER` of main project.
+
+**TIP**
+
+In case, we need to control the resources to deliver to the Search Engine and the performances of crawler, we can use `remote crawler` combines with `ngrok` or any [tunneling](https://github.com/anderspitman/awesome-tunneling?tab=readme-ov-file) that you know. It will help you :
+- Easy to optimize the crawler performance in your device.
+- Easy to control the resources be delivered to Search Engine in your device.
+
+**TIP step-by-step**
+
+1. Config the remote crawler for your project
+
+```typescript
+// server.config.ts
+
+const ServerConfig = defineServerConfig({
+  ...,
+  crawler: 'http(s)://<remote-crawler-url>', //
+  crawlerSecretKey: '***', //
+})
+```

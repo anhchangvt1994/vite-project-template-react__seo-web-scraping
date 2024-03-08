@@ -37,7 +37,10 @@ interface IProcessENV {
 	HOSTNAME: string
 	ADDRESS: string
 	IS_SERVER: string
-	[key: string]: string
+	IS_REMOTE_CRAWLER?: boolean
+	CRAWLER: string
+	CRAWLER_SECRET_KEY: string
+	[key: string]: string | boolean | undefined
 }
 
 export const PROCESS_ENV = (() => {
@@ -68,5 +71,18 @@ export const PROCESS_ENV = (() => {
 			break
 	}
 
-	return process.env as IProcessENV
+	const tmpProcessEnv = process.env as IProcessENV
+
+	tmpProcessEnv.BUILD_TOOL = 'vite'
+	tmpProcessEnv.RESET_RESOURCE = true
+
+	if (process.env.IS_REMOTE_CRAWLER !== undefined) {
+		tmpProcessEnv.IS_REMOTE_CRAWLER = ['false', '0', ''].includes(
+			process.env.IS_REMOTE_CRAWLER as string
+		)
+			? false
+			: true
+	}
+
+	return tmpProcessEnv
 })()

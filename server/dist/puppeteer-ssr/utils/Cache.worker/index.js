@@ -36,12 +36,12 @@ var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
+var _zlib = require('zlib')
 var _constants = require('../../../constants')
 var _ConsoleHandler = require('../../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _utils = require('./utils')
-var _zlib = require('zlib')
 
 const maintainFile = _path2.default.resolve(
 	__dirname,

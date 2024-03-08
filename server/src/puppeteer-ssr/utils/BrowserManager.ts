@@ -3,13 +3,13 @@ import path from 'path'
 import { Browser, Page } from 'puppeteer-core'
 import WorkerPool from 'workerpool'
 import {
-	IS_REMOTE_CRAWLER,
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
 	SERVER_LESS,
 	resourceExtension,
 	userDataPath,
 } from '../../constants'
+import ServerConfig from '../../server.config'
 import { getStore, setStore } from '../../store'
 import Console from '../../utils/ConsoleHandler'
 import {
@@ -64,9 +64,9 @@ const BrowserManager = (
 
 		const selfUserDataDirPath =
 			reserveUserDataDirPath ||
-			`${userDataDir()}${IS_REMOTE_CRAWLER ? '_remote' : ''}`
+			`${userDataDir()}${ServerConfig.isRemoteCrawler ? '_remote' : ''}`
 		reserveUserDataDirPath = `${userDataDir()}_reserve${
-			IS_REMOTE_CRAWLER ? '_remote' : ''
+			ServerConfig.isRemoteCrawler ? '_remote' : ''
 		}`
 
 		browserLaunch = new Promise(async (res, rej) => {

@@ -31,7 +31,7 @@ const DetectStaticMiddle = (res, req) => {
 	if (
 		isStatic &&
 		_serverconfig2.default.crawler &&
-		!_InitEnv.PROCESS_ENV.IS_REMOTE_CRAWLER
+		!_serverconfig2.default.isRemoteCrawler
 	) {
 		const staticPath = _path2.default.resolve(
 			__dirname,

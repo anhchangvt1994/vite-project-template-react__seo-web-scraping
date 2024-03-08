@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { HttpResponse, TemplatedApp } from 'uWebSockets.js'
 import { brotliCompressSync, brotliDecompressSync, gzipSync } from 'zlib'
-import { COOKIE_EXPIRED, IS_REMOTE_CRAWLER, SERVER_LESS } from '../constants'
+import { COOKIE_EXPIRED, SERVER_LESS } from '../constants'
 import DetectBotMiddle from '../middlewares/uws/DetectBot'
 import DetectDeviceMiddle from '../middlewares/uws/DetectDevice'
 import DetectLocaleMiddle from '../middlewares/uws/DetectLocale'
@@ -13,7 +13,7 @@ import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
 import { ENV, ENV_MODE, MODE, PROCESS_ENV } from '../utils/InitEnv'
-import { CACHEABLE_STATUS_CODE, DISABLE_SSR_CACHE } from './constants'
+import { CACHEABLE_STATUS_CODE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl.uws'
 import ISRGenerator from './utils/ISRGenerator.next'
 import SSRHandler from './utils/ISRHandler'
@@ -147,12 +147,32 @@ const puppeteerSSRService = (async () => {
 			DetectLocaleMiddle(res, req)
 
 			const botInfo: IBotInfo = res.cookies?.botInfo
+			const { enableToCrawl, enableToCache } = (() => {
+				let enableToCrawl = ServerConfig.crawl.enable
+				let enableToCache = enableToCrawl && ServerConfig.crawl.cache.enable
+
+				const crawlOptionPerRoute =
+					ServerConfig.crawl.routes[req.getUrl()] ||
+					ServerConfig.crawl.routes[res.urlForCrawler] ||
+					ServerConfig.crawl.custom?.(req.getUrl()) ||
+					ServerConfig.crawl.custom?.(res.urlForCrawler)
+
+				if (crawlOptionPerRoute) {
+					enableToCrawl = crawlOptionPerRoute.enable
+					enableToCache = enableToCrawl && crawlOptionPerRoute.cache.enable
+				}
+
+				return {
+					enableToCrawl,
+					enableToCache,
+				}
+			})()
 
 			if (
-				IS_REMOTE_CRAWLER &&
+				ServerConfig.isRemoteCrawler &&
 				((ServerConfig.crawlerSecretKey &&
 					req.getQuery('crawlerSecretKey') !== ServerConfig.crawlerSecretKey) ||
-					(!botInfo.isBot && DISABLE_SSR_CACHE))
+					(!botInfo.isBot && !enableToCache))
 			) {
 				return res.writeStatus('403').end('403 Forbidden', true)
 			}
@@ -188,16 +208,6 @@ const puppeteerSSRService = (async () => {
 				}
 			})()
 
-			const enableISR =
-				ServerConfig.isr.enable &&
-				Boolean(
-					!ServerConfig.isr.routes ||
-						!ServerConfig.isr.routes[req.getUrl()] ||
-						ServerConfig.isr.routes[req.getUrl()].enable ||
-						!ServerConfig.isr.routes[res.urlForCrawler] ||
-						ServerConfig.isr.routes[res.urlForCrawler].enable
-				)
-
 			const enableContentEncoding = Boolean(req.getHeader('accept-encoding'))
 			const contentEncoding = (() => {
 				const tmpHeaderAcceptEncoding = req.getHeader('accept-encoding') || ''
@@ -217,7 +227,7 @@ const puppeteerSSRService = (async () => {
 
 			if (
 				ENV_MODE !== 'development' &&
-				enableISR &&
+				enableToCrawl &&
 				req.getHeader('service') !== 'puppeteer'
 			) {
 				const url = convertUrlHeaderToQueryString(
@@ -341,10 +351,7 @@ const puppeteerSSRService = (async () => {
 					}
 
 					res.writableEnded = true
-				} else if (
-					!botInfo.isBot &&
-					(!DISABLE_SSR_CACHE || ServerConfig.crawler)
-				) {
+				} else if (!botInfo.isBot && enableToCache) {
 					try {
 						if (SERVER_LESS) {
 							await ISRGenerator({
