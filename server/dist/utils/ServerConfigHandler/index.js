@@ -40,149 +40,95 @@ const defineServerConfig = (options) => {
 	for (const key in _constants.defaultServerConfig) {
 		if (key === 'locale') {
 			if (options[key]) {
+				const tmpOptionCastingType = options[key]
 				serverConfigDefined[key] = {
-					enable: Boolean(
-						_optionalChain([
-							options,
-							'access',
-							(_) => _[key],
-							'optionalAccess',
-							(_2) => _2.enable,
-						])
-					),
+					enable: tmpOptionCastingType.enable,
 					routes: {},
 				}
 
-				if (serverConfigDefined[key].enable)
+				if (serverConfigDefined[key].enable) {
 					serverConfigDefined[key] = {
 						...serverConfigDefined[key],
-						defaultLang: _optionalChain([
-							options,
-							'access',
-							(_3) => _3[key],
-							'optionalAccess',
-							(_4) => _4.defaultLang,
-						]),
-						defaultCountry: _optionalChain([
-							options,
-							'access',
-							(_5) => _5[key],
-							'optionalAccess',
-							(_6) => _6.defaultCountry,
-						]),
-						hideDefaultLocale: Boolean(
-							_optionalChain([
-								options,
-								'access',
-								(_7) => _7[key],
-								'optionalAccess',
-								(_8) => _8.hideDefaultLocale,
-							])
-						),
+						defaultLang: tmpOptionCastingType.defaultLang,
+						defaultCountry: tmpOptionCastingType.defaultCountry,
+						hideDefaultLocale: tmpOptionCastingType.hideDefaultLocale,
+						routes: tmpOptionCastingType.routes || {},
 					}
 
-				for (const localeRouteKey in serverConfigDefined[key].routes) {
-					if (serverConfigDefined[key].routes[localeRouteKey]) {
-						serverConfigDefined[key].routes[localeRouteKey] = {
-							enable: serverConfigDefined[key].routes[localeRouteKey].enable,
-						}
-
-						if (serverConfigDefined[key].routes[localeRouteKey].enable)
+					for (const localeRouteKey in serverConfigDefined[key].routes) {
+						if (serverConfigDefined[key].routes[localeRouteKey]) {
 							serverConfigDefined[key].routes[localeRouteKey] = {
-								...serverConfigDefined[key].routes[localeRouteKey],
-								defaultLang: _optionalChain([
-									serverConfigDefined,
-									'access',
-									(_9) => _9[key],
-									'access',
-									(_10) => _10.routes,
-									'access',
-									(_11) => _11[localeRouteKey],
-									'optionalAccess',
-									(_12) => _12.defaultLang,
-								]),
-								defaultCountry: _optionalChain([
-									serverConfigDefined,
-									'access',
-									(_13) => _13[key],
-									'access',
-									(_14) => _14.routes,
-									'access',
-									(_15) => _15[localeRouteKey],
-									'optionalAccess',
-									(_16) => _16.defaultCountry,
-								]),
-								hideDefaultLocale: _nullishCoalesce(
-									_optionalChain([
+								enable: serverConfigDefined[key].routes[localeRouteKey].enable,
+							}
+
+							if (serverConfigDefined[key].routes[localeRouteKey].enable)
+								serverConfigDefined[key].routes[localeRouteKey] = {
+									...serverConfigDefined[key].routes[localeRouteKey],
+									defaultLang: _optionalChain([
 										serverConfigDefined,
 										'access',
-										(_17) => _17[key],
+										(_) => _[key],
 										'access',
-										(_18) => _18.routes,
+										(_2) => _2.routes,
 										'access',
-										(_19) => _19[localeRouteKey],
+										(_3) => _3[localeRouteKey],
 										'optionalAccess',
-										(_20) => _20.hideDefaultLocale,
+										(_4) => _4.defaultLang,
 									]),
-									() => true
-								),
-							}
-					} else
-						serverConfigDefined[key].routes[localeRouteKey] =
-							_constants.defaultServerConfig[key]
+									defaultCountry: _optionalChain([
+										serverConfigDefined,
+										'access',
+										(_5) => _5[key],
+										'access',
+										(_6) => _6.routes,
+										'access',
+										(_7) => _7[localeRouteKey],
+										'optionalAccess',
+										(_8) => _8.defaultCountry,
+									]),
+									hideDefaultLocale: _nullishCoalesce(
+										_optionalChain([
+											serverConfigDefined,
+											'access',
+											(_9) => _9[key],
+											'access',
+											(_10) => _10.routes,
+											'access',
+											(_11) => _11[localeRouteKey],
+											'optionalAccess',
+											(_12) => _12.hideDefaultLocale,
+										]),
+										() => true
+									),
+								}
+						} else
+							serverConfigDefined[key].routes[localeRouteKey] =
+								_constants.defaultServerConfig[key]
+					}
 				}
 			} else serverConfigDefined[key] = _constants.defaultServerConfig[key]
 		} // locale
 
 		if (key === 'crawl') {
 			if (options[key]) {
+				const tmpOptionCastingType = options[key]
 				serverConfigDefined[key] = {
-					enable: Boolean(
-						_optionalChain([
-							options,
-							'access',
-							(_21) => _21.crawl,
-							'optionalAccess',
-							(_22) => _22.enable,
-						])
-					),
-					optimize: Boolean(
-						_optionalChain([
-							options,
-							'access',
-							(_23) => _23.crawl,
-							'optionalAccess',
-							(_24) => _24.optimize,
-						])
-					),
-					compress: Boolean(
-						_optionalChain([
-							options,
-							'access',
-							(_25) => _25.crawl,
-							'optionalAccess',
-							(_26) => _26.compress,
-						])
-					),
+					enable: tmpOptionCastingType.enable,
+					optimize: Boolean(tmpOptionCastingType.optimize),
+					compress: Boolean(tmpOptionCastingType.compress),
 					cache:
-						_optionalChain([
-							options,
-							'access',
-							(_27) => _27.crawl,
-							'optionalAccess',
-							(_28) => _28.cache,
-						]) === undefined
+						tmpOptionCastingType.cache === undefined
 							? _constants.defaultServerConfig[key].cache
 							: {
-									enable: options.crawl.cache.enable,
+									enable: tmpOptionCastingType.cache.enable,
 									time:
-										options.crawl.cache.time ||
+										tmpOptionCastingType.cache.time ||
 										_constants.defaultServerConfig[key].cache.time,
 									renewTime:
-										options.crawl.cache.renewTime ||
+										tmpOptionCastingType.cache.renewTime ||
 										_constants.defaultServerConfig[key].cache.renewTime,
 							  },
-					routes: {},
+					routes: tmpOptionCastingType.routes || {},
 				}
 
 				for (const localeRouteKey in serverConfigDefined[key].routes) {
@@ -230,6 +176,8 @@ const defineServerConfig = (options) => {
 		: _InitEnv.ENV_MODE === 'development'
 		? serverConfigDefined.crawlerSecretKey
 		: _InitEnv.PROCESS_ENV.CRAWLER_SECRET_KEY || undefined
+
+	console.log(JSON.stringify(serverConfigDefined))
 
 	return serverConfigDefined
 }

@@ -100,11 +100,13 @@ const CleanerService = async () => {
 		} finally {
 			pool.terminate()
 
-			if (!_constants.SERVER_LESS)
+			if (!_constants.SERVER_LESS) {
+				const cacheTimeHour = _serverconfig2.default.crawl.cache.time / 3600
+
 				setTimeout(() => {
-					console.log(_serverconfig2.default.crawl.cache.time)
-					cleanPages(_serverconfig2.default.crawl.cache.time)
+					cleanPages(cacheTimeHour)
 				}, 21600000)
+			}
 		}
 	}
 
