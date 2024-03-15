@@ -233,9 +233,11 @@ const BrowserManager = (
 								_ConsoleHandler2.default.log('BrowserManager line 193')
 								_ConsoleHandler2.default.error(err)
 							}
-
-						exports.deleteUserDataDir.call(void 0, selfUserDataDirPath)
 					}
+				})
+
+				browser.once('disconnected', () => {
+					exports.deleteUserDataDir.call(void 0, selfUserDataDirPath)
 				})
 			} catch (err) {
 				_ConsoleHandler2.default.log('Browser manager line 177:')
@@ -263,11 +265,16 @@ const BrowserManager = (
 	} // _get
 
 	const _newPage = async () => {
-		let browser
-		let page
 		try {
-			browser = await _get()
-			page = await _optionalChain([
+			const browser = await _get()
+
+			if (!browser.connected) {
+				browser.close()
+				__launch()
+				return _newPage()
+			}
+
+			const page = await _optionalChain([
 				browser,
 				'optionalAccess',
 				(_8) => _8.newPage,
@@ -276,16 +283,17 @@ const BrowserManager = (
 			])
 
 			if (!page) {
+				browser.close()
 				__launch()
 				return _newPage()
 			}
+
+			browser.emit('createNewPage', page)
+			return page
 		} catch (err) {
 			__launch()
 			return _newPage()
 		}
-
-		if (page) browser.emit('createNewPage', page)
-		return page
 	} // _newPage
 
 	const _isReady = () => {

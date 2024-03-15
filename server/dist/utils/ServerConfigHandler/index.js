@@ -114,8 +114,14 @@ const defineServerConfig = (options) => {
 				const tmpOptionCastingType = options[key]
 				serverConfigDefined[key] = {
 					enable: tmpOptionCastingType.enable,
-					optimize: Boolean(tmpOptionCastingType.optimize),
-					compress: Boolean(tmpOptionCastingType.compress),
+					optimize:
+						tmpOptionCastingType.optimize === undefined
+							? _constants.defaultServerConfig[key].optimize
+							: Boolean(tmpOptionCastingType.optimize),
+					compress:
+						tmpOptionCastingType.compress === undefined
+							? _constants.defaultServerConfig[key].compress
+							: Boolean(tmpOptionCastingType.compress),
 					cache:
 						tmpOptionCastingType.cache === undefined
 							? _constants.defaultServerConfig[key].cache
@@ -135,12 +141,20 @@ const defineServerConfig = (options) => {
 					if (serverConfigDefined[key].routes[localeRouteKey]) {
 						serverConfigDefined[key].routes[localeRouteKey] = {
 							enable: serverConfigDefined[key].routes[localeRouteKey].enable,
-							optimize: Boolean(
-								serverConfigDefined[key].routes[localeRouteKey].optimize
-							),
-							compress: Boolean(
-								serverConfigDefined[key].routes[localeRouteKey].compress
-							),
+							optimize:
+								serverConfigDefined[key].routes[localeRouteKey].optimize ===
+								undefined
+									? _constants.defaultServerConfig[key].optimize
+									: Boolean(
+											serverConfigDefined[key].routes[localeRouteKey].optimize
+									  ),
+							compress:
+								serverConfigDefined[key].routes[localeRouteKey].compress ==
+								undefined
+									? _constants.defaultServerConfig[key].compress
+									: Boolean(
+											serverConfigDefined[key].routes[localeRouteKey].compress
+									  ),
 							cache: {
 								enable:
 									serverConfigDefined[key].routes[localeRouteKey].cache.enable,
@@ -176,8 +190,6 @@ const defineServerConfig = (options) => {
 		: _InitEnv.ENV_MODE === 'development'
 		? serverConfigDefined.crawlerSecretKey
 		: _InitEnv.PROCESS_ENV.CRAWLER_SECRET_KEY || undefined
-
-	console.log(JSON.stringify(serverConfigDefined))
 
 	return serverConfigDefined
 }

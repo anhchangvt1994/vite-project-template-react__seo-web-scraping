@@ -192,10 +192,12 @@ const BrowserManager = (
 								Console.log('BrowserManager line 193')
 								Console.error(err)
 							}
-
-						deleteUserDataDir(selfUserDataDirPath)
 					}
 				}) as any)
+
+				browser.once('disconnected', () => {
+					deleteUserDataDir(selfUserDataDirPath)
+				})
 			} catch (err) {
 				Console.log('Browser manager line 177:')
 				Console.error(err)
@@ -222,23 +224,29 @@ const BrowserManager = (
 	} // _get
 
 	const _newPage = async () => {
-		let browser
-		let page
 		try {
-			browser = await _get()
-			page = await browser?.newPage?.()
+			const browser = await _get()
 
-			if (!page) {
+			if (!browser.connected) {
+				browser.close()
 				__launch()
 				return _newPage()
 			}
+
+			const page = await browser?.newPage?.()
+
+			if (!page) {
+				browser.close()
+				__launch()
+				return _newPage()
+			}
+
+			browser.emit('createNewPage', page)
+			return page
 		} catch (err) {
 			__launch()
 			return _newPage()
 		}
-
-		if (page) browser.emit('createNewPage', page)
-		return page
 	} // _newPage
 
 	const _isReady = () => {

@@ -56,8 +56,14 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 				const tmpOptionCastingType = options[key] as IServerConfig['crawl']
 				serverConfigDefined[key] = {
 					enable: tmpOptionCastingType.enable,
-					optimize: Boolean(tmpOptionCastingType.optimize),
-					compress: Boolean(tmpOptionCastingType.compress),
+					optimize:
+						tmpOptionCastingType.optimize === undefined
+							? defaultServerConfig[key].optimize
+							: Boolean(tmpOptionCastingType.optimize),
+					compress:
+						tmpOptionCastingType.compress === undefined
+							? defaultServerConfig[key].compress
+							: Boolean(tmpOptionCastingType.compress),
 					cache:
 						tmpOptionCastingType.cache === undefined
 							? defaultServerConfig[key].cache
@@ -77,12 +83,20 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 					if (serverConfigDefined[key].routes[localeRouteKey]) {
 						serverConfigDefined[key].routes[localeRouteKey] = {
 							enable: serverConfigDefined[key].routes[localeRouteKey].enable,
-							optimize: Boolean(
-								serverConfigDefined[key].routes[localeRouteKey].optimize
-							),
-							compress: Boolean(
-								serverConfigDefined[key].routes[localeRouteKey].compress
-							),
+							optimize:
+								serverConfigDefined[key].routes[localeRouteKey].optimize ===
+								undefined
+									? defaultServerConfig[key].optimize
+									: Boolean(
+											serverConfigDefined[key].routes[localeRouteKey].optimize
+									  ),
+							compress:
+								serverConfigDefined[key].routes[localeRouteKey].compress ==
+								undefined
+									? defaultServerConfig[key].compress
+									: Boolean(
+											serverConfigDefined[key].routes[localeRouteKey].compress
+									  ),
 							cache: {
 								enable:
 									serverConfigDefined[key].routes[localeRouteKey].cache.enable,
@@ -117,8 +131,6 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 		: ENV_MODE === 'development'
 		? serverConfigDefined.crawlerSecretKey
 		: PROCESS_ENV.CRAWLER_SECRET_KEY || undefined
-
-	console.log(JSON.stringify(serverConfigDefined))
 
 	return serverConfigDefined as IServerConfig
 }

@@ -313,8 +313,10 @@ const ISRHandler = async ({ hasCache, url }) => {
 	}
 
 	let html = ''
-	let isForceToOptimizeAndCompress = false
 	let status = 200
+	let enableOptimizeAndCompressIfRemoteCrawlerFail =
+		!_serverconfig2.default.crawler
+
 	const specialInfo = _nullishCoalesce(
 		_optionalChain([
 			_constants3.regexQueryStringSpecialInfo,
@@ -329,7 +331,6 @@ const ISRHandler = async ({ hasCache, url }) => {
 	)
 
 	if (_serverconfig2.default.crawler) {
-		isForceToOptimizeAndCompress = true
 		const requestParams = {
 			startGenerating,
 			hasCache,
@@ -371,6 +372,7 @@ const ISRHandler = async ({ hasCache, url }) => {
 			}
 			_ConsoleHandler2.default.log('External crawler status: ', status)
 		} catch (err) {
+			enableOptimizeAndCompressIfRemoteCrawlerFail = true
 			_ConsoleHandler2.default.log('ISRHandler line 230:')
 			_ConsoleHandler2.default.log('Crawler is fail!')
 			_ConsoleHandler2.default.error(err)
@@ -378,6 +380,7 @@ const ISRHandler = async ({ hasCache, url }) => {
 	}
 
 	if (!_serverconfig2.default.crawler || [404, 500].includes(status)) {
+		enableOptimizeAndCompressIfRemoteCrawlerFail = true
 		_ConsoleHandler2.default.log('Create new page')
 		const page = await browserManager.newPage()
 		const safePage = _getSafePage(page)
@@ -547,30 +550,19 @@ const ISRHandler = async ({ hasCache, url }) => {
 
 	let result
 	if (_constants3.CACHEABLE_STATUS_CODE[status]) {
-		const optimizeHTMLContentPool = _workerpool2.default.pool(
-			__dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`,
-			{
-				minWorkers: 2,
-				maxWorkers: _constants3.MAX_WORKERS,
-			}
-		)
-
-		let isRaw = false
-
-		try {
-			const pathname = new URL(url).pathname
-			const enableToOptimize =
-				_optionalChain([
-					_serverconfig2.default,
-					'access',
-					(_55) => _55.crawl,
-					'access',
-					(_56) => _56.routes,
-					'access',
-					(_57) => _57[pathname],
-					'optionalAccess',
-					(_58) => _58.optimize,
-				]) ||
+		const pathname = new URL(url).pathname
+		const enableToOptimize =
+			(_optionalChain([
+				_serverconfig2.default,
+				'access',
+				(_55) => _55.crawl,
+				'access',
+				(_56) => _56.routes,
+				'access',
+				(_57) => _57[pathname],
+				'optionalAccess',
+				(_58) => _58.optimize,
+			]) ||
 				_optionalChain([
 					_serverconfig2.default,
 					'access',
@@ -582,27 +574,21 @@ const ISRHandler = async ({ hasCache, url }) => {
 					'optionalAccess',
 					(_62) => _62.optimize,
 				]) ||
-				_serverconfig2.default.crawl.optimize ||
-				isForceToOptimizeAndCompress
+				_serverconfig2.default.crawl.optimize) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
 
-			html = await optimizeHTMLContentPool.exec('optimizeContent', [
-				html,
-				true,
-				enableToOptimize,
-			])
-
-			const enableToCompress =
-				_optionalChain([
-					_serverconfig2.default,
-					'access',
-					(_63) => _63.crawl,
-					'access',
-					(_64) => _64.routes,
-					'access',
-					(_65) => _65[pathname],
-					'optionalAccess',
-					(_66) => _66.compress,
-				]) ||
+		const enableToCompress =
+			(_optionalChain([
+				_serverconfig2.default,
+				'access',
+				(_63) => _63.crawl,
+				'access',
+				(_64) => _64.routes,
+				'access',
+				(_65) => _65[pathname],
+				'optionalAccess',
+				(_66) => _66.compress,
+			]) ||
 				_optionalChain([
 					_serverconfig2.default,
 					'access',
@@ -614,20 +600,44 @@ const ISRHandler = async ({ hasCache, url }) => {
 					'optionalAccess',
 					(_70) => _70.compress,
 				]) ||
-				_serverconfig2.default.crawl.compress
+				_serverconfig2.default.crawl.compress) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
 
-			html = await optimizeHTMLContentPool.exec('compressContent', [
-				html,
-				enableToCompress,
-			])
-		} catch (err) {
-			isRaw = true
-			_ConsoleHandler2.default.log('--------------------')
-			_ConsoleHandler2.default.log('ISRHandler line 368:')
-			_ConsoleHandler2.default.log('error url', url.split('?')[0])
-			_ConsoleHandler2.default.error(err)
-		} finally {
-			optimizeHTMLContentPool.terminate()
+		let optimizeHTMLContentPool
+		if (enableToOptimize || enableToCompress)
+			optimizeHTMLContentPool = _workerpool2.default.pool(
+				__dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`,
+				{
+					minWorkers: 2,
+					maxWorkers: _constants3.MAX_WORKERS,
+				}
+			)
+
+		let isRaw = false
+
+		if (optimizeHTMLContentPool) {
+			try {
+				if (enableToOptimize)
+					html = await optimizeHTMLContentPool.exec('optimizeContent', [
+						html,
+						true,
+						enableToOptimize,
+					])
+
+				if (enableToCompress)
+					html = await optimizeHTMLContentPool.exec('compressContent', [
+						html,
+						enableToCompress,
+					])
+			} catch (err) {
+				isRaw = true
+				_ConsoleHandler2.default.log('--------------------')
+				_ConsoleHandler2.default.log('ISRHandler line 368:')
+				_ConsoleHandler2.default.log('error url', url.split('?')[0])
+				_ConsoleHandler2.default.error(err)
+			} finally {
+				optimizeHTMLContentPool.terminate()
+			}
 		}
 
 		result = await cacheManager.set({

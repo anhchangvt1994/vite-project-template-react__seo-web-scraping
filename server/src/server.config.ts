@@ -11,7 +11,7 @@ const ServerConfig = defineServerConfig({
 			},
 		},
 	},
-	crawler: 'http://localhost:8084',
+	crawler: 'https://on-ferret-above.ngrok-free.app',
 })
 
 export default ServerConfig
