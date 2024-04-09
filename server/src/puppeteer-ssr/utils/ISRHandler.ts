@@ -118,6 +118,8 @@ const waitResponse = (() => {
 					safePage()
 						?.goto(url.split('?')[0], {
 							waitUntil: 'networkidle2',
+							// waitUntil: 'domcontentloaded',
+							// waitUntil: 'load',
 							timeout: 0,
 						})
 						.then((res) => {

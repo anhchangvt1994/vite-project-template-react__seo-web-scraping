@@ -97,8 +97,8 @@ const CleanerService = async () => {
 		}
 	}
 
-	if (SERVER_LESS) cleanPages(360)
-	else await cleanPages(360)
+	if (process.env.MODE === 'development') cleanPages(0)
+	else cleanPages(360)
 }
 
 if (!SERVER_LESS) CleanerService()

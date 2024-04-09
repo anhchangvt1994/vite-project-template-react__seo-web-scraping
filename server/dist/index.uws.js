@@ -29,33 +29,34 @@ var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _PortHandler = require('../../config/utils/PortHandler')
-var _constants = require('./constants')
 var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _InitEnv = require('./utils/InitEnv')
 
 require('events').EventEmitter.setMaxListeners(200)
 
-const cleanResourceWithCondition = async () => {
-	if (_InitEnv.ENV_MODE === 'development') {
-		// NOTE - Clean Browsers and Pages after start / restart
-		const {
-			deleteResource,
-		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${_constants.resourceExtension}`)
-		const browsersPath = _path2.default.resolve(
-			__dirname,
-			'./puppeteer-ssr/browsers'
-		)
+// spawn('node', ['server/src/utils/GenerateServerInfo.js'], {
+// 	stdio: 'inherit',
+// 	shell: true,
+// })
 
-		return Promise.all([
-			deleteResource(browsersPath),
-			deleteResource(_constants.pagesPath),
-		])
-	}
-}
+// const cleanResourceWithCondition = async () => {
+// 	if (ENV_MODE === 'development') {
+// 		// NOTE - Clean Browsers and Pages after start / restart
+// 		const {
+// 			deleteResource,
+// 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
+// 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
+
+// 		return Promise.all([
+// 			deleteResource(browsersPath),
+// 			deleteResource(pagesPath),
+// 		])
+// 	}
+// }
 
 const startServer = async () => {
-	await cleanResourceWithCondition()
+	// await cleanResourceWithCondition()
 	let port =
 		_InitEnv.ENV !== 'development'
 			? _InitEnv.PROCESS_ENV.PORT ||

@@ -2,29 +2,33 @@ import { spawn } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
-import { pagesPath, resourceExtension } from './constants'
 import ServerConfig from './server.config'
-import { ENV, ENV_MODE, PROCESS_ENV } from './utils/InitEnv'
+import { ENV, PROCESS_ENV } from './utils/InitEnv'
 
 require('events').EventEmitter.setMaxListeners(200)
 
-const cleanResourceWithCondition = async () => {
-	if (ENV_MODE === 'development') {
-		// NOTE - Clean Browsers and Pages after start / restart
-		const {
-			deleteResource,
-		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
-		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
+// spawn('node', ['server/src/utils/GenerateServerInfo.js'], {
+// 	stdio: 'inherit',
+// 	shell: true,
+// })
 
-		return Promise.all([
-			deleteResource(browsersPath),
-			deleteResource(pagesPath),
-		])
-	}
-}
+// const cleanResourceWithCondition = async () => {
+// 	if (ENV_MODE === 'development') {
+// 		// NOTE - Clean Browsers and Pages after start / restart
+// 		const {
+// 			deleteResource,
+// 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
+// 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
+
+// 		return Promise.all([
+// 			deleteResource(browsersPath),
+// 			deleteResource(pagesPath),
+// 		])
+// 	}
+// }
 
 const startServer = async () => {
-	await cleanResourceWithCondition()
+	// await cleanResourceWithCondition()
 	let port =
 		ENV !== 'development'
 			? PROCESS_ENV.PORT || getPort('PUPPETEER_SSR_PORT')

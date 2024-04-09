@@ -7,7 +7,7 @@ import path from 'path'
 import serveStatic from 'serve-static'
 import { brotliCompressSync, gzipSync } from 'zlib'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
-import { COOKIE_EXPIRED, pagesPath, resourceExtension } from './constants'
+import { COOKIE_EXPIRED } from './constants'
 import ServerConfig from './server.config'
 import { setCookie } from './utils/CookieHandler'
 import detectBot from './utils/DetectBot'
@@ -22,23 +22,28 @@ const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
 
 require('events').EventEmitter.setMaxListeners(200)
 
-const cleanResourceWithCondition = async () => {
-	if (ENV_MODE === 'development') {
-		// NOTE - Clean Browsers and Pages after start / restart
-		const {
-			deleteResource,
-		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
-		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
+// spawn('node', ['server/src/utils/GenerateServerInfo.js'], {
+// 	stdio: 'inherit',
+// 	shell: true,
+// })
 
-		return Promise.all([
-			deleteResource(browsersPath),
-			deleteResource(pagesPath),
-		])
-	}
-}
+// const cleanResourceWithCondition = async () => {
+// 	if (ENV_MODE === 'development') {
+// 		// NOTE - Clean Browsers and Pages after start / restart
+// 		const {
+// 			deleteResource,
+// 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
+// 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
+
+// 		return Promise.all([
+// 			deleteResource(browsersPath),
+// 			deleteResource(pagesPath),
+// 		])
+// 	}
+// }
 
 const startServer = async () => {
-	await cleanResourceWithCondition()
+	// await cleanResourceWithCondition()
 	let port =
 		ENV !== 'development'
 			? PROCESS_ENV.PORT || getPort('PUPPETEER_SSR_PORT')
@@ -182,6 +187,7 @@ const startServer = async () => {
 			}
 			next()
 		})
+
 	if (!ServerConfig.isRemoteCrawler) {
 		app.use(function (req, res, next) {
 			const redirectResult = DetectRedirect(req, res)

@@ -164,6 +164,8 @@ const waitResponse = (() => {
 						(_6) =>
 							_6(url.split('?')[0], {
 								waitUntil: 'networkidle2',
+								// waitUntil: 'domcontentloaded',
+								// waitUntil: 'load',
 								timeout: 0,
 							}),
 						'access',

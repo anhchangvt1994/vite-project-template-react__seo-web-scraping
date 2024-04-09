@@ -90,79 +90,6 @@ const SSRGenerator = async ({
 				ServerConfig.crawl.custom?.(pathname)?.cache.renewTime ||
 				ServerConfig.crawl.cache.renewTime) * 1000
 
-		// if (NonNullableResult.isRaw) {
-		// 	Console.log('Optimize content!')
-		// 	const asyncTmpResult = new Promise<ISSRResult>(async (res) => {
-		// 		const optimizeHTMLContentPool = WorkerPool.pool(
-		// 			__dirname + `/OptimizeHtml.worker.${resourceExtension}`,
-		// 			{
-		// 				minWorkers: 1,
-		// 				maxWorkers: MAX_WORKERS,
-		// 			}
-		// 		)
-
-		// 		if (
-		// 			!NonNullableResult ||
-		// 			!NonNullableResult.file ||
-		// 			!fs.existsSync(NonNullableResult.file)
-		// 		)
-		// 			res(undefined)
-
-		// 		fs.readFile(NonNullableResult.file as string, async (err, data) => {
-		// 			if (err) return res(undefined)
-
-		// 			const restOfDuration = (() => {
-		// 				const duration = getRestOfDuration(startGenerating, 2000)
-
-		// 				return duration > 7000 ? 7000 : duration
-		// 			})()
-
-		// 			let html = (() => {
-		// 				if (NonNullableResult.file.endsWith('.br'))
-		// 					return brotliDecompressSync(data).toString()
-
-		// 				return data.toString('utf-8')
-		// 			})()
-
-		// 			const timeout = setTimeout(async () => {
-		// 				optimizeHTMLContentPool.terminate()
-		// 				const result = await cacheManager.set({
-		// 					html,
-		// 					url: ISRHandlerParams.url,
-		// 					isRaw: !NonNullableResult.available,
-		// 				})
-
-		// 				res(result)
-		// 			}, restOfDuration)
-
-		// 			let tmpHTML = ''
-
-		// 			try {
-		// 				if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
-		// 					tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
-		// 						html,
-		// 					])
-		// 			} catch (err) {
-		// 				tmpHTML = html
-		// 				// Console.error(err)
-		// 			} finally {
-		// 				clearTimeout(timeout)
-		// 				optimizeHTMLContentPool.terminate()
-
-		// 				const result = await cacheManager.set({
-		// 					html: tmpHTML,
-		// 					url: ISRHandlerParams.url,
-		// 					isRaw: !NonNullableResult.available,
-		// 				})
-
-		// 				res(result)
-		// 			}
-		// 		})
-		// 	})
-
-		// 	const tmpResult = await asyncTmpResult
-		// 	result = tmpResult || result
-		// } else
 		if (
 			Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
 			renewTime
@@ -194,8 +121,7 @@ const SSRGenerator = async ({
 						})
 			})
 		}
-	}
-	if (!result) {
+	} else {
 		result = await cacheManager.get()
 
 		Console.log('Check for condition to create new page.')

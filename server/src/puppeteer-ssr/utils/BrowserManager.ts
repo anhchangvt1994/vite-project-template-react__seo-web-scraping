@@ -19,6 +19,12 @@ import {
 	puppeteer,
 } from '../constants'
 
+if (!process.env.PUPPETEER_CACHE_DIR)
+	process.env.PUPPETEER_CACHE_DIR = path.resolve(
+		__dirname,
+		'../../../../node_modules/puppeteer-ssr/.cache'
+	)
+
 export interface IBrowser {
 	get: () => Promise<Browser | undefined>
 	newPage: () => Promise<Page | undefined>

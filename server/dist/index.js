@@ -72,26 +72,28 @@ const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 
 require('events').EventEmitter.setMaxListeners(200)
 
-const cleanResourceWithCondition = async () => {
-	if (_InitEnv.ENV_MODE === 'development') {
-		// NOTE - Clean Browsers and Pages after start / restart
-		const {
-			deleteResource,
-		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${_constants.resourceExtension}`)
-		const browsersPath = _path2.default.resolve(
-			__dirname,
-			'./puppeteer-ssr/browsers'
-		)
+// spawn('node', ['server/src/utils/GenerateServerInfo.js'], {
+// 	stdio: 'inherit',
+// 	shell: true,
+// })
 
-		return Promise.all([
-			deleteResource(browsersPath),
-			deleteResource(_constants.pagesPath),
-		])
-	}
-}
+// const cleanResourceWithCondition = async () => {
+// 	if (ENV_MODE === 'development') {
+// 		// NOTE - Clean Browsers and Pages after start / restart
+// 		const {
+// 			deleteResource,
+// 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
+// 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
+
+// 		return Promise.all([
+// 			deleteResource(browsersPath),
+// 			deleteResource(pagesPath),
+// 		])
+// 	}
+// }
 
 const startServer = async () => {
-	await cleanResourceWithCondition()
+	// await cleanResourceWithCondition()
 	let port =
 		_InitEnv.ENV !== 'development'
 			? _InitEnv.PROCESS_ENV.PORT ||

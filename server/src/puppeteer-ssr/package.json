@@ -4,12 +4,14 @@
 	"version": "1.0.0",
 	"description": "puppeteer-ssr",
 	"main": "index.ts",
-	"scripts": {},
+	"scripts": {
+		"preinstall": "node utils/DeletePuppeteerConfigFile.js"
+	},
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"puppeteer": "^21.7.0",
+		"puppeteer": "^22.6.3",
 		"html-minifier": "^4.0.0",
-		"@sparticuz/chromium-min": "122.0.0"
+		"@sparticuz/chromium-min": "123.0.1"
 	}
 }

@@ -5,7 +5,6 @@ const path = require('path')
 const { resolve } = require('path')
 const ObjectToEnvConverter = require('./ObjectToEnvConverter')
 
-const serverInfoPath = resolve(__dirname, '../../server-info.json')
 const envPath = resolve(__dirname, '../../.env')
 
 const readFileENVSync = () => {
@@ -30,7 +29,7 @@ const readFileENVSync = () => {
 } // readFileENVSync
 
 ;(async () => {
-	if (fs.existsSync(serverInfoPath)) return
+	// if (fs.existsSync(serverInfoPath)) return
 
 	const serverInfo = {
 		platform: os.platform(),
@@ -66,8 +65,6 @@ const readFileENVSync = () => {
 		} catch {}
 	}
 
-	console.log(serverInfo)
-
 	fs.writeFile(
 		path.resolve(__dirname, '../../server-info.json'),
 		JSON.stringify(serverInfo),
@@ -77,7 +74,10 @@ const readFileENVSync = () => {
 				return
 			}
 
-			console.log(`File server-info.json has been created.`)
+			if (process.env.IS_SERVER === 'true') {
+				console.log(serverInfo)
+				console.log(`File server-info.json has been created.`)
+			}
 		}
 	)
 })()

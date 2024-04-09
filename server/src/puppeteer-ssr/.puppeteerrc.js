@@ -1,11 +1,11 @@
-const { join } = require('path')
 const fs = require('fs')
+const { resolve } = require('path')
 
 const browserCachePath = (() => {
-	const tmpPath = '/tmp'
-	if (fs.existsSync(tmpPath)) return tmpPath + '/.cache'
+	const path = resolve(__dirname, './node_modules/puppeteer-ssr')
+	if (!fs.existsSync(path)) return
 
-	return join(__dirname, '.cache', 'puppeteer')
+	return path + '/.cache'
 })()
 
 /**
