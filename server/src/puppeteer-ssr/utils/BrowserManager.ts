@@ -19,17 +19,20 @@ import {
 	defaultBrowserOptions,
 	puppeteer,
 } from '../constants'
-import { PROCESS_ENV } from '../../utils/InitEnv'
 
 if (
-	PROCESS_ENV.PLATFORM.toLowerCase() !== 'linux' &&
-	(!process.env.PUPPETEER_CACHE_DIR ||
-		!fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')))
+	!process.env.PUPPETEER_CACHE_DIR ||
+	!fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', ''))
 )
 	process.env.PUPPETEER_CACHE_DIR = path.resolve(
 		__dirname,
 		'../../../../node_modules/puppeteer/.cache'
 	)
+
+console.log(
+	'process.env.PUPPETEER_CACHE_DIR: ',
+	process.env.PUPPETEER_CACHE_DIR
+)
 
 export interface IBrowser {
 	get: () => Promise<Browser | undefined>

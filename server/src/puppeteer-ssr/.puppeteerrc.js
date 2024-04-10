@@ -18,11 +18,7 @@ if (serverInfoStringify) {
 	}
 }
 
-const skipDownload = serverInfo.platform.toLowerCase() === 'linux'
-
 const browserCachePath = (() => {
-	if (skipDownload) return
-
 	if (
 		process.env.PUPPETEER_CACHE_DIR &&
 		fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', ''))
@@ -42,5 +38,4 @@ const browserCachePath = (() => {
 module.exports = {
 	// Changes the cache location for Puppeteer.
 	cacheDirectory: browserCachePath,
-	skipDownload,
 }

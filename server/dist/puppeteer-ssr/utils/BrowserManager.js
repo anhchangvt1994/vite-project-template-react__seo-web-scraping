@@ -42,19 +42,22 @@ var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _constants3 = require('../constants')
-var _InitEnv = require('../../utils/InitEnv')
 
 if (
-	_InitEnv.PROCESS_ENV.PLATFORM.toLowerCase() !== 'linux' &&
-	(!process.env.PUPPETEER_CACHE_DIR ||
-		!_fs2.default.existsSync(
-			process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')
-		))
+	!process.env.PUPPETEER_CACHE_DIR ||
+	!_fs2.default.existsSync(
+		process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')
+	)
 )
 	process.env.PUPPETEER_CACHE_DIR = _path2.default.resolve(
 		__dirname,
 		'../../../../node_modules/puppeteer/.cache'
 	)
+
+console.log(
+	'process.env.PUPPETEER_CACHE_DIR: ',
+	process.env.PUPPETEER_CACHE_DIR
+)
 
 const deleteUserDataDir = async (dir) => {
 	if (dir) {
