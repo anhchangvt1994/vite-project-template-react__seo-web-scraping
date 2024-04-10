@@ -159,7 +159,7 @@ const puppeteerSSRService = (async () => {
 				return ''
 			})()
 
-			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
+			_ConsoleHandler2.default.log('<---puppeteer/index.ts--->')
 			_ConsoleHandler2.default.log(
 				'enableContentEncoding: ',
 				enableContentEncoding
@@ -169,7 +169,7 @@ const puppeteerSSRService = (async () => {
 				headers['accept-encoding']
 			)
 			_ConsoleHandler2.default.log('contentEncoding: ', contentEncoding)
-			_ConsoleHandler2.default.log('<---puppeteer/index.uws.ts--->')
+			_ConsoleHandler2.default.log('<---puppeteer/index.ts--->')
 
 			res.set({
 				'Content-Type':

@@ -110,11 +110,11 @@ const puppeteerSSRService = (async () => {
 					return '' as 'br' | 'gzip' | ''
 				})()
 
-				Console.log('<---puppeteer/index.uws.ts--->')
+				Console.log('<---puppeteer/index.fastify.ts--->')
 				Console.log('enableContentEncoding: ', enableContentEncoding)
 				Console.log(`headers['accept-encoding']: `, headers['accept-encoding'])
 				Console.log('contentEncoding: ', contentEncoding)
-				Console.log('<---puppeteer/index.uws.ts--->')
+				Console.log('<---puppeteer/index.fastify.ts--->')
 
 				res.raw.setHeader(
 					'Content-Type',

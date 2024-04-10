@@ -134,7 +134,7 @@ exports.chromiumPath = chromiumPath
 
 const canUseLinuxChromium =
 	_InitEnv.PROCESS_ENV.PLATFORM.toLowerCase() === 'linux' &&
-	Boolean(process.env.PUPPETEER_SKIP_DOWNLOAD)
+	['true', 'TRUE', '1'].includes(process.env.PUPPETEER_SKIP_DOWNLOAD || '')
 exports.canUseLinuxChromium = canUseLinuxChromium
 
 const puppeteer = (() => {

@@ -48,16 +48,15 @@ if (
 	!_fs2.default.existsSync(
 		process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')
 	)
-)
-	process.env.PUPPETEER_CACHE_DIR = _path2.default.resolve(
+) {
+	const tmpPath = (process.env.PUPPETEER_CACHE_DIR = _path2.default.resolve(
 		__dirname,
 		'../../../../node_modules/puppeteer/.cache'
-	)
+	))
 
-console.log(
-	'process.env.PUPPETEER_CACHE_DIR: ',
-	process.env.PUPPETEER_CACHE_DIR
-)
+	if (_fs2.default.existsSync(tmpPath))
+		process.env.PUPPETEER_CACHE_DIR = tmpPath
+}
 
 const deleteUserDataDir = async (dir) => {
 	if (dir) {

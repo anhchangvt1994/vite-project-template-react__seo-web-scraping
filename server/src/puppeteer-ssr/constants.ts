@@ -113,7 +113,7 @@ export const chromiumPath =
 
 export const canUseLinuxChromium =
 	PROCESS_ENV.PLATFORM.toLowerCase() === 'linux' &&
-	Boolean(process.env.PUPPETEER_SKIP_DOWNLOAD)
+	['true', 'TRUE', '1'].includes(process.env.PUPPETEER_SKIP_DOWNLOAD || '')
 
 export const puppeteer = (() => {
 	if (canUseLinuxChromium) return require('puppeteer-core')

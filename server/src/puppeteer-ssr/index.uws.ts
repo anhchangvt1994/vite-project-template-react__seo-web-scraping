@@ -313,9 +313,9 @@ const puppeteerSSRService = (async () => {
 										res.end(body, true)
 									} catch {
 										res
-											.writeStatus('404')
+											.writeStatus('500')
 											.writeHeader('Content-Type', 'text/html; charset=utf-8')
-											.end('Page not found!', true)
+											.end('500 Internal Server Error', true)
 									}
 								} else if (result.html) {
 									if (result.status === 200) {
