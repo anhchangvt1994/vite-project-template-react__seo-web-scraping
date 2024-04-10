@@ -20,6 +20,16 @@ import {
 	puppeteer,
 } from '../constants'
 
+console.log('----BrowserManager----')
+console.log(
+	'process.env.PUPPETEER_CACHE_DIR: ',
+	process.env.PUPPETEER_CACHE_DIR
+)
+console.log(
+	'typeof process.env.PUPPETEER_CACHE_DIR: ',
+	typeof process.env.PUPPETEER_CACHE_DIR
+)
+
 if (
 	!process.env.PUPPETEER_CACHE_DIR ||
 	!fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', ''))

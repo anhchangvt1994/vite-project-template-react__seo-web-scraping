@@ -22,6 +22,20 @@ if (serverInfoStringify) {
 	}
 }
 
+console.log('----CreatePuppeteerConfigFile----')
+console.log(
+	'process.env.PUPPETEER_SKIP_DOWNLOAD: ',
+	process.env.PUPPETEER_SKIP_DOWNLOAD
+)
+console.log(
+	'process.env.PUPPETEER_CACHE_DIR: ',
+	process.env.PUPPETEER_CACHE_DIR
+)
+console.log(
+	'typeof process.env.PUPPETEER_CACHE_DIR: ',
+	typeof process.env.PUPPETEER_CACHE_DIR
+)
+
 if (
 	!process.env.PUPPETEER_SKIP_DOWNLOAD &&
 	(!process.env.PUPPETEER_CACHE_DIR ||
