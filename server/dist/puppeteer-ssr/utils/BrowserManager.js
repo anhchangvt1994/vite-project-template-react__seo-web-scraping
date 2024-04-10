@@ -42,6 +42,12 @@ var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _constants3 = require('../constants')
 var _InitEnv = require('../../utils/InitEnv')
 
+_ConsoleHandler2.default.log(
+	'process.env.PUPPETEER_CACHE_DIR: ',
+	process.env.PUPPETEER_CACHE_DIR
+)
+_ConsoleHandler2.default.log('PROCESS_ENV: ', _InitEnv.PROCESS_ENV)
+
 if (
 	!process.env.PUPPETEER_CACHE_DIR &&
 	_InitEnv.PROCESS_ENV.PLATFORM.toLowerCase() !== 'linux'

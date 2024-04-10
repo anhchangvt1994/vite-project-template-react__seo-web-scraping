@@ -20,6 +20,12 @@ import {
 } from '../constants'
 import { PROCESS_ENV } from '../../utils/InitEnv'
 
+Console.log(
+	'process.env.PUPPETEER_CACHE_DIR: ',
+	process.env.PUPPETEER_CACHE_DIR
+)
+Console.log('PROCESS_ENV: ', PROCESS_ENV)
+
 if (
 	!process.env.PUPPETEER_CACHE_DIR &&
 	PROCESS_ENV.PLATFORM.toLowerCase() !== 'linux'
