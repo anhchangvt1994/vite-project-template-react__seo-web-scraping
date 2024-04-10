@@ -1,5 +1,6 @@
 import Chromium from '@sparticuz/chromium-min'
 import path from 'path'
+import fs from 'fs'
 import { Browser, Page } from 'puppeteer-core'
 import WorkerPool from 'workerpool'
 import {
@@ -18,17 +19,10 @@ import {
 	defaultBrowserOptions,
 	puppeteer,
 } from '../constants'
-import { PROCESS_ENV } from '../../utils/InitEnv'
-
-Console.log(
-	'process.env.PUPPETEER_CACHE_DIR: ',
-	process.env.PUPPETEER_CACHE_DIR
-)
-Console.log('PROCESS_ENV: ', PROCESS_ENV)
 
 if (
-	!process.env.PUPPETEER_CACHE_DIR &&
-	PROCESS_ENV.PLATFORM.toLowerCase() !== 'linux'
+	!process.env.PUPPETEER_CACHE_DIR ||
+	!fs.existsSync(process.env.PUPPETEER_CACHE_DIR)
 )
 	process.env.PUPPETEER_CACHE_DIR = path.resolve(
 		__dirname,

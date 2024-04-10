@@ -2,6 +2,12 @@ const fs = require('fs')
 const { resolve } = require('path')
 
 const browserCachePath = (() => {
+	if (
+		process.env.PUPPETEER_CACHE_DIR &&
+		fs.existsSync(process.env.PUPPETEER_CACHE_DIR)
+	)
+		return process.env.PUPPETEER_CACHE_DIR
+
 	const path = resolve(__dirname, './node_modules/puppeteer')
 	if (!fs.existsSync(path)) return
 
