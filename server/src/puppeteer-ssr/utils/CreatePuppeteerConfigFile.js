@@ -25,7 +25,9 @@ if (serverInfoStringify) {
 if (
 	!process.env.PUPPETEER_SKIP_DOWNLOAD &&
 	serverInfo &&
-	serverInfo.platform !== 'linux'
+	serverInfo.platform !== 'linux' &&
+	(!process.env.PUPPETEER_CACHE_DIR ||
+		!fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')))
 ) {
 	// NOTE - Copy .puppeteer.json to root workspace of this project for installing puppeteer
 	fs.copyFile(puppeteerConfigPath, targetPath, (err) => {

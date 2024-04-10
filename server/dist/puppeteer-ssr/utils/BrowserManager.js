@@ -45,7 +45,9 @@ var _constants3 = require('../constants')
 
 if (
 	!process.env.PUPPETEER_CACHE_DIR ||
-	!_fs2.default.existsSync(process.env.PUPPETEER_CACHE_DIR)
+	!_fs2.default.existsSync(
+		process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')
+	)
 )
 	process.env.PUPPETEER_CACHE_DIR = _path2.default.resolve(
 		__dirname,

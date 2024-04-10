@@ -4,7 +4,7 @@ const { resolve } = require('path')
 const browserCachePath = (() => {
 	if (
 		process.env.PUPPETEER_CACHE_DIR &&
-		fs.existsSync(process.env.PUPPETEER_CACHE_DIR)
+		fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', ''))
 	)
 		return process.env.PUPPETEER_CACHE_DIR
 

@@ -22,7 +22,7 @@ import {
 
 if (
 	!process.env.PUPPETEER_CACHE_DIR ||
-	!fs.existsSync(process.env.PUPPETEER_CACHE_DIR)
+	!fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', ''))
 )
 	process.env.PUPPETEER_CACHE_DIR = path.resolve(
 		__dirname,
