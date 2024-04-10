@@ -2,7 +2,7 @@ const fs = require('fs')
 const { resolve } = require('path')
 
 const browserCachePath = (() => {
-	const path = resolve(__dirname, './node_modules/puppeteer-ssr')
+	const path = resolve(__dirname, './node_modules/puppeteer')
 	if (!fs.existsSync(path)) return
 
 	return path + '/.cache'

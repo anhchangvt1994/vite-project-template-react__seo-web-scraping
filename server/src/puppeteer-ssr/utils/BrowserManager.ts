@@ -18,11 +18,15 @@ import {
 	defaultBrowserOptions,
 	puppeteer,
 } from '../constants'
+import { PROCESS_ENV } from '../../utils/InitEnv'
 
-if (!process.env.PUPPETEER_CACHE_DIR)
+if (
+	!process.env.PUPPETEER_CACHE_DIR &&
+	PROCESS_ENV.PLATFORM.toLowerCase() !== 'linux'
+)
 	process.env.PUPPETEER_CACHE_DIR = path.resolve(
 		__dirname,
-		'../../../../node_modules/puppeteer-ssr/.cache'
+		'../../../../node_modules/puppeteer/.cache'
 	)
 
 export interface IBrowser {
