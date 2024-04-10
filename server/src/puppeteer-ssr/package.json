@@ -4,9 +4,7 @@
 	"version": "1.0.0",
 	"description": "puppeteer-ssr",
 	"main": "index.ts",
-	"scripts": {
-		"preinstall": "node utils/DeletePuppeteerConfigFile.js"
-	},
+	"scripts": {},
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
