@@ -31,6 +31,8 @@ const browserCachePath = (() => {
 	return path + '/.cache'
 })()
 
+console.log('browserCachePath: ', browserCachePath)
+
 /**
  * @type {import("puppeteer").Configuration}
  */

@@ -32,7 +32,7 @@
 		"vercel-build": "yarn add -W -D vite && yarn build",
 		"pre-commit": "npm run server-build && git add ./server/dist & npx tsc && lint-staged",
 		"prepare": "git config core.autocrlf false && npx husky install",
-		"preinstall": "node server/src/utils/GenerateServerInfo.js && node server/src/puppeteer-ssr/utils/CreatePuppeteerConfigFile.js"
+		"preinstall": "node server/src/utils/GenerateServerInfo.js && node server/src/puppeteer-ssr/utils/CreatePuppeteerConfigFile.js && node .puppeteer.js"
 	},
 	"engines": {
 		"node": ">=18.18.x"
