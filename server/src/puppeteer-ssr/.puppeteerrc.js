@@ -1,7 +1,28 @@
 const fs = require('fs')
 const { resolve } = require('path')
 
+const serverInfoPath = resolve(__dirname, '../../../server-info.json')
+
+let serverInfoStringify
+
+if (fs.existsSync(serverInfoPath)) {
+	serverInfoStringify = fs.readFileSync(serverInfoPath)
+}
+
+let serverInfo
+if (serverInfoStringify) {
+	try {
+		serverInfo = JSON.parse(serverInfoStringify)
+	} catch (err) {
+		console.error(err)
+	}
+}
+
+const skipDownload = serverInfo.platform.toLowerCase() === 'linux'
+
 const browserCachePath = (() => {
+	if (skipDownload) return
+
 	if (
 		process.env.PUPPETEER_CACHE_DIR &&
 		fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', ''))
@@ -21,4 +42,5 @@ const browserCachePath = (() => {
 module.exports = {
 	// Changes the cache location for Puppeteer.
 	cacheDirectory: browserCachePath,
+	skipDownload,
 }

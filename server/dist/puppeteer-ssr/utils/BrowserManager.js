@@ -42,22 +42,14 @@ var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _constants3 = require('../constants')
-
-console.log('----BrowserManager----')
-console.log(
-	'process.env.PUPPETEER_CACHE_DIR: ',
-	process.env.PUPPETEER_CACHE_DIR
-)
-console.log(
-	'typeof process.env.PUPPETEER_CACHE_DIR: ',
-	typeof process.env.PUPPETEER_CACHE_DIR
-)
+var _InitEnv = require('../../utils/InitEnv')
 
 if (
-	!process.env.PUPPETEER_CACHE_DIR ||
-	!_fs2.default.existsSync(
-		process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')
-	)
+	_InitEnv.PROCESS_ENV.PLATFORM.toLowerCase() !== 'linux' &&
+	(!process.env.PUPPETEER_CACHE_DIR ||
+		!_fs2.default.existsSync(
+			process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')
+		))
 )
 	process.env.PUPPETEER_CACHE_DIR = _path2.default.resolve(
 		__dirname,
