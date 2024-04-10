@@ -313,9 +313,9 @@ const puppeteerSSRService = (async () => {
 										res.end(body, true)
 									} catch {
 										res
-											.writeStatus('500')
+											.writeStatus('504')
 											.writeHeader('Content-Type', 'text/html; charset=utf-8')
-											.end('500 Internal Server Error', true)
+											.end('504 Gateway Timeout', true)
 									}
 								} else if (result.html) {
 									if (result.status === 200) {
