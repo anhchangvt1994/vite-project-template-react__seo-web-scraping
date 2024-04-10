@@ -24,8 +24,6 @@ if (serverInfoStringify) {
 
 if (
 	!process.env.PUPPETEER_SKIP_DOWNLOAD &&
-	serverInfo &&
-	serverInfo.platform !== 'linux' &&
 	(!process.env.PUPPETEER_CACHE_DIR ||
 		!fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')))
 ) {
