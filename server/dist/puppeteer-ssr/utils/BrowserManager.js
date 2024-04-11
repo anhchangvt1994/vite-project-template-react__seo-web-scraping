@@ -28,8 +28,6 @@ var _chromiummin = require('@sparticuz/chromium-min')
 var _chromiummin2 = _interopRequireDefault(_chromiummin)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
-var _fs = require('fs')
-var _fs2 = _interopRequireDefault(_fs)
 
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
@@ -42,21 +40,6 @@ var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 var _constants3 = require('../constants')
-
-if (
-	!process.env.PUPPETEER_CACHE_DIR ||
-	!_fs2.default.existsSync(
-		process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')
-	)
-) {
-	const tmpPath = (process.env.PUPPETEER_CACHE_DIR = _path2.default.resolve(
-		__dirname,
-		'../../../../node_modules/puppeteer/.cache'
-	))
-
-	if (_fs2.default.existsSync(tmpPath))
-		process.env.PUPPETEER_CACHE_DIR = tmpPath
-}
 
 const deleteUserDataDir = async (dir) => {
 	if (dir) {

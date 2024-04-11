@@ -20,18 +20,6 @@ import {
 	puppeteer,
 } from '../constants'
 
-if (
-	!process.env.PUPPETEER_CACHE_DIR ||
-	!fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', ''))
-) {
-	const tmpPath = (process.env.PUPPETEER_CACHE_DIR = path.resolve(
-		__dirname,
-		'../../../../node_modules/puppeteer/.cache'
-	))
-
-	if (fs.existsSync(tmpPath)) process.env.PUPPETEER_CACHE_DIR = tmpPath
-}
-
 export interface IBrowser {
 	get: () => Promise<Browser | undefined>
 	newPage: () => Promise<Page | undefined>
