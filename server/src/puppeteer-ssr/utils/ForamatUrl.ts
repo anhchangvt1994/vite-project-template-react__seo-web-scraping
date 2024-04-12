@@ -2,6 +2,7 @@ import { Response } from 'express'
 import { IBotInfo } from '../../types'
 import { getCookieFromResponse } from '../../utils/CookieHandler'
 import { PROCESS_ENV } from '../../utils/InitEnv'
+import ServerConfig from '../../server.config'
 
 export const convertUrlHeaderToQueryString = (
 	url: string,
@@ -22,7 +23,11 @@ export const convertUrlHeaderToQueryString = (
 		botInfoStringify = JSON.stringify(cookies?.['BotInfo'])
 	}
 
-	const deviceInfoStringify = JSON.stringify(cookies?.['DeviceInfo'])
+	const deviceInfoStringify = JSON.stringify({
+		...(cookies?.['DeviceInfo'] ?? {}),
+		isMobile: ServerConfig.crawl.content === 'mobile',
+		type: ServerConfig.crawl.content,
+	})
 	const localeInfoStringify = JSON.stringify(cookies?.['LocaleInfo'])
 	const environmentInfoStringify = JSON.stringify(cookies?.['EnvironmentInfo'])
 

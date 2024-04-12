@@ -114,6 +114,10 @@ const defineServerConfig = (options) => {
 				const tmpOptionCastingType = options[key]
 				serverConfigDefined[key] = {
 					enable: tmpOptionCastingType.enable,
+					content:
+						tmpOptionCastingType.content === undefined
+							? _constants.defaultServerConfig[key].content
+							: tmpOptionCastingType.content,
 					optimize:
 						tmpOptionCastingType.optimize === undefined
 							? _constants.defaultServerConfig[key].optimize

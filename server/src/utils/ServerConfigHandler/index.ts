@@ -56,6 +56,10 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 				const tmpOptionCastingType = options[key] as IServerConfig['crawl']
 				serverConfigDefined[key] = {
 					enable: tmpOptionCastingType.enable,
+					content:
+						tmpOptionCastingType.content === undefined
+							? defaultServerConfig[key].content
+							: tmpOptionCastingType.content,
 					optimize:
 						tmpOptionCastingType.optimize === undefined
 							? defaultServerConfig[key].optimize

@@ -164,8 +164,6 @@ const waitResponse = (() => {
 						(_6) =>
 							_6(url.split('?')[0], {
 								waitUntil: 'networkidle2',
-								// waitUntil: 'domcontentloaded',
-								// waitUntil: 'load',
 								timeout: 0,
 							}),
 						'access',
@@ -401,26 +399,33 @@ const ISRHandler = async ({ hasCache, url }) => {
 		let isGetHtmlProcessError = false
 
 		try {
-			// await safePage()?.waitForNetworkIdle({ idleTime: 150 })
-			// safePage()?.setDefaultNavigationTimeout(0);
 			await _optionalChain([
 				safePage,
 				'call',
 				(_32) => _32(),
 				'optionalAccess',
-				(_33) => _33.setRequestInterception,
+				(_33) => _33.waitForNetworkIdle,
 				'call',
-				(_34) => _34(true),
+				(_34) => _34({ idleTime: 150 }),
 			])
-			_optionalChain([
+			await _optionalChain([
 				safePage,
 				'call',
 				(_35) => _35(),
 				'optionalAccess',
-				(_36) => _36.on,
+				(_36) => _36.setRequestInterception,
 				'call',
-				(_37) =>
-					_37('request', (req) => {
+				(_37) => _37(true),
+			])
+			_optionalChain([
+				safePage,
+				'call',
+				(_38) => _38(),
+				'optionalAccess',
+				(_39) => _39.on,
+				'call',
+				(_40) =>
+					_40('request', (req) => {
 						const resourceType = req.resourceType()
 
 						if (resourceType === 'stylesheet') {
@@ -429,7 +434,10 @@ const ISRHandler = async ({ hasCache, url }) => {
 							/(socket.io.min.js)+(?:$)|data:image\/[a-z]*.?\;base64/.test(
 								url
 							) ||
-							/font|image|media|imageset/.test(resourceType)
+							/googletagmanager.com|connect.facebook.net|asia.creativecdn.com|static.hotjar.com|deqik.com|contineljs.com|googleads.g.doubleclick.net|analytics.tiktok.com|google.com|gstatic.com|static.airbridge.io|googleadservices.com|google-analytics.com|sg.mmstat.com|t.contentsquare.net|accounts.google.com|browser.sentry-cdn.com|bat.bing.com|tr.snapchat.com|ct.pinterest.com|criteo.com|webchat.caresoft.vn|tags.creativecdn.com|script.crazyegg.com|tags.tiqcdn.com|trc.taboola.com|securepubads.g.doubleclick.net/.test(
+								req.url()
+							) ||
+							['font', 'image', 'media', 'imageset'].includes(resourceType)
 						) {
 							req.abort()
 						} else {
@@ -441,12 +449,12 @@ const ISRHandler = async ({ hasCache, url }) => {
 			await _optionalChain([
 				safePage,
 				'call',
-				(_38) => _38(),
+				(_41) => _41(),
 				'optionalAccess',
-				(_39) => _39.setExtraHTTPHeaders,
+				(_42) => _42.setExtraHTTPHeaders,
 				'call',
-				(_40) =>
-					_40({
+				(_43) =>
+					_43({
 						...specialInfo,
 						service: 'puppeteer',
 					}),
@@ -467,11 +475,11 @@ const ISRHandler = async ({ hasCache, url }) => {
 						_optionalChain([
 							safePage,
 							'call',
-							(_41) => _41(),
+							(_44) => _44(),
 							'optionalAccess',
-							(_42) => _42.close,
+							(_45) => _45.close,
 							'call',
-							(_43) => _43(),
+							(_46) => _46(),
 						])
 						return res(false)
 					}
@@ -480,9 +488,9 @@ const ISRHandler = async ({ hasCache, url }) => {
 						_optionalChain([
 							response,
 							'optionalAccess',
-							(_44) => _44.status,
+							(_47) => _47.status,
 							'optionalCall',
-							(_45) => _45(),
+							(_48) => _48(),
 						]),
 						() => status
 					)
@@ -499,11 +507,11 @@ const ISRHandler = async ({ hasCache, url }) => {
 			_optionalChain([
 				safePage,
 				'call',
-				(_46) => _46(),
+				(_49) => _49(),
 				'optionalAccess',
-				(_47) => _47.close,
+				(_50) => _50.close,
 				'call',
-				(_48) => _48(),
+				(_51) => _51(),
 			])
 			return {
 				status: 500,
@@ -522,22 +530,22 @@ const ISRHandler = async ({ hasCache, url }) => {
 				await _optionalChain([
 					safePage,
 					'call',
-					(_49) => _49(),
+					(_52) => _52(),
 					'optionalAccess',
-					(_50) => _50.content,
+					(_53) => _53.content,
 					'call',
-					(_51) => _51(),
+					(_54) => _54(),
 				]),
 				async () => ''
 			) // serialized HTML of page DOM.
 			_optionalChain([
 				safePage,
 				'call',
-				(_52) => _52(),
+				(_55) => _55(),
 				'optionalAccess',
-				(_53) => _53.close,
+				(_56) => _56.close,
 				'call',
-				(_54) => _54(),
+				(_57) => _57(),
 			])
 		} catch (err) {
 			_ConsoleHandler2.default.log('ISRHandler line 315:')
@@ -557,24 +565,24 @@ const ISRHandler = async ({ hasCache, url }) => {
 			(_optionalChain([
 				_serverconfig2.default,
 				'access',
-				(_55) => _55.crawl,
+				(_58) => _58.crawl,
 				'access',
-				(_56) => _56.routes,
+				(_59) => _59.routes,
 				'access',
-				(_57) => _57[pathname],
+				(_60) => _60[pathname],
 				'optionalAccess',
-				(_58) => _58.optimize,
+				(_61) => _61.optimize,
 			]) ||
 				_optionalChain([
 					_serverconfig2.default,
 					'access',
-					(_59) => _59.crawl,
+					(_62) => _62.crawl,
 					'access',
-					(_60) => _60.custom,
+					(_63) => _63.custom,
 					'optionalCall',
-					(_61) => _61(pathname),
+					(_64) => _64(pathname),
 					'optionalAccess',
-					(_62) => _62.optimize,
+					(_65) => _65.optimize,
 				]) ||
 				_serverconfig2.default.crawl.optimize) &&
 			enableOptimizeAndCompressIfRemoteCrawlerFail
@@ -583,24 +591,24 @@ const ISRHandler = async ({ hasCache, url }) => {
 			(_optionalChain([
 				_serverconfig2.default,
 				'access',
-				(_63) => _63.crawl,
+				(_66) => _66.crawl,
 				'access',
-				(_64) => _64.routes,
+				(_67) => _67.routes,
 				'access',
-				(_65) => _65[pathname],
+				(_68) => _68[pathname],
 				'optionalAccess',
-				(_66) => _66.compress,
+				(_69) => _69.compress,
 			]) ||
 				_optionalChain([
 					_serverconfig2.default,
 					'access',
-					(_67) => _67.crawl,
+					(_70) => _70.crawl,
 					'access',
-					(_68) => _68.custom,
+					(_71) => _71.custom,
 					'optionalCall',
-					(_69) => _69(pathname),
+					(_72) => _72(pathname),
 					'optionalAccess',
-					(_70) => _70.compress,
+					(_73) => _73.compress,
 				]) ||
 				_serverconfig2.default.crawl.compress) &&
 			enableOptimizeAndCompressIfRemoteCrawlerFail

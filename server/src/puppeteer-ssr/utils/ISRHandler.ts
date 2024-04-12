@@ -118,8 +118,6 @@ const waitResponse = (() => {
 					safePage()
 						?.goto(url.split('?')[0], {
 							waitUntil: 'networkidle2',
-							// waitUntil: 'domcontentloaded',
-							// waitUntil: 'load',
 							timeout: 0,
 						})
 						.then((res) => {
@@ -276,8 +274,7 @@ const ISRHandler = async ({ hasCache, url }: IISRHandlerParam) => {
 		let isGetHtmlProcessError = false
 
 		try {
-			// await safePage()?.waitForNetworkIdle({ idleTime: 150 })
-			// safePage()?.setDefaultNavigationTimeout(0);
+			await safePage()?.waitForNetworkIdle({ idleTime: 150 })
 			await safePage()?.setRequestInterception(true)
 			safePage()?.on('request', (req) => {
 				const resourceType = req.resourceType()
@@ -286,7 +283,10 @@ const ISRHandler = async ({ hasCache, url }: IISRHandlerParam) => {
 					req.respond({ status: 200, body: 'aborted' })
 				} else if (
 					/(socket.io.min.js)+(?:$)|data:image\/[a-z]*.?\;base64/.test(url) ||
-					/font|image|media|imageset/.test(resourceType)
+					/googletagmanager.com|connect.facebook.net|asia.creativecdn.com|static.hotjar.com|deqik.com|contineljs.com|googleads.g.doubleclick.net|analytics.tiktok.com|google.com|gstatic.com|static.airbridge.io|googleadservices.com|google-analytics.com|sg.mmstat.com|t.contentsquare.net|accounts.google.com|browser.sentry-cdn.com|bat.bing.com|tr.snapchat.com|ct.pinterest.com|criteo.com|webchat.caresoft.vn|tags.creativecdn.com|script.crazyegg.com|tags.tiqcdn.com|trc.taboola.com|securepubads.g.doubleclick.net/.test(
+						req.url()
+					) ||
+					['font', 'image', 'media', 'imageset'].includes(resourceType)
 				) {
 					req.abort()
 				} else {

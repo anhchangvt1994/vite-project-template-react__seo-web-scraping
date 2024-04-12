@@ -22,6 +22,8 @@ export interface IServerConfigOptional {
 	crawl?: {
 		enable: boolean
 
+		content?: 'desktop' | 'mobile'
+
 		optimize?: boolean
 
 		compress?: boolean
@@ -35,7 +37,7 @@ export interface IServerConfigOptional {
 		routes?: {
 			[key: string]: Omit<
 				NonNullable<IServerConfigOptional['crawl']>,
-				'routes' | 'custom' | 'cache'
+				'routes' | 'custom' | 'cache' | 'content'
 			> & {
 				cache: Omit<
 					NonNullable<IServerConfigOptional['crawl']>['cache'],
@@ -46,7 +48,7 @@ export interface IServerConfigOptional {
 
 		custom?: (path: string) => Omit<
 			NonNullable<IServerConfigOptional['crawl']>,
-			'routes' | 'custom' | 'cache'
+			'routes' | 'custom' | 'cache' | 'content'
 		> & {
 			cache: Omit<NonNullable<IServerConfigOptional['crawl']>['cache'], 'time'>
 		}
@@ -79,6 +81,8 @@ export interface IServerConfig extends IServerConfigOptional {
 	crawl: {
 		enable: boolean
 
+		content: 'desktop' | 'mobile'
+
 		optimize: boolean
 
 		compress: boolean
@@ -92,7 +96,7 @@ export interface IServerConfig extends IServerConfigOptional {
 		routes: {
 			[key: string]: Omit<
 				IServerConfig['crawl'],
-				'routes' | 'custom' | 'cache'
+				'routes' | 'custom' | 'cache' | 'content'
 			> & {
 				cache: Omit<IServerConfig['crawl']['cache'], 'time'>
 			}
@@ -100,7 +104,7 @@ export interface IServerConfig extends IServerConfigOptional {
 
 		custom?: (path: string) => Omit<
 			IServerConfig['crawl'],
-			'routes' | 'custom' | 'cache'
+			'routes' | 'custom' | 'cache' | 'content'
 		> & {
 			cache: Omit<IServerConfig['crawl']['cache'], 'time'>
 		}

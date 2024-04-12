@@ -9,6 +9,7 @@ const defaultServerConfig = {
 	isRemoteCrawler: false,
 	crawl: {
 		enable: true,
+		content: 'desktop',
 		cache: {
 			enable: true,
 			time: 4 * 3600,

@@ -6,7 +6,7 @@ const puppeteerConfigPath = resolve(__dirname, '../.puppeteerrc.js')
 const targetPath = resolve(__dirname, '../../../../.puppeteerrc.js')
 
 if (
-	!['true', 'TRUE', '1'].includes(process.env.PUPPETEER_SKIP_DOWNLOAD || '') &&
+	!['true', 'TRUE', '1'].includes(process.env.USE_CHROME_AWS_LAMBDA || '') &&
 	(!process.env.PUPPETEER_CACHE_DIR ||
 		!fs.existsSync(process.env.PUPPETEER_CACHE_DIR.replace('.cache', '')))
 ) {

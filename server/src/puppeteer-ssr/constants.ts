@@ -1,13 +1,22 @@
 import { PuppeteerLaunchOptions } from 'puppeteer-core'
 import { SERVER_LESS, userDataPath } from '../constants'
 import { PROCESS_ENV } from '../utils/InitEnv'
+import ServerConfig from '../server.config'
 
 // NOTE - Browser Options
+const _windowWidth = 1920
+const _windowHeight = 99999
+const _userAgent =
+	ServerConfig.crawl.content === 'desktop'
+		? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+		: 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
 export const optionArgs = [
-	'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+	`--user-agent=${_userAgent}`,
 	'--no-sandbox',
 	'--disable-setuid-sandbox',
 	'--headless',
+	`--window-size=${_windowWidth},${_windowHeight}`,
+	`--ozone-override-screen-size=${_windowWidth},${_windowHeight}`,
 	// '--disable-gpu',
 	'--disable-software-rasterizer',
 	'--hide-scrollbars',
@@ -58,8 +67,8 @@ export const optionArgs = [
 export const defaultBrowserOptions: PuppeteerLaunchOptions = {
 	headless: 'shell',
 	defaultViewport: {
-		width: 1024,
-		height: 4098,
+		width: _windowWidth,
+		height: _windowHeight,
 	},
 	userDataDir: `${userDataPath}/user_data`,
 	args: optionArgs,
@@ -113,7 +122,7 @@ export const chromiumPath =
 
 export const canUseLinuxChromium =
 	PROCESS_ENV.PLATFORM.toLowerCase() === 'linux' &&
-	['true', 'TRUE', '1'].includes(process.env.PUPPETEER_SKIP_DOWNLOAD || '')
+	['true', 'TRUE', '1'].includes(process.env.USE_CHROME_AWS_LAMBDA || '')
 
 export const puppeteer = (() => {
 	if (canUseLinuxChromium) return require('puppeteer-core')

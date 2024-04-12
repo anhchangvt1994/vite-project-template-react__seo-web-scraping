@@ -1,5 +1,15 @@
 'use strict'
 Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj }
+}
+function _nullishCoalesce(lhs, rhsFn) {
+	if (lhs != null) {
+		return lhs
+	} else {
+		return rhsFn()
+	}
+}
 function _optionalChain(ops) {
 	let lastAccessLHS = undefined
 	let value = ops[0]
@@ -24,6 +34,8 @@ function _optionalChain(ops) {
 
 var _CookieHandler = require('./CookieHandler')
 var _InitEnv = require('./InitEnv')
+var _serverconfig = require('../server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
 const convertUrlHeaderToQueryString = (url, res, simulateBot = false) => {
 	if (!url) return ''
@@ -42,9 +54,14 @@ const convertUrlHeaderToQueryString = (url, res, simulateBot = false) => {
 		)
 	}
 
-	const deviceInfoStringify = JSON.stringify(
-		_optionalChain([cookies, 'optionalAccess', (_2) => _2['DeviceInfo']])
-	)
+	const deviceInfoStringify = JSON.stringify({
+		..._nullishCoalesce(
+			_optionalChain([cookies, 'optionalAccess', (_2) => _2['DeviceInfo']]),
+			() => ({})
+		),
+		isMobile: _serverconfig2.default.crawl.content === 'mobile',
+		type: _serverconfig2.default.crawl.content,
+	})
 	const localeInfoStringify = JSON.stringify(
 		_optionalChain([cookies, 'optionalAccess', (_3) => _3['LocaleInfo']])
 	)

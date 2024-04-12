@@ -1,6 +1,7 @@
 import { HttpRequest, HttpResponse } from 'uWebSockets.js'
 import { IBotInfo } from '../../types'
 import { PROCESS_ENV } from '../../utils/InitEnv'
+import ServerConfig from '../../server.config'
 
 export const convertUrlHeaderToQueryString = (
 	url: string,
@@ -20,7 +21,11 @@ export const convertUrlHeaderToQueryString = (
 		botInfoStringify = JSON.stringify(res.cookies?.botInfo)
 	}
 
-	const deviceInfoStringify = JSON.stringify(res.cookies?.deviceInfo)
+	const deviceInfoStringify = JSON.stringify({
+		...(res.cookies?.deviceInfo ?? {}),
+		isMobile: ServerConfig.crawl.content === 'mobile',
+		type: ServerConfig.crawl.content,
+	})
 	const localeInfoStringify = JSON.stringify(res.cookies?.localeInfo)
 	const environmentInfoStringify = JSON.stringify(res.cookies?.environmentInfo)
 
