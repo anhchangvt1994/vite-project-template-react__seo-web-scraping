@@ -249,21 +249,6 @@ const puppeteerSSRService = (async () => {
 
 						res.cork(() => {
 							if (result) {
-								/**
-								 * NOTE
-								 * calc by using:
-								 * https://www.inchcalculator.com/convert/year-to-second/
-								 */
-								res
-									.writeStatus(String(result.status))
-									.writeHeader('Content-Type', 'text/html; charset=utf-8')
-
-								if (enableContentEncoding && result.status === 200) {
-									res.writeHeader('Content-Encoding', contentEncoding)
-								}
-
-								if (result.status === 503) res.writeHeader('Retry-After', '120')
-
 								// Add Server-Timing! See https://w3c.github.io/server-timing/.
 								if (
 									(CACHEABLE_STATUS_CODE[result.status] ||
@@ -310,6 +295,17 @@ const puppeteerSSRService = (async () => {
 											return tmpBody
 										})()
 
+										res
+											.writeStatus(String(result.status))
+											.writeHeader('Content-Type', 'text/html; charset=utf-8')
+
+										if (enableContentEncoding && result.status === 200) {
+											res.writeHeader('Content-Encoding', contentEncoding)
+										}
+
+										if (result.status === 503)
+											res.writeHeader('Retry-After', '120')
+
 										res.end(body, true)
 									} catch {
 										res
@@ -318,6 +314,14 @@ const puppeteerSSRService = (async () => {
 											.end('504 Gateway Timeout', true)
 									}
 								} else if (result.html) {
+									res
+										.writeStatus(String(result.status))
+										.writeHeader('Content-Type', 'text/html; charset=utf-8')
+
+									if (enableContentEncoding && result.status === 200) {
+										res.writeHeader('Content-Encoding', contentEncoding)
+									}
+
 									if (result.status === 200) {
 										res
 											.writeHeader(
@@ -333,6 +337,13 @@ const puppeteerSSRService = (async () => {
 
 									res.end(body || '', true)
 								} else {
+									res
+										.writeStatus(String(result.status))
+										.writeHeader('Content-Type', 'text/html; charset=utf-8')
+
+									if (enableContentEncoding && result.status === 200) {
+										res.writeHeader('Content-Encoding', contentEncoding)
+									}
 									res.end(`${result.status} Error`, true)
 								}
 							} else {
