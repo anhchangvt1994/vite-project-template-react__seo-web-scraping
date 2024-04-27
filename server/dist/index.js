@@ -95,19 +95,20 @@ require('events').EventEmitter.setMaxListeners(200)
 const startServer = async () => {
 	// await cleanResourceWithCondition()
 	let port =
-		_InitEnv.ENV !== 'development'
-			? _InitEnv.PROCESS_ENV.PORT ||
-			  _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
+		_InitEnv.PROCESS_ENV.PORT || _InitEnv.ENV_MODE === 'production'
+			? 8080
 			: _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
-	port = await _PortHandler.findFreePort.call(
-		void 0,
-		port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
-	)
-	_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 
-	if (_InitEnv.ENV !== 'development') {
-		_InitEnv.PROCESS_ENV.PORT = port
+	if (_InitEnv.ENV_MODE === 'development') {
+		port = await _PortHandler.findFreePort.call(
+			void 0,
+			port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
+		)
+
+		_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 	}
+
+	_InitEnv.PROCESS_ENV.PORT = port
 
 	const app = _express2.default.call(void 0)
 	const server = require('http').createServer(app)

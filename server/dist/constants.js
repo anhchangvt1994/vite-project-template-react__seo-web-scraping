@@ -37,6 +37,8 @@ exports.userDataPath = userDataPath
 
 const resourceExtension = _InitEnv.PROCESS_ENV.IS_SERVER ? 'js' : 'ts'
 exports.resourceExtension = resourceExtension
+const resourceDirectory = _InitEnv.PROCESS_ENV.IS_SERVER ? 'dist' : 'src'
+exports.resourceDirectory = resourceDirectory
 
 const SERVER_LESS = !!_InitEnv.PROCESS_ENV.SERVER_LESS
 exports.SERVER_LESS = SERVER_LESS

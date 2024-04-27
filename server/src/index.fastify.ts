@@ -45,15 +45,17 @@ require('events').EventEmitter.setMaxListeners(200)
 const startServer = async () => {
 	// await cleanResourceWithCondition()
 	let port =
-		ENV !== 'development'
-			? PROCESS_ENV.PORT || getPort('PUPPETEER_SSR_PORT')
+		PROCESS_ENV.PORT || ENV_MODE === 'production'
+			? 8080
 			: getPort('PUPPETEER_SSR_PORT')
-	port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
-	setPort(port, 'PUPPETEER_SSR_PORT')
 
-	if (ENV !== 'development') {
-		PROCESS_ENV.PORT = port
+	if (ENV_MODE === 'development') {
+		port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
+
+		setPort(port, 'PUPPETEER_SSR_PORT')
 	}
+
+	PROCESS_ENV.PORT = port
 
 	const app = fastify()
 

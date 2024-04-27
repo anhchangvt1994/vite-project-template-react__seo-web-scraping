@@ -21,6 +21,7 @@ export const userDataPath = PROCESS_ENV.IS_SERVER
 	: path.resolve(__dirname, './puppeteer-ssr/browsers')
 
 export const resourceExtension = PROCESS_ENV.IS_SERVER ? 'js' : 'ts'
+export const resourceDirectory = PROCESS_ENV.IS_SERVER ? 'dist' : 'src'
 
 export const SERVER_LESS = !!PROCESS_ENV.SERVER_LESS
 

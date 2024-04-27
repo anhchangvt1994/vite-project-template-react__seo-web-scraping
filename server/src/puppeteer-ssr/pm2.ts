@@ -1,7 +1,7 @@
 import chokidar from 'chokidar'
 import path from 'path'
 import pm2 from 'pm2'
-import { resourceExtension } from '../constants'
+import { resourceExtension, resourceDirectory } from '../constants'
 import Console from '../utils/ConsoleHandler'
 import { PROCESS_ENV } from '../utils/InitEnv'
 
@@ -11,8 +11,6 @@ const CLUSTER_INSTANCES =
 		: Number(PROCESS_ENV.CLUSTER_INSTANCES || 2)
 const CLUSTER_KILL_TIMEOUT =
 	PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
-
-const distPath = resourceExtension === 'js' ? 'server/dist' : 'server/src'
 
 // connect to pm2 daemon
 pm2.connect(false, (err) => {
@@ -88,7 +86,7 @@ pm2.connect(false, (err) => {
 			pm2.start(
 				{
 					name: 'puppeteer-ssr',
-					script: `${distPath}/index.${resourceExtension}`,
+					script: `server/${resourceDirectory}/index.${resourceExtension}`,
 					instances: CLUSTER_INSTANCES,
 					exec_mode: CLUSTER_INSTANCES === 1 ? 'fork' : 'cluster',
 					interpreter: './node_modules/.bin/sucrase',
@@ -106,8 +104,10 @@ pm2.connect(false, (err) => {
 
 					const watcher = chokidar.watch(
 						[
-							path.resolve(__dirname, `../**/*.${resourceExtension}`),
-							// path.resolve(__dirname, `../utils/**/*.${resourceExtension}`),
+							path.resolve(
+								__dirname,
+								`../../${resourceDirectory}/**/*.${resourceExtension}`
+							),
 						],
 						{
 							ignored: /$^/,
