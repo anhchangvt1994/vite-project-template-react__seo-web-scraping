@@ -21,38 +21,20 @@ const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
 
 require('events').EventEmitter.setMaxListeners(200)
 
-// spawn('node', ['server/src/utils/GenerateServerInfo.js'], {
-// 	stdio: 'inherit',
-// 	shell: true,
-// })
-
-// const cleanResourceWithCondition = async () => {
-// 	if (ENV_MODE === 'development') {
-// 		// NOTE - Clean Browsers and Pages after start / restart
-// 		const {
-// 			deleteResource,
-// 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
-// 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
-
-// 		return Promise.all([
-// 			deleteResource(browsersPath),
-// 			deleteResource(pagesPath),
-// 		])
-// 	}
-// }
-
 const startServer = async () => {
 	// await cleanResourceWithCondition()
 	let port =
-		ENV !== 'development'
-			? PROCESS_ENV.PORT || getPort('PUPPETEER_SSR_PORT')
+		PROCESS_ENV.PORT || ENV_MODE === 'production'
+			? 8080
 			: getPort('PUPPETEER_SSR_PORT')
-	port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
-	setPort(port, 'PUPPETEER_SSR_PORT')
 
-	if (ENV !== 'development') {
-		PROCESS_ENV.PORT = port
+	if (ENV_MODE === 'development') {
+		port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
+
+		setPort(port, 'PUPPETEER_SSR_PORT')
 	}
+
+	PROCESS_ENV.PORT = port
 
 	const app = express()
 	const server = require('http').createServer(app)
@@ -65,62 +47,64 @@ const startServer = async () => {
 				express.static(path.resolve(__dirname, '../robots.txt'))
 			)
 			.use(function (req, res, next) {
-				const isStatic = detectStaticExtension(req)
-				/**
-				 * NOTE
-				 * Cache-Control max-age is 1 year
-				 * calc by using:
-				 * https://www.inchcalculator.com/convert/month-to-second/
-				 */
-				if (isStatic) {
-					const staticPath = path.resolve(__dirname, `../../dist/${req.url}`)
+				if (!req.url.startsWith('/api')) {
+					const isStatic = detectStaticExtension(req)
+					/**
+					 * NOTE
+					 * Cache-Control max-age is 1 year
+					 * calc by using:
+					 * https://www.inchcalculator.com/convert/month-to-second/
+					 */
+					if (isStatic) {
+						const staticPath = path.resolve(__dirname, `../../dist/${req.url}`)
 
-					try {
-						if (ENV === 'development') {
-							res
-								.status(200)
-								.set('Cache-Control', 'public, max-age=31556952')
-								.sendFile(staticPath)
-						} else {
-							const contentEncoding = (() => {
-								const tmpHeaderAcceptEncoding =
-									req.headers['accept-encoding'] || ''
-								if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
-								else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
-									return 'gzip'
-								return '' as 'br' | 'gzip' | ''
-							})()
-							res.set({
-								'Content-Encoding': contentEncoding,
-							})
-							const body = (() => {
-								const content = fs.readFileSync(staticPath)
-								const tmpBody =
-									contentEncoding === 'br'
-										? brotliCompressSync(content)
-										: contentEncoding === 'gzip'
-										? gzipSync(content)
-										: content
-
-								return tmpBody
-							})()
-
-							const mimeType = serveStatic.mime.lookup(staticPath)
-
-							res
-								.status(200)
-								.set('Cache-Control', 'public, max-age=31556952')
-								.set({
-									'Content-type': mimeType,
+						try {
+							if (ENV === 'development') {
+								res
+									.status(200)
+									.set('Cache-Control', 'public, max-age=31556952')
+									.sendFile(staticPath)
+							} else {
+								const contentEncoding = (() => {
+									const tmpHeaderAcceptEncoding =
+										req.headers['accept-encoding'] || ''
+									if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+									else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
+										return 'gzip'
+									return '' as 'br' | 'gzip' | ''
+								})()
+								res.set({
+									'Content-Encoding': contentEncoding,
 								})
-								.send(body)
+								const body = (() => {
+									const content = fs.readFileSync(staticPath)
+									const tmpBody =
+										contentEncoding === 'br'
+											? brotliCompressSync(content)
+											: contentEncoding === 'gzip'
+											? gzipSync(content)
+											: content
+
+									return tmpBody
+								})()
+
+								const mimeType = serveStatic.mime.lookup(staticPath)
+
+								res
+									.status(200)
+									.set('Cache-Control', 'public, max-age=31556952')
+									.set({
+										'Content-type': mimeType,
+									})
+									.send(body)
+							}
+						} catch {
+							res.status(404).send('File not found!')
 						}
-					} catch {
-						res.status(404).send('File not found!')
+					} else {
+						next()
 					}
-				} else {
-					next()
-				}
+				} else next()
 			})
 	}
 
@@ -131,82 +115,90 @@ const startServer = async () => {
 			next()
 		})
 		.use(function (req, res, next) {
-			const botInfo =
-				req.headers['botinfo'] ||
-				req.headers['botInfo'] ||
-				JSON.stringify(detectBot(req))
+			if (!req.url.startsWith('/api')) {
+				const botInfo =
+					req.headers['botinfo'] ||
+					req.headers['botInfo'] ||
+					JSON.stringify(detectBot(req))
 
-			setCookie(
-				res,
-				`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
+				setCookie(
+					res,
+					`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+				)
+			}
 
 			next()
 		})
 		.use(function (req, res, next) {
-			const localeInfo = (() => {
-				let tmpLocaleInfo =
-					req.headers['localeinfo'] || req.headers['localeInfo']
+			if (!req.url.startsWith('/api')) {
+				const localeInfo = (() => {
+					let tmpLocaleInfo =
+						req.headers['localeinfo'] || req.headers['localeInfo']
 
-				if (tmpLocaleInfo) return JSON.parse(tmpLocaleInfo as string)
+					if (tmpLocaleInfo) return JSON.parse(tmpLocaleInfo as string)
 
-				return detectLocale(req)
-			})()
+					return detectLocale(req)
+				})()
 
-			const enableLocale =
-				ServerConfig.locale.enable &&
-				Boolean(
-					!ServerConfig.locale.routes ||
-						!ServerConfig.locale.routes[req.url as string] ||
-						ServerConfig.locale.routes[req.url as string].enable
-				)
+				const enableLocale =
+					ServerConfig.locale.enable &&
+					Boolean(
+						!ServerConfig.locale.routes ||
+							!ServerConfig.locale.routes[req.url as string] ||
+							ServerConfig.locale.routes[req.url as string].enable
+					)
 
-			setCookie(
-				res,
-				`LocaleInfo=${JSON.stringify(
-					localeInfo
-				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
-
-			if (enableLocale) {
 				setCookie(
 					res,
-					`lang=${
-						localeInfo?.langSelected ?? ServerConfig.locale.defaultLang
-					};Path=/`
+					`LocaleInfo=${JSON.stringify(
+						localeInfo
+					)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 				)
 
-				if (ServerConfig.locale.defaultCountry) {
+				if (enableLocale) {
 					setCookie(
 						res,
-						`country=${
-							localeInfo?.countrySelected ?? ServerConfig.locale.defaultCountry
+						`lang=${
+							localeInfo?.langSelected ?? ServerConfig.locale.defaultLang
 						};Path=/`
 					)
+
+					if (ServerConfig.locale.defaultCountry) {
+						setCookie(
+							res,
+							`country=${
+								localeInfo?.countrySelected ??
+								ServerConfig.locale.defaultCountry
+							};Path=/`
+						)
+					}
 				}
 			}
+
 			next()
 		})
 	if (!ServerConfig.isRemoteCrawler) {
 		app.use(function (req, res, next) {
-			const redirectResult = DetectRedirect(req, res)
+			if (!req.url.startsWith('/api')) {
+				const redirectResult = DetectRedirect(req, res)
 
-			if (redirectResult.status !== 200) {
-				if (req.headers.accept === 'application/json') {
-					req.headers['redirect'] = JSON.stringify(redirectResult)
-				} else {
-					if (redirectResult.path.length > 1)
-						redirectResult.path = redirectResult.path.replace(
-							/\/$|\/(\?)/,
-							'$1'
-						)
-					res.writeHead(redirectResult.status, {
-						Location: `${redirectResult.path}${
-							redirectResult.search ? redirectResult.search : ''
-						}`,
-						'cache-control': 'no-store',
-					})
-					return res.end()
+				if (redirectResult.status !== 200) {
+					if (req.headers.accept === 'application/json') {
+						req.headers['redirect'] = JSON.stringify(redirectResult)
+					} else {
+						if (redirectResult.path.length > 1)
+							redirectResult.path = redirectResult.path.replace(
+								/\/$|\/(\?)/,
+								'$1'
+							)
+						res.writeHead(redirectResult.status, {
+							Location: `${redirectResult.path}${
+								redirectResult.search ? redirectResult.search : ''
+							}`,
+							'cache-control': 'no-store',
+						})
+						return res.end()
+					}
 				}
 			}
 			next()
@@ -214,42 +206,48 @@ const startServer = async () => {
 	}
 	app
 		.use(function (req, res, next) {
-			const environmentInfo = (() => {
-				const tmpEnvironmentInfo =
-					req.headers['environmentinfo'] || req.headers['environmentInfo']
+			if (!req.url.startsWith('/api')) {
+				const environmentInfo = (() => {
+					const tmpEnvironmentInfo =
+						req.headers['environmentinfo'] || req.headers['environmentInfo']
 
-				if (tmpEnvironmentInfo) return tmpEnvironmentInfo
+					if (tmpEnvironmentInfo) return tmpEnvironmentInfo
 
-				return JSON.stringify({
-					ENV,
-					MODE,
-					ENV_MODE,
-				})
-			})()
-			setCookie(
-				res,
-				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
+					return JSON.stringify({
+						ENV,
+						MODE,
+						ENV_MODE,
+					})
+				})()
+				setCookie(
+					res,
+					`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+				)
+			}
 			next()
 		})
 		.use(function (req, res, next) {
-			const deviceInfo =
-				req.headers['deviceinfo'] ||
-				req.headers['deviceInfo'] ||
-				JSON.stringify(detectDevice(req))
+			if (!req.url.startsWith('/api')) {
+				const deviceInfo =
+					req.headers['deviceinfo'] ||
+					req.headers['deviceInfo'] ||
+					JSON.stringify(detectDevice(req))
 
-			setCookie(
-				res,
-				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
+				setCookie(
+					res,
+					`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+				)
+			}
 
 			next()
 		})
+	;(await require('./api').default).init(app)
 	;(await require('./puppeteer-ssr').default).init(app)
 
 	server.listen(port, () => {
 		console.log(`Server started port ${port}. Press Ctrl+C to quit`)
 		process.send?.('ready')
+		process.title = 'web scraping'
 	})
 
 	process.on('SIGINT', async function () {

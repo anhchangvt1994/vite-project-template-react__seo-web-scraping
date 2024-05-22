@@ -3,11 +3,18 @@ import { IStores } from './types'
 export const BrowserStore: IStores['browser'] = {}
 export const HeadersStore: IStores['headers'] = {}
 export const PromiseStore: IStores['promise'] = {}
+export const APICacheStore: IStores['api']['cache'] = new Map()
+export const APIStoreStore: IStores['api']['store'] = new Map()
+export const APIStore: IStores['api'] = {
+	cache: APICacheStore,
+	store: APIStoreStore,
+}
 
 export const store: IStores = {
 	browser: BrowserStore,
 	headers: HeadersStore,
 	promise: PromiseStore,
+	api: APIStore,
 }
 
 export const getStoreList = () => {

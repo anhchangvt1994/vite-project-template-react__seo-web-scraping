@@ -1,4 +1,4 @@
-import WorkerPool from 'workerpool'
+import path from 'path'
 import {
 	BANDWIDTH_LEVEL,
 	BANDWIDTH_LEVEL_LIST,
@@ -10,10 +10,17 @@ import {
 import ServerConfig from '../../server.config'
 import Console from '../../utils/ConsoleHandler'
 import { PROCESS_ENV } from '../../utils/InitEnv'
-import { DISABLE_SSR_CACHE, DURATION_TIMEOUT, MAX_WORKERS } from '../constants'
+import WorkerManager from '../../utils/WorkerManager'
+import { DISABLE_SSR_CACHE, DURATION_TIMEOUT } from '../constants'
 import { ISSRResult } from '../types'
 import CacheManager from './CacheManager'
 import ISRHandler from './ISRHandler'
+
+const workerManager = WorkerManager.init(
+	path.resolve(__dirname + `/OptimizeHtml.worker.${resourceExtension}`),
+	{ minWorkers: 1, maxWorkers: 4 },
+	['compressContent']
+)
 
 const fetchData = async (
 	input: RequestInfo | URL,
@@ -184,25 +191,18 @@ const SSRGenerator = async ({
 				}
 
 				if (result.html && result.status === 200 && DISABLE_SSR_CACHE) {
-					const optimizeHTMLContentPool = WorkerPool.pool(
-						__dirname + `/OptimizeHtml.worker.${resourceExtension}`,
-						{
-							minWorkers: 1,
-							maxWorkers: MAX_WORKERS,
-						}
-					)
+					const freePool = workerManager.getFreePool()
+					const pool = freePool.pool
 					let tmpHTML = result.html
 
 					try {
 						if (POWER_LEVEL === POWER_LEVEL_LIST.THREE)
-							tmpHTML = await optimizeHTMLContentPool.exec('compressContent', [
-								tmpHTML,
-							])
+							tmpHTML = await pool.exec('compressContent', [tmpHTML])
 					} catch (err) {
 						tmpHTML = result.html
 						// Console.error(err)
 					} finally {
-						optimizeHTMLContentPool.terminate()
+						freePool.terminate()
 						result.html = tmpHTML
 					}
 				}

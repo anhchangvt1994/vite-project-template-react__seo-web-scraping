@@ -38,8 +38,8 @@ function _optionalChain(ops) {
 	}
 	return value
 }
-var _workerpool = require('workerpool')
-var _workerpool2 = _interopRequireDefault(_workerpool)
+var _path = require('path')
+var _path2 = _interopRequireDefault(_path)
 
 var _constants = require('../../constants')
 var _serverconfig = require('../../server.config')
@@ -47,6 +47,8 @@ var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _InitEnv = require('../../utils/InitEnv')
+var _WorkerManager = require('../../utils/WorkerManager')
+var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
 
 var _constants3 = require('../constants')
 
@@ -54,6 +56,14 @@ var _BrowserManager = require('./BrowserManager')
 var _BrowserManager2 = _interopRequireDefault(_BrowserManager)
 var _CacheManager = require('./CacheManager')
 var _CacheManager2 = _interopRequireDefault(_CacheManager)
+
+const workerManager = _WorkerManager2.default.init(
+	_path2.default.resolve(
+		__dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`
+	),
+	{ minWorkers: 1, maxWorkers: 4 },
+	['optimizeContent', 'compressContent']
+)
 
 const browserManager = (() => {
 	if (_InitEnv.ENV_MODE === 'development') return undefined
@@ -118,13 +128,13 @@ const fetchData = async (input, init, reqData) => {
 
 const waitResponse = (() => {
 	const firstWaitingDuration =
-		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 150 : 500
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 100 : 500
 	const defaultRequestWaitingDuration =
-		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 150 : 500
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 100 : 500
 	const requestServedFromCacheDuration =
-		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 150 : 250
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 100 : 250
 	const requestFailDuration =
-		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 150 : 250
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 100 : 250
 	const maximumTimeout =
 		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE
 			? 60000
@@ -163,7 +173,8 @@ const waitResponse = (() => {
 						'call',
 						(_6) =>
 							_6(url.split('?')[0], {
-								waitUntil: 'networkidle2',
+								// waitUntil: 'networkidle2',
+								waitUntil: 'load',
 								timeout: 0,
 							}),
 						'access',
@@ -613,41 +624,31 @@ const ISRHandler = async ({ hasCache, url }) => {
 				_serverconfig2.default.crawl.compress) &&
 			enableOptimizeAndCompressIfRemoteCrawlerFail
 
-		let optimizeHTMLContentPool
-		if (enableToOptimize || enableToCompress)
-			optimizeHTMLContentPool = _workerpool2.default.pool(
-				__dirname + `/OptimizeHtml.worker.${_constants.resourceExtension}`,
-				{
-					minWorkers: 2,
-					maxWorkers: _constants3.MAX_WORKERS,
-				}
-			)
+		// let optimizeHTMLContentPool
 
 		let isRaw = false
 
-		if (optimizeHTMLContentPool) {
-			try {
-				if (enableToOptimize)
-					html = await optimizeHTMLContentPool.exec('optimizeContent', [
-						html,
-						true,
-						enableToOptimize,
-					])
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
-				if (enableToCompress)
-					html = await optimizeHTMLContentPool.exec('compressContent', [
-						html,
-						enableToCompress,
-					])
-			} catch (err) {
-				isRaw = true
-				_ConsoleHandler2.default.log('--------------------')
-				_ConsoleHandler2.default.log('ISRHandler line 368:')
-				_ConsoleHandler2.default.log('error url', url.split('?')[0])
-				_ConsoleHandler2.default.error(err)
-			} finally {
-				optimizeHTMLContentPool.terminate()
-			}
+		try {
+			if (enableToOptimize)
+				html = await pool.exec('optimizeContent', [
+					html,
+					true,
+					enableToOptimize,
+				])
+
+			if (enableToCompress)
+				html = await pool.exec('compressContent', [html, enableToCompress])
+		} catch (err) {
+			isRaw = true
+			_ConsoleHandler2.default.log('--------------------')
+			_ConsoleHandler2.default.log('ISRHandler line 368:')
+			_ConsoleHandler2.default.log('error url', url.split('?')[0])
+			_ConsoleHandler2.default.error(err)
+		} finally {
+			freePool.terminate()
 		}
 
 		result = await cacheManager.set({

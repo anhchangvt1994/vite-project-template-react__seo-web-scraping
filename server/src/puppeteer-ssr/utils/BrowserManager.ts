@@ -1,8 +1,6 @@
 import Chromium from '@sparticuz/chromium-min'
 import path from 'path'
-import fs from 'fs'
 import { Browser, Page } from 'puppeteer-core'
-import WorkerPool from 'workerpool'
 import {
 	POWER_LEVEL,
 	POWER_LEVEL_LIST,
@@ -13,6 +11,7 @@ import {
 import ServerConfig from '../../server.config'
 import { getStore, setStore } from '../../store'
 import Console from '../../utils/ConsoleHandler'
+import WorkerManager from '../../utils/WorkerManager'
 import {
 	canUseLinuxChromium,
 	chromiumPath,
@@ -26,18 +25,30 @@ export interface IBrowser {
 	isReady: () => boolean
 }
 
+const workerManager = WorkerManager.init(
+	path.resolve(
+		__dirname,
+		`../../utils/FollowResource.worker/index.${resourceExtension}`
+	),
+	{
+		minWorkers: 1,
+		maxWorkers: 3,
+	},
+	['deleteResource']
+)
+
 export const deleteUserDataDir = async (dir: string) => {
 	if (dir) {
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
+
 		try {
-			await WorkerPool.pool(
-				path.resolve(
-					__dirname,
-					`./FollowResource.worker/index.${resourceExtension}`
-				)
-			)?.exec('deleteResource', [dir])
+			pool.exec('deleteResource', [dir])
 		} catch (err) {
 			Console.log('BrowserManager line 39:')
 			Console.error(err)
+		} finally {
+			freePool.terminate()
 		}
 	}
 } // deleteUserDataDir

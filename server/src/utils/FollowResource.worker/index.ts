@@ -4,9 +4,10 @@ import path from 'path'
 import WorkerPool from 'workerpool'
 
 import { Browser } from 'puppeteer-core'
-import { resourceExtension } from '../../../constants'
-import Console from '../../../utils/ConsoleHandler'
-import { defaultBrowserOptions, puppeteer } from '../../constants'
+import { brotliDecompressSync } from 'zlib'
+import { resourceExtension } from '../../constants'
+import { defaultBrowserOptions, puppeteer } from '../../puppeteer-ssr/constants'
+import Console from '../ConsoleHandler'
 import { deleteResource as deleteResourceWithWorker } from './utils'
 
 type IFileInfo =
@@ -224,9 +225,136 @@ const scanToCleanPages = async (dirPath: string, durationValidToKeep = 1) => {
 	})
 } // scanToCleanPages
 
+const scanToCleanAPIDataCache = async (dirPath: string) => {
+	if (!dirPath) {
+		Console.error('You need to provide dirPath param!')
+		return
+	}
+
+	const apiCacheList = fs.readdirSync(dirPath)
+
+	if (!apiCacheList || !apiCacheList.length) return
+
+	const chunkSize = 50
+
+	const arrPromise: Promise<string>[] = []
+	const curTime = Date.now()
+
+	for (let i = 0; i < apiCacheList.length; i += chunkSize) {
+		arrPromise.push(
+			new Promise(async (resolve) => {
+				let timeout
+				const arrChunked = apiCacheList.slice(i, i + chunkSize)
+				for (const item of arrChunked) {
+					if (item.includes('.fetch')) continue
+
+					const absolutePath = path.join(dirPath, item)
+
+					if (!fs.existsSync(absolutePath)) continue
+					const fileInfo = await getFileInfo(absolutePath)
+
+					if (!fileInfo?.size) continue
+
+					const fileContent = (() => {
+						const tmpContent = fs.readFileSync(absolutePath)
+
+						return JSON.parse(brotliDecompressSync(tmpContent).toString())
+					})()
+
+					const expiredTime = fileContent.cache
+						? fileContent.cache.expiredTime
+						: 60000
+
+					if (
+						curTime - new Date(fileInfo.requestedAt).getTime() >=
+						expiredTime
+					) {
+						if (timeout) clearTimeout(timeout)
+						try {
+							fs.unlink(absolutePath, () => {})
+						} catch (err) {
+							Console.error(err)
+						} finally {
+							timeout = setTimeout(() => {
+								resolve('complete')
+							}, 100)
+						}
+					}
+				}
+
+				timeout = setTimeout(() => {
+					resolve('complete')
+				}, 100)
+			})
+		)
+	}
+
+	await Promise.all(arrPromise)
+
+	return 'complete'
+} // scanToCleanAPIDataCache
+
+const scanToCleanAPIStoreCache = async (dirPath: string) => {
+	if (!dirPath) {
+		Console.error('You need to provide dirPath param!')
+		return
+	}
+
+	const apiCacheList = fs.readdirSync(dirPath)
+
+	if (!apiCacheList || !apiCacheList.length) return
+
+	const chunkSize = 50
+
+	const arrPromise: Promise<string>[] = []
+	const curTime = Date.now()
+
+	for (let i = 0; i < apiCacheList.length; i += chunkSize) {
+		arrPromise.push(
+			new Promise(async (resolve) => {
+				let timeout
+				const arrChunked = apiCacheList.slice(i, i + chunkSize)
+				for (const item of arrChunked) {
+					const absolutePath = path.join(dirPath, item)
+
+					if (!fs.existsSync(absolutePath)) continue
+					const fileInfo = await getFileInfo(absolutePath)
+
+					if (!fileInfo?.size) continue
+
+					if (curTime - new Date(fileInfo.requestedAt).getTime() >= 300000) {
+						try {
+							fs.unlink(absolutePath, () => {})
+						} catch (err) {
+							Console.error(err)
+						} finally {
+							timeout = setTimeout(() => {
+								resolve('complete')
+							}, 100)
+						}
+					}
+				}
+
+				timeout = setTimeout(() => {
+					resolve('complete')
+				}, 100)
+			})
+		)
+	}
+
+	await Promise.all(arrPromise)
+
+	return 'complete'
+} // scanToCleanAPIStoreCache
+
 WorkerPool.worker({
 	checkToCleanFile,
 	scanToCleanBrowsers,
 	scanToCleanPages,
+	scanToCleanAPIDataCache,
+	scanToCleanAPIStoreCache,
 	deleteResource,
+	finish: () => {
+		return 'finish'
+	},
 })

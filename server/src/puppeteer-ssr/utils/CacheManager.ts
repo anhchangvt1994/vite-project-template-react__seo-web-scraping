@@ -1,10 +1,10 @@
 import fs from 'fs'
 import path from 'path'
-import WorkerPool from 'workerpool'
 import { pagesPath, resourceExtension } from '../../constants'
 import ServerConfig from '../../server.config'
 import Console from '../../utils/ConsoleHandler'
 import { PROCESS_ENV } from '../../utils/InitEnv'
+import WorkerManager from '../../utils/WorkerManager'
 import { ISSRResult } from '../types'
 import {
 	ICacheSetParams,
@@ -12,9 +12,14 @@ import {
 	getFileInfo,
 } from './Cache.worker/utils'
 
-const MAX_WORKERS = PROCESS_ENV.MAX_WORKERS
-	? Number(PROCESS_ENV.MAX_WORKERS)
-	: 7
+const workerManager = WorkerManager.init(
+	path.resolve(__dirname, `./Cache.worker/index.${resourceExtension}`),
+	{
+		minWorkers: 1,
+		maxWorkers: 4,
+	},
+	['get', 'set', 'renew', 'remove']
+)
 
 const maintainFile = path.resolve(__dirname, '../../../maintain.html')
 
@@ -38,13 +43,8 @@ const CacheManager = (url: string) => {
 				isInit: true,
 			}
 
-		const pool = WorkerPool.pool(
-			path.resolve(__dirname, `./Cache.worker/index.${resourceExtension}`),
-			{
-				minWorkers: 1,
-				maxWorkers: MAX_WORKERS,
-			}
-		)
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
 		try {
 			const result = await pool.exec('get', [url])
@@ -53,7 +53,7 @@ const CacheManager = (url: string) => {
 			Console.error(err)
 			return
 		} finally {
-			pool.terminate()
+			freePool.terminate()
 		}
 	} // get
 
@@ -110,13 +110,8 @@ const CacheManager = (url: string) => {
 				status: params.html ? 200 : 503,
 			}
 
-		const pool = WorkerPool.pool(
-			path.resolve(__dirname, `./Cache.worker/index.${resourceExtension}`),
-			{
-				minWorkers: 1,
-				maxWorkers: MAX_WORKERS,
-			}
-		)
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
 		try {
 			const result = await pool.exec('set', [params])
@@ -125,18 +120,13 @@ const CacheManager = (url: string) => {
 			Console.error(err)
 			return
 		} finally {
-			pool.terminate()
+			freePool.terminate()
 		}
 	} // set
 
 	const renew = async () => {
-		const pool = WorkerPool.pool(
-			path.resolve(__dirname, `./Cache.worker/index.${resourceExtension}`),
-			{
-				minWorkers: 1,
-				maxWorkers: MAX_WORKERS,
-			}
-		)
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
 		try {
 			const result = await pool.exec('renew', [url])
@@ -145,19 +135,14 @@ const CacheManager = (url: string) => {
 			Console.error(err)
 			return
 		} finally {
-			pool.terminate()
+			freePool.terminate()
 		}
 	} // renew
 
 	const remove = async (url: string) => {
 		if (!enableToCache) return
-		const pool = WorkerPool.pool(
-			path.resolve(__dirname, `./Cache.worker/index.${resourceExtension}`),
-			{
-				minWorkers: 1,
-				maxWorkers: MAX_WORKERS,
-			}
-		)
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
 		try {
 			await pool.exec('remove', [url])
@@ -165,7 +150,7 @@ const CacheManager = (url: string) => {
 			Console.error(err)
 			return
 		} finally {
-			pool.terminate()
+			freePool.terminate()
 		}
 	} // remove
 

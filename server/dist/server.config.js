@@ -14,6 +14,11 @@ const ServerConfig = _ServerConfigHandler.defineServerConfig.call(void 0, {
 		},
 	},
 	crawler: 'https://on-ferret-above.ngrok-free.app',
+	api: {
+		list: {
+			'http://localhost:3000/api': 'XXX',
+		},
+	},
 })
 
 exports.default = ServerConfig

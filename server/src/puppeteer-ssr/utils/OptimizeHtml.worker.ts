@@ -191,4 +191,7 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 workerpool.worker({
 	compressContent,
 	optimizeContent,
+	finish: () => {
+		return 'finish'
+	},
 })

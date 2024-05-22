@@ -35,47 +35,26 @@ var _InitEnv = require('./utils/InitEnv')
 
 require('events').EventEmitter.setMaxListeners(200)
 
-// spawn('node', ['server/src/utils/GenerateServerInfo.js'], {
-// 	stdio: 'inherit',
-// 	shell: true,
-// })
-
-// const cleanResourceWithCondition = async () => {
-// 	if (ENV_MODE === 'development') {
-// 		// NOTE - Clean Browsers and Pages after start / restart
-// 		const {
-// 			deleteResource,
-// 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
-// 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
-
-// 		return Promise.all([
-// 			deleteResource(browsersPath),
-// 			deleteResource(pagesPath),
-// 		])
-// 	}
-// }
-
 const startServer = async () => {
-	// await cleanResourceWithCondition()
 	let port =
-		_InitEnv.ENV !== 'development'
-			? _InitEnv.PROCESS_ENV.PORT ||
-			  _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
+		_InitEnv.PROCESS_ENV.PORT || _InitEnv.ENV_MODE === 'production'
+			? 8080
 			: _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
-	port = await _PortHandler.findFreePort.call(
-		void 0,
-		port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
-	)
-	_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 
-	if (_InitEnv.ENV !== 'development') {
-		_InitEnv.PROCESS_ENV.PORT = port
+	if (_InitEnv.ENV_MODE === 'development') {
+		port = await _PortHandler.findFreePort.call(
+			void 0,
+			port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
+		)
+
+		_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 	}
+
+	_InitEnv.PROCESS_ENV.PORT = port
 
 	const app = require('uWebSockets.js')./*SSL*/ App({
 		key_file_name: 'misc/key.pem',
 		cert_file_name: 'misc/cert.pem',
-		passphrase: '1234',
 	})
 
 	if (
@@ -94,6 +73,7 @@ const startServer = async () => {
 			}
 		})
 	}
+	;(await require('./api/index.uws').default).init(app)
 	;(await require('./puppeteer-ssr/index.uws').default).init(app)
 
 	app.listen(Number(port), (token) => {
@@ -106,6 +86,7 @@ const startServer = async () => {
 				'optionalCall',
 				(_2) => _2('ready'),
 			])
+			process.title = 'web-scraping'
 		} else {
 			console.log(`Failed to listen to port ${port}`)
 		}

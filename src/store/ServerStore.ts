@@ -10,7 +10,7 @@ export interface IBotInfo {
 }
 
 export interface IDeviceInfo {
-	type: string
+	type: 'mobile' | 'tablet' | 'desktop'
 	isMobile: string | boolean
 	os: string
 }

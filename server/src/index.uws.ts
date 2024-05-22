@@ -3,47 +3,27 @@ import fs from 'fs'
 import path from 'path'
 import { findFreePort, getPort, setPort } from '../../config/utils/PortHandler'
 import ServerConfig from './server.config'
-import { ENV, PROCESS_ENV } from './utils/InitEnv'
+import { ENV, ENV_MODE, PROCESS_ENV } from './utils/InitEnv'
 
 require('events').EventEmitter.setMaxListeners(200)
 
-// spawn('node', ['server/src/utils/GenerateServerInfo.js'], {
-// 	stdio: 'inherit',
-// 	shell: true,
-// })
-
-// const cleanResourceWithCondition = async () => {
-// 	if (ENV_MODE === 'development') {
-// 		// NOTE - Clean Browsers and Pages after start / restart
-// 		const {
-// 			deleteResource,
-// 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
-// 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
-
-// 		return Promise.all([
-// 			deleteResource(browsersPath),
-// 			deleteResource(pagesPath),
-// 		])
-// 	}
-// }
-
 const startServer = async () => {
-	// await cleanResourceWithCondition()
 	let port =
-		ENV !== 'development'
-			? PROCESS_ENV.PORT || getPort('PUPPETEER_SSR_PORT')
+		PROCESS_ENV.PORT || ENV_MODE === 'production'
+			? 8080
 			: getPort('PUPPETEER_SSR_PORT')
-	port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
-	setPort(port, 'PUPPETEER_SSR_PORT')
 
-	if (ENV !== 'development') {
-		PROCESS_ENV.PORT = port
+	if (ENV_MODE === 'development') {
+		port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
+
+		setPort(port, 'PUPPETEER_SSR_PORT')
 	}
+
+	PROCESS_ENV.PORT = port
 
 	const app = require('uWebSockets.js')./*SSL*/ App({
 		key_file_name: 'misc/key.pem',
 		cert_file_name: 'misc/cert.pem',
-		passphrase: '1234',
 	})
 
 	if (ServerConfig.crawler && !ServerConfig.isRemoteCrawler) {
@@ -57,12 +37,14 @@ const startServer = async () => {
 			}
 		})
 	}
+	;(await require('./api/index.uws').default).init(app)
 	;(await require('./puppeteer-ssr/index.uws').default).init(app)
 
 	app.listen(Number(port), (token) => {
 		if (token) {
 			console.log(`Server started port ${port}. Press Ctrl+C to quit`)
 			process.send?.('ready')
+			process.title = 'web-scraping'
 		} else {
 			console.log(`Failed to listen to port ${port}`)
 		}

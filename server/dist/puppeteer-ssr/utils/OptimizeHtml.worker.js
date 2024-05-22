@@ -247,4 +247,7 @@ const optimizeContent = (html, isFullOptimize = false) => {
 _workerpool2.default.worker({
 	compressContent,
 	optimizeContent,
+	finish: () => {
+		return 'finish'
+	},
 })

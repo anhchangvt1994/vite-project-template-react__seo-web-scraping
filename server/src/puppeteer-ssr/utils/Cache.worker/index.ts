@@ -228,4 +228,7 @@ WorkerPool.worker({
 	set,
 	renew,
 	remove,
+	finish: () => {
+		return 'finish'
+	},
 })

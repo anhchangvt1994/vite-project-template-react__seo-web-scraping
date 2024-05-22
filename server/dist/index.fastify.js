@@ -67,44 +67,36 @@ const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 
 require('events').EventEmitter.setMaxListeners(200)
 
-// spawn('node', ['server/src/utils/GenerateServerInfo.js'], {
-// 	stdio: 'inherit',
-// 	shell: true,
-// })
-
-// const cleanResourceWithCondition = async () => {
-// 	if (ENV_MODE === 'development') {
-// 		// NOTE - Clean Browsers and Pages after start / restart
-// 		const {
-// 			deleteResource,
-// 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
-// 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
-
-// 		return Promise.all([
-// 			deleteResource(browsersPath),
-// 			deleteResource(pagesPath),
-// 		])
-// 	}
-// }
-
 const startServer = async () => {
 	// await cleanResourceWithCondition()
 	let port =
-		_InitEnv.ENV !== 'development'
-			? _InitEnv.PROCESS_ENV.PORT ||
-			  _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
+		_InitEnv.PROCESS_ENV.PORT || _InitEnv.ENV_MODE === 'production'
+			? 8080
 			: _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
-	port = await _PortHandler.findFreePort.call(
-		void 0,
-		port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
-	)
-	_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 
-	if (_InitEnv.ENV !== 'development') {
-		_InitEnv.PROCESS_ENV.PORT = port
+	if (_InitEnv.ENV_MODE === 'development') {
+		port = await _PortHandler.findFreePort.call(
+			void 0,
+			port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
+		)
+
+		_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 	}
 
+	_InitEnv.PROCESS_ENV.PORT = port
+
 	const app = _fastify2.default.call(void 0)
+
+	// NOTE - Handle parser request POST body
+	app.addContentTypeParser('*', function (request, payload, done) {
+		var data = ''
+		payload.on('data', (chunk) => {
+			data += chunk
+		})
+		payload.on('end', () => {
+			done(null, data)
+		})
+	})
 
 	await app.register(_middie2.default, {
 		hook: 'onRequest', // default
@@ -125,63 +117,75 @@ const startServer = async () => {
 				)
 			)
 			.use(function (req, res, next) {
-				const isStatic = _DetectStaticExtension2.default.call(void 0, req)
-				/**
-				 * NOTE
-				 * Cache-Control max-age is 1 year
-				 * calc by using:
-				 * https://www.inchcalculator.com/convert/month-to-second/
-				 */
+				if (
+					!_optionalChain([
+						req,
+						'access',
+						(_) => _.url,
+						'optionalAccess',
+						(_2) => _2.startsWith,
+						'call',
+						(_3) => _3('/api'),
+					])
+				) {
+					const isStatic = _DetectStaticExtension2.default.call(void 0, req)
+					/**
+					 * NOTE
+					 * Cache-Control max-age is 1 year
+					 * calc by using:
+					 * https://www.inchcalculator.com/convert/month-to-second/
+					 */
 
-				if (isStatic) {
-					const staticPath = _path2.default.resolve(
-						__dirname,
-						`../../dist/${req.url}`
-					)
+					if (isStatic) {
+						const staticPath = _path2.default.resolve(
+							__dirname,
+							`../../dist/${req.url}`
+						)
 
-					if (_InitEnv.ENV === 'development') {
-						res.setHeader('Cache-Control', 'public, max-age=31556952')
-						_SendFile2.default.call(void 0, staticPath, res)
-					} else {
-						try {
-							const contentEncoding = (() => {
-								const tmpHeaderAcceptEncoding =
-									req.headers['accept-encoding'] || ''
-								if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
-								else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
-									return 'gzip'
-								return ''
-							})()
+						if (_InitEnv.ENV === 'development') {
+							res.setHeader('Cache-Control', 'public, max-age=31556952')
+							_SendFile2.default.call(void 0, staticPath, res)
+						} else {
+							try {
+								const contentEncoding = (() => {
+									const tmpHeaderAcceptEncoding =
+										req.headers['accept-encoding'] || ''
+									if (tmpHeaderAcceptEncoding.indexOf('br') !== -1) return 'br'
+									else if (tmpHeaderAcceptEncoding.indexOf('gzip') !== -1)
+										return 'gzip'
+									return ''
+								})()
 
-							const body = (() => {
-								const content = _fs2.default.readFileSync(staticPath)
-								const tmpBody =
-									contentEncoding === 'br'
-										? _zlib.brotliCompressSync.call(void 0, content)
-										: contentEncoding === 'gzip'
-										? _zlib.gzipSync.call(void 0, content)
-										: content
+								const body = (() => {
+									const content = _fs2.default.readFileSync(staticPath)
+									const tmpBody =
+										contentEncoding === 'br'
+											? _zlib.brotliCompressSync.call(void 0, content)
+											: contentEncoding === 'gzip'
+											? _zlib.gzipSync.call(void 0, content)
+											: content
 
-								return tmpBody
-							})()
+									return tmpBody
+								})()
 
-							const mimeType = _servestatic2.default.mime.lookup(staticPath)
+								const mimeType = _servestatic2.default.mime.lookup(staticPath)
 
-							res
-								.writeHead(200, {
-									'cache-control': 'public, max-age=31556952',
-									'content-encoding': contentEncoding,
-									'content-type': mimeType,
-								})
-								.end(body)
-						} catch (err) {
-							res.statusCode = 404
-							res.end('File not found')
+								res
+									.writeHead(200, {
+										'cache-control': 'public, max-age=31556952',
+										'content-encoding': contentEncoding,
+										'content-type': mimeType,
+									})
+									.end(body)
+							} catch (err) {
+								res.statusCode = 404
+								res.end('File not found')
+							}
 						}
+					} else {
+						next()
 					}
-				} else {
-					next()
-				}
+				} else next()
 			})
 	}
 
@@ -192,137 +196,200 @@ const startServer = async () => {
 			next()
 		})
 		.use(function (req, res, next) {
-			const botInfo =
-				req.headers['botinfo'] ||
-				req.headers['botInfo'] ||
-				JSON.stringify(_DetectBot2.default.call(void 0, req))
+			if (
+				!_optionalChain([
+					req,
+					'access',
+					(_4) => _4.url,
+					'optionalAccess',
+					(_5) => _5.startsWith,
+					'call',
+					(_6) => _6('/api'),
+				])
+			) {
+				const botInfo =
+					req.headers['botinfo'] ||
+					req.headers['botInfo'] ||
+					JSON.stringify(_DetectBot2.default.call(void 0, req))
 
-			_CookieHandler.setCookie.call(
-				void 0,
-				res,
-				`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
-
-			next()
-		})
-		.use(function (req, res, next) {
-			const localeInfo = (() => {
-				let tmpLocaleInfo =
-					req.headers['localeinfo'] || req.headers['localeInfo']
-
-				if (tmpLocaleInfo) return JSON.parse(tmpLocaleInfo)
-
-				return _DetectLocale2.default.call(void 0, req)
-			})()
-
-			const enableLocale =
-				_serverconfig2.default.locale.enable &&
-				Boolean(
-					!_serverconfig2.default.locale.routes ||
-						!_serverconfig2.default.locale.routes[req.url] ||
-						_serverconfig2.default.locale.routes[req.url].enable
-				)
-
-			_CookieHandler.setCookie.call(
-				void 0,
-				res,
-				`LocaleInfo=${JSON.stringify(
-					localeInfo
-				)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
-
-			if (enableLocale) {
 				_CookieHandler.setCookie.call(
 					void 0,
 					res,
-					`lang=${_nullishCoalesce(
-						_optionalChain([
-							localeInfo,
-							'optionalAccess',
-							(_) => _.langSelected,
-						]),
-						() => _serverconfig2.default.locale.defaultLang
-					)};Path=/`
+					`BotInfo=${botInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+				)
+			}
+			next()
+		})
+		.use(function (req, res, next) {
+			if (
+				!_optionalChain([
+					req,
+					'access',
+					(_7) => _7.url,
+					'optionalAccess',
+					(_8) => _8.startsWith,
+					'call',
+					(_9) => _9('/api'),
+				])
+			) {
+				const localeInfo = (() => {
+					let tmpLocaleInfo =
+						req.headers['localeinfo'] || req.headers['localeInfo']
+
+					if (tmpLocaleInfo) return JSON.parse(tmpLocaleInfo)
+
+					return _DetectLocale2.default.call(void 0, req)
+				})()
+
+				const enableLocale =
+					_serverconfig2.default.locale.enable &&
+					Boolean(
+						!_serverconfig2.default.locale.routes ||
+							!_serverconfig2.default.locale.routes[req.url] ||
+							_serverconfig2.default.locale.routes[req.url].enable
+					)
+
+				_CookieHandler.setCookie.call(
+					void 0,
+					res,
+					`LocaleInfo=${JSON.stringify(
+						localeInfo
+					)};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
 				)
 
-				if (_serverconfig2.default.locale.defaultCountry) {
+				if (enableLocale) {
 					_CookieHandler.setCookie.call(
 						void 0,
 						res,
-						`country=${_nullishCoalesce(
+						`lang=${_nullishCoalesce(
 							_optionalChain([
 								localeInfo,
 								'optionalAccess',
-								(_2) => _2.countrySelected,
+								(_10) => _10.langSelected,
 							]),
-							() => _serverconfig2.default.locale.defaultCountry
+							() => _serverconfig2.default.locale.defaultLang
 						)};Path=/`
 					)
+
+					if (_serverconfig2.default.locale.defaultCountry) {
+						_CookieHandler.setCookie.call(
+							void 0,
+							res,
+							`country=${_nullishCoalesce(
+								_optionalChain([
+									localeInfo,
+									'optionalAccess',
+									(_11) => _11.countrySelected,
+								]),
+								() => _serverconfig2.default.locale.defaultCountry
+							)};Path=/`
+						)
+					}
 				}
 			}
+
 			next()
 		})
 
 	if (!_serverconfig2.default.isRemoteCrawler) {
 		app.use(function (req, res, next) {
-			const redirectResult = _DetectRedirect2.default.call(void 0, req, res)
+			if (
+				!_optionalChain([
+					req,
+					'access',
+					(_12) => _12.url,
+					'optionalAccess',
+					(_13) => _13.startsWith,
+					'call',
+					(_14) => _14('/api'),
+				])
+			) {
+				const redirectResult = _DetectRedirect2.default.call(void 0, req, res)
 
-			if (redirectResult.status !== 200) {
-				if (req.headers.accept === 'application/json') {
-					req.headers['redirect'] = JSON.stringify(redirectResult)
-				} else {
-					if (redirectResult.path.length > 1)
-						redirectResult.path = redirectResult.path.replace(
-							/\/$|\/(\?)/,
-							'$1'
-						)
-					res.writeHead(redirectResult.status, {
-						Location: `${redirectResult.path}${
-							redirectResult.search ? redirectResult.search : ''
-						}`,
-						'cache-control': 'no-store',
-					})
-					return res.end()
+				if (redirectResult.status !== 200) {
+					if (req.headers.accept === 'application/json') {
+						req.headers['redirect'] = JSON.stringify(redirectResult)
+					} else {
+						if (redirectResult.path.length > 1)
+							redirectResult.path = redirectResult.path.replace(
+								/\/$|\/(\?)/,
+								'$1'
+							)
+						res.writeHead(redirectResult.status, {
+							Location: `${redirectResult.path}${
+								redirectResult.search ? redirectResult.search : ''
+							}`,
+							'cache-control': 'no-store',
+						})
+						return res.end()
+					}
 				}
 			}
+
 			next()
 		})
 	}
 	app
 		.use(function (req, res, next) {
-			const environmentInfo = (() => {
-				const tmpEnvironmentInfo =
-					req.headers['environmentinfo'] || req.headers['environmentInfo']
+			if (
+				!_optionalChain([
+					req,
+					'access',
+					(_15) => _15.url,
+					'optionalAccess',
+					(_16) => _16.startsWith,
+					'call',
+					(_17) => _17('/api'),
+				])
+			) {
+				const environmentInfo = (() => {
+					const tmpEnvironmentInfo =
+						req.headers['environmentinfo'] || req.headers['environmentInfo']
 
-				if (tmpEnvironmentInfo) return tmpEnvironmentInfo
+					if (tmpEnvironmentInfo) return tmpEnvironmentInfo
 
-				return JSON.stringify({
-					ENV: _InitEnv.ENV,
-					MODE: _InitEnv.MODE,
-					ENV_MODE: _InitEnv.ENV_MODE,
-				})
-			})()
-			_CookieHandler.setCookie.call(
-				void 0,
-				res,
-				`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
+					return JSON.stringify({
+						ENV: _InitEnv.ENV,
+						MODE: _InitEnv.MODE,
+						ENV_MODE: _InitEnv.ENV_MODE,
+					})
+				})()
+				_CookieHandler.setCookie.call(
+					void 0,
+					res,
+					`EnvironmentInfo=${environmentInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+				)
+			}
+
 			next()
 		})
 		.use(function (req, res, next) {
-			const deviceInfo =
-				req.headers['deviceinfo'] ||
-				req.headers['deviceInfo'] ||
-				JSON.stringify(_DetectDevice2.default.call(void 0, req))
+			if (
+				!_optionalChain([
+					req,
+					'access',
+					(_18) => _18.url,
+					'optionalAccess',
+					(_19) => _19.startsWith,
+					'call',
+					(_20) => _20('/api'),
+				])
+			) {
+				const deviceInfo =
+					req.headers['deviceinfo'] ||
+					req.headers['deviceInfo'] ||
+					JSON.stringify(_DetectDevice2.default.call(void 0, req))
 
-			_CookieHandler.setCookie.call(
-				void 0,
-				res,
-				`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
-			)
+				_CookieHandler.setCookie.call(
+					void 0,
+					res,
+					`DeviceInfo=${deviceInfo};Max-Age=${COOKIE_EXPIRED_SECOND};Path=/`
+				)
+			}
 
 			next()
 		})
+	;(await require('./api/index.fastify').default).init(app)
 	;(await require('./puppeteer-ssr/index.fastify').default).init(app)
 
 	app.listen(
@@ -334,9 +401,9 @@ const startServer = async () => {
 			_optionalChain([
 				process,
 				'access',
-				(_3) => _3.send,
+				(_21) => _21.send,
 				'optionalCall',
-				(_4) => _4('ready'),
+				(_22) => _22('ready'),
 			])
 		}
 	)

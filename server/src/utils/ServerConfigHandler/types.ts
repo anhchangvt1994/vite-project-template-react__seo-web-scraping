@@ -55,6 +55,17 @@ export interface IServerConfigOptional {
 	}
 	crawler?: string
 	crawlerSecretKey?: string
+
+	api?: {
+		list?: {
+			[key: string]:
+				| string
+				| {
+						secretKey: string
+						headerKeyName?: string
+				  }
+		}
+	}
 }
 
 export interface IServerConfig extends IServerConfigOptional {
@@ -107,6 +118,15 @@ export interface IServerConfig extends IServerConfigOptional {
 			'routes' | 'custom' | 'cache' | 'content'
 		> & {
 			cache: Omit<IServerConfig['crawl']['cache'], 'time'>
+		}
+	}
+
+	api: {
+		list: {
+			[key: string]: {
+				secretKey: string
+				headerKeyName: string
+			}
 		}
 	}
 }

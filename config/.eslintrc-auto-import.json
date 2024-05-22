@@ -3,6 +3,7 @@
     "BotInfo": true,
     "BrowserRouter": true,
     "DeviceInfo": true,
+    "EnvironmentInfo": true,
     "Link": true,
     "LocaleInfo": true,
     "NavLink": true,
@@ -20,6 +21,7 @@
     "createGlobalStyle": true,
     "createRef": true,
     "createRoot": true,
+    "deleteCookie": true,
     "forwardRef": true,
     "generatePath": true,
     "generateSentenceCase": true,
@@ -100,7 +102,9 @@
     "useTitleCase": true,
     "useTransition": true,
     "useUnsignedLetters": true,
-    "EnvironmentInfo": true,
-    "deleteCookie": true
+    "decode": true,
+    "encode": true,
+    "hashCode": true,
+    "ProxyAPI": true
   }
 }

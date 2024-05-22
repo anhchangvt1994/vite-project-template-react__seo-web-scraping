@@ -29,41 +29,41 @@ var _chromiummin2 = _interopRequireDefault(_chromiummin)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 
-var _workerpool = require('workerpool')
-var _workerpool2 = _interopRequireDefault(_workerpool)
-
 var _constants = require('../../constants')
 var _serverconfig = require('../../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _store = require('../../store')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _WorkerManager = require('../../utils/WorkerManager')
+var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
 
 var _constants3 = require('../constants')
 
+const workerManager = _WorkerManager2.default.init(
+	_path2.default.resolve(
+		__dirname,
+		`../../utils/FollowResource.worker/index.${_constants.resourceExtension}`
+	),
+	{
+		minWorkers: 1,
+		maxWorkers: 3,
+	},
+	['deleteResource']
+)
+
 const deleteUserDataDir = async (dir) => {
 	if (dir) {
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
+
 		try {
-			await _optionalChain([
-				_workerpool2.default,
-				'access',
-				(_) => _.pool,
-				'call',
-				(_2) =>
-					_2(
-						_path2.default.resolve(
-							__dirname,
-							`./FollowResource.worker/index.${_constants.resourceExtension}`
-						)
-					),
-				'optionalAccess',
-				(_3) => _3.exec,
-				'call',
-				(_4) => _4('deleteResource', [dir]),
-			])
+			pool.exec('deleteResource', [dir])
 		} catch (err) {
 			_ConsoleHandler2.default.log('BrowserManager line 39:')
 			_ConsoleHandler2.default.error(err)
+		} finally {
+			freePool.terminate()
 		}
 	}
 }
@@ -211,12 +211,12 @@ const BrowserManager = (
 						_optionalChain([
 							safePage,
 							'call',
-							(_5) => _5(),
+							(_) => _(),
 							'optionalAccess',
-							(_6) => _6.once,
+							(_2) => _2.once,
 							'call',
-							(_7) =>
-								_7('close', () => {
+							(_3) =>
+								_3('close', () => {
 									clearTimeout(timeoutCloseTab)
 									resolveCloseTab(null)
 								}),
@@ -277,9 +277,9 @@ const BrowserManager = (
 			const page = await _optionalChain([
 				browser,
 				'optionalAccess',
-				(_8) => _8.newPage,
+				(_4) => _4.newPage,
 				'optionalCall',
-				(_9) => _9(),
+				(_5) => _5(),
 			])
 
 			if (!page) {

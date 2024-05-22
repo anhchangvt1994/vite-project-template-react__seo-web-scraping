@@ -29,6 +29,8 @@ var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _zlib = require('zlib')
+
+var _CacheManager = require('../api/utils/CacheManager')
 var _constants = require('../constants')
 var _serverconfig = require('../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
@@ -39,8 +41,7 @@ var _ConsoleHandler = require('../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _CookieHandler = require('../utils/CookieHandler')
 var _InitEnv = require('../utils/InitEnv')
-var _SendFile = require('../utils/SendFile')
-var _SendFile2 = _interopRequireDefault(_SendFile)
+var _StringHelper = require('../utils/StringHelper')
 var _constants3 = require('./constants')
 var _ForamatUrl = require('./utils/ForamatUrl')
 var _ISRGeneratornext = require('./utils/ISRGenerator.next')
@@ -388,8 +389,93 @@ const puppeteerSSRService = (async () => {
 					const filePath =
 						req.headers['static-html-path'] ||
 						_path2.default.resolve(__dirname, '../../../dist/index.html')
+
+					const apiStoreData = await (async () => {
+						let tmpStoreKey
+						let tmpAPIStore
+
+						tmpStoreKey = _StringHelper.hashCode.call(void 0, req.url)
+
+						tmpAPIStore = await _CacheManager.getStore.call(void 0, tmpStoreKey)
+
+						if (tmpAPIStore) return tmpAPIStore.data
+
+						const cookies = _CookieHandler.getCookieFromResponse.call(
+							void 0,
+							res
+						)
+						const deviceType = _optionalChain([
+							cookies,
+							'optionalAccess',
+							(_17) => _17['DeviceInfo'],
+							'optionalAccess',
+							(_18) => _18['type'],
+						])
+
+						tmpStoreKey = _StringHelper.hashCode.call(
+							void 0,
+							`${req.url}${
+								req.url.includes('?') && deviceType
+									? '&device=' + deviceType
+									: '?device=' + deviceType
+							}`
+						)
+						tmpAPIStore = await _CacheManager.getStore.call(void 0, tmpStoreKey)
+
+						if (tmpAPIStore) return tmpAPIStore.data
+
+						return
+					})()
+
+					const WindowAPIStore = {}
+
+					if (apiStoreData) {
+						if (apiStoreData.length) {
+							for (const cacheKey of apiStoreData) {
+								const apiCache = await _CacheManager.getData.call(
+									void 0,
+									cacheKey
+								)
+								if (
+									!apiCache ||
+									!apiCache.cache ||
+									apiCache.cache.status !== 200
+								)
+									continue
+
+								WindowAPIStore[cacheKey] = apiCache.cache.data
+							}
+						}
+					}
+
+					let html = _fs2.default.readFileSync(filePath, 'utf8') || ''
+
+					html = html.replace(
+						'</head>',
+						`<script>window.API_STORE = ${JSON.stringify(
+							WindowAPIStore
+						)}</script></head>`
+					)
+
+					const body = (() => {
+						if (!enableContentEncoding) return html
+
+						switch (true) {
+							case contentEncoding === 'br':
+								return _zlib.brotliCompressSync.call(void 0, html)
+							case contentEncoding === 'gzip':
+								return _zlib.gzipSync.call(void 0, html)
+							default:
+								return html
+						}
+					})()
+
+					if (enableContentEncoding) {
+						res.raw.setHeader('Content-Encoding', contentEncoding)
+					}
+
 					res.raw.setHeader('Cache-Control', 'no-store')
-					return _SendFile2.default.call(void 0, filePath, res.raw)
+					res.status(200).send(body)
 				}
 			}
 		)

@@ -14,4 +14,24 @@ export interface IStores {
 	promise: {
 		executablePath?: Promise<string>
 	}
+	api: {
+		cache: Map<
+			string,
+			{
+				fetch: () => Promise<any>
+				controller?: AbortController
+				destroy: NodeJS.Timeout
+				updateAt: number
+				createAt: number
+			}
+		>
+		store: Map<
+			string,
+			{
+				list: string[]
+				destroy: NodeJS.Timeout
+				updateAt: number
+			}
+		>
+	}
 }
