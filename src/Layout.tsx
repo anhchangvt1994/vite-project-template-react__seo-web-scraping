@@ -3,6 +3,8 @@ import LoadingBoundary from 'utils/LoadingBoundary'
 import LoadingPageComponent from 'components/LoadingPageComponent'
 import ErrorLoadingPageComponent from 'components/ErrorPageComponent'
 import { useUserInfo } from 'store/UserInfoContext'
+import { getAPIStore } from 'store/APIStore'
+import { ProxyAPIExample_v1 } from 'utils/ProxyAPIHelper/utils/EndpointGenerator'
 
 const MainContainer = styled.div`
 	max-width: 1280px;
@@ -19,7 +21,6 @@ const Header = styled.header`
 `
 
 function Layout() {
-	const location = useLocation()
 	const route = useRoute()
 	const { userState, setUserState } = useUserInfo()
 	const { localeState } = useLocaleInfo()
@@ -42,8 +43,66 @@ function Layout() {
 		route.handle.reProtect?.()
 	}
 
+	const [infoState, setInfoState] = useState<string>(
+		JSON.stringify(getAPIStore('/users'))
+	)
+	const [userInfoState, setUserInfoState] = useState<string>(
+		JSON.stringify(getAPIStore('/users/1'))
+	)
+
+	useEffect(() => {
+		fetch(
+			ProxyAPIExample_v1.get(`/users?test=1&user=2`, {
+				expiredTime: 10000,
+				cacheKey: `/users`,
+				enableStore: true,
+				storeInDevice: DeviceInfo.type,
+				relativeCacheKey: ['/users/1'],
+			}),
+			{
+				method: 'GET',
+				headers: new Headers({
+					Accept: 'application/json',
+					Author: 'admin',
+				}),
+				// body: JSON.stringify({ test: 1, user: 2 }),
+			}
+		).then(async (res) => {
+			const text = await res.text()
+			setInfoState(text)
+		})
+
+		fetch(
+			ProxyAPIExample_v1.get(`/users/1`, {
+				expiredTime: 10000,
+				renewTime: 10000,
+				cacheKey: `/users/1`,
+				enableStore: true,
+				storeInDevice: DeviceInfo.type,
+			}),
+			{
+				method: 'GET',
+				headers: new Headers({
+					Accept: 'application/json',
+					Author: 'admin',
+				}),
+				// body: JSON.stringify({ test: 1, user: 2 }),
+			}
+		).then(async (res) => {
+			const text = await res.text()
+			setUserInfoState(text)
+		})
+	}, [])
+
 	return (
 		<div className="layout">
+			<p style={{ marginBottom: '16px' }}>
+				<code>{infoState}</code>
+			</p>
+			<p>
+				<code>{userInfoState}</code>
+			</p>
+
 			<MainContainer>
 				<Header>
 					<div>

@@ -1,5 +1,5 @@
+import path from 'path'
 import { Page } from 'puppeteer-core'
-import WorkerPool from 'workerpool'
 import {
 	BANDWIDTH_LEVEL,
 	BANDWIDTH_LEVEL_LIST,
@@ -11,16 +11,22 @@ import {
 import ServerConfig from '../../server.config'
 import Console from '../../utils/ConsoleHandler'
 import { ENV_MODE } from '../../utils/InitEnv'
+import WorkerManager from '../../utils/WorkerManager'
 import {
 	CACHEABLE_STATUS_CODE,
 	DURATION_TIMEOUT,
-	MAX_WORKERS,
 	regexNotFoundPageID,
 	regexQueryStringSpecialInfo,
 } from '../constants'
 import { ISSRResult } from '../types'
 import BrowserManager, { IBrowser } from './BrowserManager'
 import CacheManager from './CacheManager'
+
+const workerManager = WorkerManager.init(
+	path.resolve(__dirname + `/OptimizeHtml.worker.${resourceExtension}`),
+	{ minWorkers: 1, maxWorkers: 4 },
+	['optimizeContent', 'compressContent']
+)
 
 const browserManager = (() => {
 	if (ENV_MODE === 'development') return undefined as unknown as IBrowser
@@ -90,13 +96,13 @@ const fetchData = async (
 
 const waitResponse = (() => {
 	const firstWaitingDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 150 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 100 : 500
 	const defaultRequestWaitingDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 150 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 100 : 500
 	const requestServedFromCacheDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 150 : 250
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 100 : 250
 	const requestFailDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 150 : 250
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 100 : 250
 	const maximumTimeout =
 		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 60000 : 60000
 
@@ -117,7 +123,8 @@ const waitResponse = (() => {
 				const result = await new Promise<any>((resolveAfterPageLoad) => {
 					safePage()
 						?.goto(url.split('?')[0], {
-							waitUntil: 'networkidle2',
+							// waitUntil: 'networkidle2',
+							waitUntil: 'load',
 							timeout: 0,
 						})
 						.then((res) => {
@@ -368,41 +375,31 @@ const ISRHandler = async ({ hasCache, url }: IISRHandlerParam) => {
 				ServerConfig.crawl.compress) &&
 			enableOptimizeAndCompressIfRemoteCrawlerFail
 
-		let optimizeHTMLContentPool
-		if (enableToOptimize || enableToCompress)
-			optimizeHTMLContentPool = WorkerPool.pool(
-				__dirname + `/OptimizeHtml.worker.${resourceExtension}`,
-				{
-					minWorkers: 2,
-					maxWorkers: MAX_WORKERS,
-				}
-			)
+		// let optimizeHTMLContentPool
 
 		let isRaw = false
 
-		if (optimizeHTMLContentPool) {
-			try {
-				if (enableToOptimize)
-					html = await optimizeHTMLContentPool.exec('optimizeContent', [
-						html,
-						true,
-						enableToOptimize,
-					])
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
-				if (enableToCompress)
-					html = await optimizeHTMLContentPool.exec('compressContent', [
-						html,
-						enableToCompress,
-					])
-			} catch (err) {
-				isRaw = true
-				Console.log('--------------------')
-				Console.log('ISRHandler line 368:')
-				Console.log('error url', url.split('?')[0])
-				Console.error(err)
-			} finally {
-				optimizeHTMLContentPool.terminate()
-			}
+		try {
+			if (enableToOptimize)
+				html = await pool.exec('optimizeContent', [
+					html,
+					true,
+					enableToOptimize,
+				])
+
+			if (enableToCompress)
+				html = await pool.exec('compressContent', [html, enableToCompress])
+		} catch (err) {
+			isRaw = true
+			Console.log('--------------------')
+			Console.log('ISRHandler line 368:')
+			Console.log('error url', url.split('?')[0])
+			Console.error(err)
+		} finally {
+			freePool.terminate()
 		}
 
 		result = await cacheManager.set({

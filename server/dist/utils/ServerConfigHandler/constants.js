@@ -19,5 +19,8 @@ const defaultServerConfig = {
 		optimize: true,
 		routes: {},
 	},
+	api: {
+		list: {},
+	},
 }
 exports.defaultServerConfig = defaultServerConfig

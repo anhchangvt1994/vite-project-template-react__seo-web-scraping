@@ -28,20 +28,28 @@ var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
-var _workerpool = require('workerpool')
-var _workerpool2 = _interopRequireDefault(_workerpool)
 var _constants = require('../../constants')
 var _serverconfig = require('../../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-var _InitEnv = require('../../utils/InitEnv')
+
+var _WorkerManager = require('../../utils/WorkerManager')
+var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
 
 var _utils = require('./Cache.worker/utils')
 
-const MAX_WORKERS = _InitEnv.PROCESS_ENV.MAX_WORKERS
-	? Number(_InitEnv.PROCESS_ENV.MAX_WORKERS)
-	: 7
+const workerManager = _WorkerManager2.default.init(
+	_path2.default.resolve(
+		__dirname,
+		`./Cache.worker/index.${_constants.resourceExtension}`
+	),
+	{
+		minWorkers: 1,
+		maxWorkers: 4,
+	},
+	['get', 'set', 'renew', 'remove']
+)
 
 const maintainFile = _path2.default.resolve(__dirname, '../../../maintain.html')
 
@@ -85,16 +93,8 @@ const CacheManager = (url) => {
 				isInit: true,
 			}
 
-		const pool = _workerpool2.default.pool(
-			_path2.default.resolve(
-				__dirname,
-				`./Cache.worker/index.${_constants.resourceExtension}`
-			),
-			{
-				minWorkers: 1,
-				maxWorkers: MAX_WORKERS,
-			}
-		)
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
 		try {
 			const result = await pool.exec('get', [url])
@@ -103,7 +103,7 @@ const CacheManager = (url) => {
 			_ConsoleHandler2.default.error(err)
 			return
 		} finally {
-			pool.terminate()
+			freePool.terminate()
 		}
 	} // get
 
@@ -160,16 +160,8 @@ const CacheManager = (url) => {
 				status: params.html ? 200 : 503,
 			}
 
-		const pool = _workerpool2.default.pool(
-			_path2.default.resolve(
-				__dirname,
-				`./Cache.worker/index.${_constants.resourceExtension}`
-			),
-			{
-				minWorkers: 1,
-				maxWorkers: MAX_WORKERS,
-			}
-		)
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
 		try {
 			const result = await pool.exec('set', [params])
@@ -178,21 +170,13 @@ const CacheManager = (url) => {
 			_ConsoleHandler2.default.error(err)
 			return
 		} finally {
-			pool.terminate()
+			freePool.terminate()
 		}
 	} // set
 
 	const renew = async () => {
-		const pool = _workerpool2.default.pool(
-			_path2.default.resolve(
-				__dirname,
-				`./Cache.worker/index.${_constants.resourceExtension}`
-			),
-			{
-				minWorkers: 1,
-				maxWorkers: MAX_WORKERS,
-			}
-		)
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
 		try {
 			const result = await pool.exec('renew', [url])
@@ -201,22 +185,14 @@ const CacheManager = (url) => {
 			_ConsoleHandler2.default.error(err)
 			return
 		} finally {
-			pool.terminate()
+			freePool.terminate()
 		}
 	} // renew
 
 	const remove = async (url) => {
 		if (!enableToCache) return
-		const pool = _workerpool2.default.pool(
-			_path2.default.resolve(
-				__dirname,
-				`./Cache.worker/index.${_constants.resourceExtension}`
-			),
-			{
-				minWorkers: 1,
-				maxWorkers: MAX_WORKERS,
-			}
-		)
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
 		try {
 			await pool.exec('remove', [url])
@@ -224,7 +200,7 @@ const CacheManager = (url) => {
 			_ConsoleHandler2.default.error(err)
 			return
 		} finally {
-			pool.terminate()
+			freePool.terminate()
 		}
 	} // remove
 

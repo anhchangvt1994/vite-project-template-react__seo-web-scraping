@@ -2,6 +2,10 @@ import { Express } from 'express'
 import fs from 'fs'
 import path from 'path'
 import { brotliCompressSync, brotliDecompressSync, gzipSync } from 'zlib'
+import {
+	getData as getDataCache,
+	getStore as getStoreCache,
+} from '../api/utils/CacheManager'
 import { SERVER_LESS } from '../constants'
 import ServerConfig from '../server.config'
 import { IBotInfo } from '../types'
@@ -9,6 +13,7 @@ import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
 import { getCookieFromResponse, setCookie } from '../utils/CookieHandler'
 import { ENV_MODE } from '../utils/InitEnv'
+import { hashCode } from '../utils/StringHelper'
 import { CACHEABLE_STATUS_CODE } from './constants'
 import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl'
 import ISRGenerator from './utils/ISRGenerator.next'
@@ -281,13 +286,82 @@ const puppeteerSSRService = (async () => {
 					(req.headers['static-html-path'] as string) ||
 					path.resolve(__dirname, '../../../dist/index.html')
 
+				const apiStoreData = await (async () => {
+					let tmpStoreKey
+					let tmpAPIStore
+
+					tmpStoreKey = hashCode(req.url)
+
+					tmpAPIStore = await getStoreCache(tmpStoreKey)
+
+					if (tmpAPIStore) return tmpAPIStore.data
+
+					const cookies = getCookieFromResponse(res)
+					const deviceType = cookies?.['DeviceInfo']?.['type']
+
+					tmpStoreKey = hashCode(
+						`${req.url}${
+							req.url.includes('?') && deviceType
+								? '&device=' + deviceType
+								: '?device=' + deviceType
+						}`
+					)
+					tmpAPIStore = await getStoreCache(tmpStoreKey)
+
+					if (tmpAPIStore) return tmpAPIStore.data
+
+					return
+				})()
+
+				const WindowAPIStore = {}
+
+				if (apiStoreData) {
+					if (apiStoreData.length) {
+						for (const cacheKey of apiStoreData) {
+							const apiCache = await getDataCache(cacheKey)
+							if (!apiCache || !apiCache.cache || apiCache.cache.status !== 200)
+								continue
+
+							WindowAPIStore[cacheKey] = apiCache.cache.data
+						}
+					}
+				}
+
+				let html = fs.readFileSync(filePath, 'utf8') || ''
+
+				html = html.replace(
+					'</head>',
+					`<script>window.API_STORE = ${JSON.stringify(
+						WindowAPIStore
+					)}</script></head>`
+				)
+
+				const body = (() => {
+					if (!enableContentEncoding) return html
+
+					switch (true) {
+						case contentEncoding === 'br':
+							return brotliCompressSync(html)
+						case contentEncoding === 'gzip':
+							return gzipSync(html)
+						default:
+							return html
+					}
+				})()
+
+				if (enableContentEncoding) {
+					res.set({
+						'Content-Encoding': contentEncoding,
+					})
+				}
+
 				res
 					.set({
 						// 'Cache-Control': 'public, max-age: 31556952',
 						'Cache-Control': 'no-store',
 					})
 					.status(200)
-					.sendFile(filePath, { etag: false, lastModified: false }) // Serve prerendered page as response.
+					.send(body)
 			}
 		})
 

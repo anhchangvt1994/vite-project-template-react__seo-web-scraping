@@ -11,6 +11,24 @@ export const pagesPath = PROCESS_ENV.IS_SERVER
 	  })()
 	: path.resolve(__dirname, './puppeteer-ssr/utils/Cache.worker/pages')
 
+export const dataPath = PROCESS_ENV.IS_SERVER
+	? (() => {
+			const tmpPath = '/tmp'
+			if (fs.existsSync(tmpPath)) return tmpPath + '/data'
+
+			return path.resolve(__dirname, './api/utils/CacheManager/data')
+	  })()
+	: path.resolve(__dirname, './api/utils/CacheManager/data')
+
+export const storePath = PROCESS_ENV.IS_SERVER
+	? (() => {
+			const tmpPath = '/tmp'
+			if (fs.existsSync(tmpPath)) return tmpPath + '/store'
+
+			return path.resolve(__dirname, './api/utils/CacheManager/store')
+	  })()
+	: path.resolve(__dirname, './api/utils/CacheManager/store')
+
 export const userDataPath = PROCESS_ENV.IS_SERVER
 	? (() => {
 			const tmpPath = '/tmp'

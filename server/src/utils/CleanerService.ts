@@ -1,17 +1,28 @@
 import Chromium from '@sparticuz/chromium-min'
 import path from 'path'
-import WorkerPool from 'workerpool'
 import {
 	SERVER_LESS,
+	dataPath,
 	pagesPath,
 	resourceExtension,
+	storePath,
 	userDataPath,
 } from '../constants'
 import { canUseLinuxChromium, chromiumPath } from '../puppeteer-ssr/constants'
+import ServerConfig from '../server.config'
 import { getStore, setStore } from '../store'
 import Console from './ConsoleHandler'
 import { PROCESS_ENV } from './InitEnv'
-import ServerConfig from '../server.config'
+import WorkerManager from './WorkerManager'
+
+const workerManager = WorkerManager.init(
+	path.resolve(__dirname, `./FollowResource.worker/index.${resourceExtension}`),
+	{
+		minWorkers: 1,
+		maxWorkers: 4,
+	},
+	['scanToCleanBrowsers', 'scanToCleanPages', 'scanToCleanAPIDataCache']
+)
 
 const CleanerService = async () => {
 	// NOTE - Browsers Cleaner
@@ -39,12 +50,8 @@ const CleanerService = async () => {
 				executablePath = await promiseStore.executablePath
 			}
 
-			const pool = WorkerPool.pool(
-				path.resolve(
-					__dirname,
-					`../puppeteer-ssr/utils/FollowResource.worker/index.${resourceExtension}`
-				)
-			)
+			const freePool = workerManager.getFreePool()
+			const pool = freePool.pool
 
 			browserStore.executablePath = executablePath
 
@@ -57,7 +64,7 @@ const CleanerService = async () => {
 			} catch (err) {
 				Console.error(err)
 			} finally {
-				pool.terminate()
+				freePool.terminate()
 
 				if (!SERVER_LESS)
 					setTimeout(() => {
@@ -75,19 +82,15 @@ const CleanerService = async () => {
 	const cleanPages = async (
 		durationValidToKeep = PROCESS_ENV.RESET_RESOURCE ? 0 : 1
 	) => {
-		const pool = WorkerPool.pool(
-			path.resolve(
-				__dirname,
-				`../puppeteer-ssr/utils/FollowResource.worker/index.${resourceExtension}`
-			)
-		)
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
 
 		try {
 			await pool.exec('scanToCleanPages', [pagesPath, durationValidToKeep])
 		} catch (err) {
 			Console.error(err)
 		} finally {
-			pool.terminate()
+			freePool.terminate()
 
 			if (!SERVER_LESS) {
 				const cacheTimeHour = ServerConfig.crawl.cache.time / 3600
@@ -101,6 +104,52 @@ const CleanerService = async () => {
 
 	if (process.env.MODE === 'development') cleanPages(0)
 	else cleanPages(360)
+
+	// NOTE - API Data Cache Cleaner
+	const cleanAPIDataCache = async () => {
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
+
+		try {
+			await pool.exec('scanToCleanAPIDataCache', [dataPath])
+		} catch (err) {
+			Console.error(err)
+		} finally {
+			freePool.terminate()
+
+			if (!SERVER_LESS) {
+				setTimeout(() => {
+					cleanAPIDataCache()
+				}, 10000)
+			}
+		}
+	}
+
+	if (process.env.MODE === 'development') cleanAPIDataCache()
+	else cleanAPIDataCache()
+
+	// NOTE - API Store Cache Cleaner
+	const cleanAPIStoreCache = async () => {
+		const freePool = workerManager.getFreePool()
+		const pool = freePool.pool
+
+		try {
+			await pool.exec('scanToCleanAPIStoreCache', [storePath])
+		} catch (err) {
+			Console.error(err)
+		} finally {
+			freePool.terminate()
+
+			if (!SERVER_LESS) {
+				setTimeout(() => {
+					cleanAPIStoreCache()
+				}, 10000)
+			}
+		}
+	}
+
+	if (process.env.MODE === 'development') cleanAPIStoreCache()
+	else cleanAPIStoreCache()
 }
 
 if (!SERVER_LESS) CleanerService()

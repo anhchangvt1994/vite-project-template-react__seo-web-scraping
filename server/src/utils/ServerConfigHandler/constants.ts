@@ -18,4 +18,7 @@ export const defaultServerConfig: IServerConfig = {
 		optimize: true,
 		routes: {},
 	},
+	api: {
+		list: {},
+	},
 }

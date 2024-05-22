@@ -1,6 +1,6 @@
 import fs from 'fs-extra'
 import WorkerPool from 'workerpool'
-import Console from '../../../utils/ConsoleHandler'
+import Console from '../ConsoleHandler'
 
 type TWorkerPool = ReturnType<typeof WorkerPool & ((...args: any[]) => any)>
 

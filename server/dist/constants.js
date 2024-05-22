@@ -25,6 +25,26 @@ const pagesPath = _InitEnv.PROCESS_ENV.IS_SERVER
 	  )
 exports.pagesPath = pagesPath
 
+const dataPath = _InitEnv.PROCESS_ENV.IS_SERVER
+	? (() => {
+			const tmpPath = '/tmp'
+			if (_fs2.default.existsSync(tmpPath)) return tmpPath + '/data'
+
+			return _path2.default.resolve(__dirname, './api/utils/CacheManager/data')
+	  })()
+	: _path2.default.resolve(__dirname, './api/utils/CacheManager/data')
+exports.dataPath = dataPath
+
+const storePath = _InitEnv.PROCESS_ENV.IS_SERVER
+	? (() => {
+			const tmpPath = '/tmp'
+			if (_fs2.default.existsSync(tmpPath)) return tmpPath + '/store'
+
+			return _path2.default.resolve(__dirname, './api/utils/CacheManager/store')
+	  })()
+	: _path2.default.resolve(__dirname, './api/utils/CacheManager/store')
+exports.storePath = storePath
+
 const userDataPath = _InitEnv.PROCESS_ENV.IS_SERVER
 	? (() => {
 			const tmpPath = '/tmp'

@@ -30,6 +30,8 @@ var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 
 var _zlib = require('zlib')
+
+var _CacheManager = require('../api/utils/CacheManager')
 var _constants = require('../constants')
 var _DetectBot = require('../middlewares/uws/DetectBot')
 var _DetectBot2 = _interopRequireDefault(_DetectBot)
@@ -49,6 +51,7 @@ var _CleanerService2 = _interopRequireDefault(_CleanerService)
 var _ConsoleHandler = require('../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _InitEnv = require('../utils/InitEnv')
+var _StringHelper = require('../utils/StringHelper')
 var _constants3 = require('./constants')
 var _ForamatUrluws = require('./utils/ForamatUrl.uws')
 var _ISRGeneratornext = require('./utils/ISRGenerator.next')
@@ -477,46 +480,150 @@ const puppeteerSSRService = (async () => {
 						true
 					)
 				} else {
-					const filePath =
-						req.getHeader('static-html-path') ||
-						_path2.default.resolve(__dirname, '../../../dist/index.html')
-
+					const reqHeaderAccept = req.getHeader('accept')
+					res.onAborted(() => {
+						res.writableEnded = true
+						_ConsoleHandler2.default.log('Request aborted')
+					})
 					try {
-						const body = _fs2.default.readFileSync(filePath)
-						res
-							.writeStatus('200')
-							.writeHeader(
-								'Content-Type',
-								req.getHeader('accept') === 'application/json'
-									? 'application/json'
-									: 'text/html; charset=utf-8'
-							)
-						res = _setCookie(res)
-						res
-							.writeHeader('Cache-Control', 'no-store')
-							.writeHeader('etag', 'false')
-							.writeHeader('lastModified', 'false')
+						const filePath =
+							req.getHeader('static-html-path') ||
+							_path2.default.resolve(__dirname, '../../../dist/index.html')
+						const url = (() => {
+							const urlWithoutQuery = req.getUrl()
+							const query = req.getQuery()
+							const tmpUrl = `${urlWithoutQuery}${query ? '?' + query : ''}`
 
-						// NOTE - Setup cookie information
-						if (res.cookies.lang)
-							res.writeHeader('set-cookie', `lang=${res.cookies.lang};Path=/`)
-						if (res.cookies.country)
+							return tmpUrl
+						})()
+						const apiStoreData = await (async () => {
+							let tmpStoreKey
+							let tmpAPIStore
+
+							tmpStoreKey = _StringHelper.hashCode.call(void 0, url)
+
+							tmpAPIStore = await _CacheManager.getStore.call(
+								void 0,
+								tmpStoreKey
+							)
+
+							if (tmpAPIStore) return tmpAPIStore.data
+
+							const deviceType = _optionalChain([
+								res,
+								'access',
+								(_9) => _9.cookies,
+								'optionalAccess',
+								(_10) => _10.deviceInfo,
+								'optionalAccess',
+								(_11) => _11.type,
+							])
+
+							tmpStoreKey = _StringHelper.hashCode.call(
+								void 0,
+								`${url}${
+									url.includes('?') && deviceType
+										? '&device=' + deviceType
+										: '?device=' + deviceType
+								}`
+							)
+
+							tmpAPIStore = await _CacheManager.getStore.call(
+								void 0,
+								tmpStoreKey
+							)
+
+							if (tmpAPIStore) return tmpAPIStore.data
+
+							return
+						})()
+
+						const WindowAPIStore = {}
+
+						if (apiStoreData) {
+							if (apiStoreData.length) {
+								for (const cacheKey of apiStoreData) {
+									const apiCache = await _CacheManager.getData.call(
+										void 0,
+										cacheKey
+									)
+									if (
+										!apiCache ||
+										!apiCache.cache ||
+										apiCache.cache.status !== 200
+									)
+										continue
+
+									WindowAPIStore[cacheKey] = apiCache.cache.data
+								}
+							}
+						}
+
+						let html = _fs2.default.readFileSync(filePath, 'utf8') || ''
+
+						html = html.replace(
+							'</head>',
+							`<script>window.API_STORE = ${JSON.stringify(
+								WindowAPIStore
+							)}</script></head>`
+						)
+
+						const body = (() => {
+							if (!enableContentEncoding) return html
+
+							switch (true) {
+								case contentEncoding === 'br':
+									return _zlib.brotliCompressSync.call(void 0, html)
+								case contentEncoding === 'gzip':
+									return _zlib.gzipSync.call(void 0, html)
+								default:
+									return html
+							}
+						})()
+
+						res.cork(() => {
+							res.writeStatus('200')
+
+							if (enableContentEncoding) {
+								res.writeHeader('Content-Encoding', contentEncoding)
+							}
+
 							res.writeHeader(
-								'set-cookie',
-								`country=${res.cookies.country};Path=/`
-							)
-
-						res.end(body, true)
-					} catch (e2) {
-						res
-							.writeStatus('404')
-							.writeHeader(
 								'Content-Type',
-								req.getHeader('accept') === 'application/json'
+								reqHeaderAccept === 'application/json'
 									? 'application/json'
 									: 'text/html; charset=utf-8'
 							)
-							.end('File not found!', true)
+							res = _setCookie(res)
+							res
+								.writeHeader('Cache-Control', 'no-store')
+								.writeHeader('etag', 'false')
+								.writeHeader('lastModified', 'false')
+
+							// NOTE - Setup cookie information
+							if (res.cookies.lang)
+								res.writeHeader('set-cookie', `lang=${res.cookies.lang};Path=/`)
+							if (res.cookies.country)
+								res.writeHeader(
+									'set-cookie',
+									`country=${res.cookies.country};Path=/`
+								)
+
+							res.end(body, true)
+						})
+					} catch (err) {
+						console.log(err)
+						res.cork(() => {
+							res
+								.writeStatus('404')
+								.writeHeader(
+									'Content-Type',
+									reqHeaderAccept === 'application/json'
+										? 'application/json'
+										: 'text/html; charset=utf-8'
+								)
+								.end('File not found!', true)
+						})
 					}
 				}
 			}

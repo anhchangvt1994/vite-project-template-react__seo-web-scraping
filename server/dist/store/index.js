@@ -7,11 +7,21 @@ const HeadersStore = {}
 exports.HeadersStore = HeadersStore
 const PromiseStore = {}
 exports.PromiseStore = PromiseStore
+const APICacheStore = new Map()
+exports.APICacheStore = APICacheStore
+const APIStoreStore = new Map()
+exports.APIStoreStore = APIStoreStore
+const APIStore = {
+	cache: exports.APICacheStore,
+	store: exports.APIStoreStore,
+}
+exports.APIStore = APIStore
 
 const store = {
 	browser: exports.BrowserStore,
 	headers: exports.HeadersStore,
 	promise: exports.PromiseStore,
+	api: exports.APIStore,
 }
 exports.store = store
 

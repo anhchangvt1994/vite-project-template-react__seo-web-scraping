@@ -7,28 +7,7 @@ import { ENV, ENV_MODE, PROCESS_ENV } from './utils/InitEnv'
 
 require('events').EventEmitter.setMaxListeners(200)
 
-// spawn('node', ['server/src/utils/GenerateServerInfo.js'], {
-// 	stdio: 'inherit',
-// 	shell: true,
-// })
-
-// const cleanResourceWithCondition = async () => {
-// 	if (ENV_MODE === 'development') {
-// 		// NOTE - Clean Browsers and Pages after start / restart
-// 		const {
-// 			deleteResource,
-// 		} = require(`./puppeteer-ssr/utils/FollowResource.worker/utils.${resourceExtension}`)
-// 		const browsersPath = path.resolve(__dirname, './puppeteer-ssr/browsers')
-
-// 		return Promise.all([
-// 			deleteResource(browsersPath),
-// 			deleteResource(pagesPath),
-// 		])
-// 	}
-// }
-
 const startServer = async () => {
-	// await cleanResourceWithCondition()
 	let port =
 		PROCESS_ENV.PORT || ENV_MODE === 'production'
 			? 8080
@@ -58,12 +37,14 @@ const startServer = async () => {
 			}
 		})
 	}
+	;(await require('./api/index.uws').default).init(app)
 	;(await require('./puppeteer-ssr/index.uws').default).init(app)
 
 	app.listen(Number(port), (token) => {
 		if (token) {
 			console.log(`Server started port ${port}. Press Ctrl+C to quit`)
 			process.send?.('ready')
+			process.title = 'web-scraping'
 		} else {
 			console.log(`Failed to listen to port ${port}`)
 		}

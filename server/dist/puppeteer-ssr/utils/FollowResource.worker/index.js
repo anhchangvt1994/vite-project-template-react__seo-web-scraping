@@ -254,4 +254,7 @@ _workerpool2.default.worker({
 	scanToCleanBrowsers,
 	scanToCleanPages,
 	deleteResource,
+	finish: () => {
+		return 'finish'
+	},
 })

@@ -259,4 +259,7 @@ _workerpool2.default.worker({
 	set,
 	renew,
 	remove,
+	finish: () => {
+		return 'finish'
+	},
 })

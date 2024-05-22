@@ -115,6 +115,34 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 				}
 			} else serverConfigDefined[key] = defaultServerConfig[key]
 		} // crawl
+
+		if (key === 'api') {
+			if (options[key]) {
+				const tmpOptionCastingType = options[key] as IServerConfig['api']
+
+				serverConfigDefined[key] = {
+					list: tmpOptionCastingType.list || defaultServerConfig[key].list,
+				}
+
+				for (const apiKey in serverConfigDefined[key].list) {
+					if (typeof serverConfigDefined[key].list[apiKey] === 'string') {
+						serverConfigDefined[key].list[apiKey] = {
+							secretKey: serverConfigDefined[key].list[
+								apiKey
+							] as unknown as string,
+							headerKeyName: 'Authorization',
+						}
+
+						continue
+					}
+
+					if (!serverConfigDefined[key].list[apiKey].headerKeyName) {
+						serverConfigDefined[key].list[apiKey].headerKeyName =
+							'Authorization'
+					}
+				}
+			} else serverConfigDefined[key] = defaultServerConfig[key]
+		} // api
 	}
 
 	serverConfigDefined.isRemoteCrawler =

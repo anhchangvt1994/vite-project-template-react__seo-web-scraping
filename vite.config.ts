@@ -93,6 +93,9 @@ export default defineConfig(async ({ mode }) => {
 							'generateTitleCase',
 							'generateSentenceCase',
 							'getLocale',
+							'encode',
+							'decode',
+							'hashCode',
 						],
 						'hooks/useStringHelper.ts': [
 							'useSlug',
@@ -137,6 +140,7 @@ export default defineConfig(async ({ mode }) => {
 							'DeviceInfo',
 							'LocaleInfo',
 						],
+						'utils/ProxyAPIHelper/index.ts': ['ProxyAPI'],
 						'utils/CookieHelper.ts': ['getCookie', 'setCookie', 'deleteCookie'],
 						'components/Link.tsx': [['default', 'Link']],
 					},
