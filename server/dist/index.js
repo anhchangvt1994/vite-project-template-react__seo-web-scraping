@@ -79,12 +79,11 @@ const startServer = async () => {
 			? 8080
 			: _PortHandler.getPort.call(void 0, 'PUPPETEER_SSR_PORT')
 
-	if (_InitEnv.ENV_MODE === 'development') {
+	if (!port) {
 		port = await _PortHandler.findFreePort.call(
 			void 0,
 			port || _InitEnv.PROCESS_ENV.PUPPETEER_SSR_PORT || 8080
 		)
-
 		_PortHandler.setPort.call(void 0, port, 'PUPPETEER_SSR_PORT')
 	}
 

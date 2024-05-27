@@ -28,3 +28,19 @@ The maximum number of workers allowed to be created in a process, usually 4 is a
 The utility level that the service can use, including 3 levels, the lower the level, the more limited utilities such as optimize, waiting for full content, etc. This is to ensure output results for free services used for testing with limited hardware.
 - **BANDWIDTH_LEVEL** `( default: 2 )`
 The service's bandwidth level used to run the product, with 2 levels. Level 1 corresponds to low bandwidth and requires time adjustment so that Web Scraping does not run out of time and cause missing content. Level 2 is good bandwidth level that can meet smooth running of the product.
+
+**Less used**
+- **USE_CHROME_AWS_LAMBDA** `( default: false )`
+Sometime the cloud / server you use to deploy this project will limit the sizes installed. In that case you can use the `USE_CHROME_AWS_LAMBDA=true` to install the importance of the SEO and optimization abilities in this project.
+
+> Please define `USE_CHROME_AWS_LAMBDA` by using setting environment available in cloud / server or use the `export` syntax to set global. Do not set it in `.env`
+
+- **PUPPETEER_SKIP_DOWNLOAD** `( default: false )`
+IF you use the `USE_CHROME_AWS_LAMBDA=true` you need to skip system to download the default. So in this case you need to set `PUPPETEER_SKIP_DOWNLOAD=true`.
+
+> Please define `PUPPETEER_SKIP_DOWNLOAD` by using setting environment available in cloud / server or use the `export` syntax to set global. Do not set it in `.env`
+
+- **PUPPETEER_CACHE_DIR** `( default: 'node_modules/.puppeteer-cache' )`
+IF the `PUPPETEER_SKIP_DOWNLOAD=true` as default. The system will install the chromium into the directory that defined by using `PUPPETEER_CACHE_DIR` before.
+
+> Please define `PUPPETEER_CACHE_DIR` by using setting environment available in cloud / server or use the `export` syntax to set global. Do not set it in `.env`

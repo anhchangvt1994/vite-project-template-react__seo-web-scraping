@@ -49,7 +49,7 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 			.replace(regexHandleAttrsHtmlTag, (match, tag, curAttrs) => {
 				let newAttrs = curAttrs
 
-				if (newAttrs.indexOf('lang') === -1) {
+				if (!newAttrs.includes('lang')) {
 					newAttrs = `lang="en"`
 				}
 
@@ -63,7 +63,7 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 				if (!alt) return ''
 
 				let newAttrs = (
-					curAttrs.indexOf('seo-tag') !== -1
+					curAttrs.includes('seo-tag')
 						? curAttrs
 						: curAttrs.replace(
 								/(?<srcAttr>(src|srcset))=("|'|)(.*?)("|'|)+(\s|$)/g,
@@ -72,9 +72,9 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 				).trim()
 
 				switch (true) {
-					case newAttrs.indexOf('height=') === -1:
+					case !newAttrs.includes('height='):
 						newAttrs = `height="200" ${newAttrs}`
-					case newAttrs.indexOf('width=') === -1:
+					case !newAttrs.includes('width='):
 						newAttrs = `width="150" ${newAttrs}`
 					default:
 						break
@@ -92,7 +92,7 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 					let result
 
 					switch (true) {
-						case newTag === 'a' && curAttrs.indexOf('href=') === -1:
+						case newTag === 'a' && !curAttrs.includes('href='):
 							newTag = 'button'
 							newAttrs = `type="button" ${newAttrs}`
 							tmpEndTag = 'button'
@@ -126,7 +126,7 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 							if (!tmpContentWithTrim.replace(/<[^>]*>/g, ''))
 								tmpContent = `${tmpContentWithTrim} ${href}`
 
-							if (curAttrs.indexOf('aria-label=') !== -1) {
+							if (curAttrs.includes('aria-label=')) {
 								const ariaLabel =
 									/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g.exec(
 										curAttrs
@@ -146,10 +146,10 @@ const optimizeContent = (html: string, isFullOptimize = false): string => {
 								.trim()
 
 							if (!tmpContentWithoutHTMLTags) return ''
-							if (curAttrs.indexOf('type=') === -1)
+							if (!curAttrs.includes('type='))
 								newAttrs = `type="button" ${newAttrs}`
 
-							if (curAttrs.indexOf('aria-label=') !== -1) {
+							if (curAttrs.includes('aria-label=')) {
 								const ariaLabel =
 									/aria-label=("|'|)(?<ariaLabel>[^"']+)("|'|)+(\s|$)/g.exec(
 										curAttrs

@@ -25,6 +25,19 @@ const WorkerManager = (() => {
 
 			let curPool = _workerpool2.default.pool(workerPath, options)
 
+			try {
+				if (instanceTaskList && instanceTaskList.length) {
+					const promiseTaskList = []
+					for (const task of instanceTaskList) {
+						promiseTaskList.push(curPool.exec(task, []))
+					}
+
+					Promise.all(promiseTaskList)
+				}
+			} catch (err) {
+				_ConsoleHandler2.default.error(err)
+			}
+
 			const _terminate = (() => {
 				let isTerminate = false
 
@@ -45,7 +58,7 @@ const WorkerManager = (() => {
 							}
 
 							await Promise.all(promiseTaskList)
-						} else await newPool.exec('finish')
+						}
 					} catch (err) {
 						_ConsoleHandler2.default.error(err)
 					} finally {

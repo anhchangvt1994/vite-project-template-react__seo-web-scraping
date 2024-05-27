@@ -14,10 +14,10 @@ export interface ISetCacheOptionsParam {
 
 export type ICacheResult =
 	| {
-			url: URL | RequestInfo
+			url?: URL | RequestInfo
 			body?: BodyInit | null
 			headers?: HeadersInit
-			method: string
+			method?: string
 			cache?:
 				| string
 				| Buffer

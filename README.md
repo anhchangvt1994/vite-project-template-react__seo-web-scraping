@@ -1,3 +1,5 @@
+![top-banner](/src/assets/static/images/readme/top-banner.jpg)
+
 ## First and foremost
 
 Hey guys, what awesome thing brought you here? … Whatever it is, I think your day has started to get better. Before exploring further, let’s identify some important things together.
@@ -5,9 +7,15 @@ Hey guys, what awesome thing brought you here? … Whatever it is, I think your 
 1. Are you looking for an optimal solution for light-house score ?
 2. Have you tried many ways to optimize but still not satisfactory ?
 
-If so, I think this project can help you. All you need to do is know how to use VueJS / ReactJS (I bet it’s much easier to use than NuxtJS and NextJS) and done, leave the rest to the system.
+OR you just enjoy adventure and discovery. You want to try a solution that can help improve your website's SEO and user experience, without needing to use Server Side Rendering.
+
+IF so, I think this project can help you. All you need to do is know how to use VueJS / ReactJS (I bet it’s much easier to use than NuxtJS and NextJS) and done, leave the rest to the system.
 
 Specifically, the system will transform your client side rendering project so that it can be SEO without you having to do anything. In addition, the system will help you optimize all light-house scores to the highest possible level, and you don’t have to do anything either. You haven’t been pressured to optimize the light-house score yet, have you? apply quickly, still in time
+
+NOTE
+- You can read detail about advanced structure of Vite + React + TS project in this [repository](https://github.com/anhchangvt1994/vite-project--template-react-ts).
+- You can read detail about router, suspense and some common utilities in this [repository](https://github.com/anhchangvt1994/vite-project--template-react-ts__react-router).
 
 ## Table of contents
 
@@ -26,6 +34,9 @@ Specifically, the system will transform your client side rendering project so th
   - [DeviceInfo variable](/READMORE/deviceinfo-variable.md)
   - [LocaleInfo variable](/READMORE/localeinfo-variable.md)
   - [Remote crawler](/READMORE/remote-crawler.md)
+  - [Proxy API](/READMORE/proxy-api.md)
+
+6. [Q&A](/READMORE/Q&A.md)
 
 <h2 id="install">Install</h2>
 

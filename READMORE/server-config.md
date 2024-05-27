@@ -60,6 +60,29 @@ const ServerConfig = defineServerConfig({
   crawler: 'http://localhost:8084', // setup remote crawler
   /* optional */
   crawlerSecretKey: '***' // setup remote crawler secret key to access
+
+  /* optional */
+  api: {
+    list: {
+      /* this mean, the base url 'http://localhost:3000/api'
+      will have
+        - the 'secretKey' is 'xxx'
+        - the 'headerSecretKeyName' is 'API-Key'
+      */
+      'http://localhost:3000/api': {
+        secretKey: 'xxx'
+        headerSecretKeyName: 'API-Key'
+      },
+
+      /* this mean, the base url 'http://localhost:3001/api'
+      will have
+        - the 'secretKey' is 'abc'
+        - the 'headerSecretKeyName' is 'Authorization'
+        as default
+      */
+      'http://localhost:3001/api': 'abc'
+    }
+  }
 })
 
 export default ServerConfig

@@ -189,14 +189,14 @@ const defineServerConfig = (options) => {
 					if (typeof serverConfigDefined[key].list[apiKey] === 'string') {
 						serverConfigDefined[key].list[apiKey] = {
 							secretKey: serverConfigDefined[key].list[apiKey],
-							headerKeyName: 'Authorization',
+							headerSecretKeyName: 'Authorization',
 						}
 
 						continue
 					}
 
-					if (!serverConfigDefined[key].list[apiKey].headerKeyName) {
-						serverConfigDefined[key].list[apiKey].headerKeyName =
+					if (!serverConfigDefined[key].list[apiKey].headerSecretKeyName) {
+						serverConfigDefined[key].list[apiKey].headerSecretKeyName =
 							'Authorization'
 					}
 				}

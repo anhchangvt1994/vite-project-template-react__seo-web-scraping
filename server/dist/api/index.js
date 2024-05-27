@@ -139,10 +139,10 @@ const apiService = (async () => {
 
 			if (apiServerConfigInfo) {
 				headers.append(
-					apiServerConfigInfo.headerKeyName,
+					apiServerConfigInfo.headerSecretKeyName,
 					apiServerConfigInfo.secretKey
 				)
-				objHeaders[apiServerConfigInfo.headerKeyName] =
+				objHeaders[apiServerConfigInfo.headerSecretKeyName] =
 					apiServerConfigInfo.secretKey
 			}
 

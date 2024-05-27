@@ -29,9 +29,8 @@ const startServer = async () => {
 			? 8080
 			: getPort('PUPPETEER_SSR_PORT')
 
-	if (ENV_MODE === 'development') {
+	if (!port) {
 		port = await findFreePort(port || PROCESS_ENV.PUPPETEER_SSR_PORT || 8080)
-
 		setPort(port, 'PUPPETEER_SSR_PORT')
 	}
 

@@ -155,7 +155,13 @@ const get = async (url, options) => {
 	}
 } // get
 
-const set = async ({ html, url, isRaw = false }) => {
+const set = async (
+	{ html, url, isRaw } = {
+		html: '',
+		url: '',
+		isRaw: false,
+	}
+) => {
 	const key = _utils.getKey.call(void 0, url)
 
 	if (!html) {

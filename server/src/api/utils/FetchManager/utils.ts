@@ -81,7 +81,7 @@ export const refreshData = async (cacheKeyList: string[]) => {
 					headers.append(key, apiCache.headers[key])
 				}
 
-				await fetchData(apiCache.url, {
+				await fetchData(apiCache.url as string, {
 					method: apiCache.method,
 					headers: apiCache.headers,
 					body: apiCache.body,
@@ -94,8 +94,8 @@ export const refreshData = async (cacheKeyList: string[]) => {
 						result.status === 200 || !cacheResult || cacheResult.status !== 200
 					if (enableToSetCache) {
 						setDataCache(dataPath, cacheKeyItem, 'br', {
-							url: apiCache.url,
-							method: apiCache.method,
+							url: apiCache.url as string,
+							method: apiCache.method as string,
 							body: apiCache.body,
 							headers: apiCache.headers,
 							cache: {

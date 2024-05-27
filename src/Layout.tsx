@@ -4,7 +4,7 @@ import LoadingPageComponent from 'components/LoadingPageComponent'
 import ErrorLoadingPageComponent from 'components/ErrorPageComponent'
 import { useUserInfo } from 'store/UserInfoContext'
 import { getAPIStore } from 'store/APIStore'
-import { ProxyAPIExample_v1 } from 'utils/ProxyAPIHelper/utils/EndpointGenerator'
+import { ProxyAPIExample_v1 } from 'utils/ProxyAPIHelper/EndpointGenerator'
 
 const MainContainer = styled.div`
 	max-width: 1280px;

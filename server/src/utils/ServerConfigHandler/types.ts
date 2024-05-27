@@ -62,7 +62,7 @@ export interface IServerConfigOptional {
 				| string
 				| {
 						secretKey: string
-						headerKeyName?: string
+						headerSecretKeyName?: string
 				  }
 		}
 	}
@@ -125,7 +125,7 @@ export interface IServerConfig extends IServerConfigOptional {
 		list: {
 			[key: string]: {
 				secretKey: string
-				headerKeyName: string
+				headerSecretKeyName: string
 			}
 		}
 	}

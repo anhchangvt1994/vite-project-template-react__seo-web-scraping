@@ -130,14 +130,14 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 							secretKey: serverConfigDefined[key].list[
 								apiKey
 							] as unknown as string,
-							headerKeyName: 'Authorization',
+							headerSecretKeyName: 'Authorization',
 						}
 
 						continue
 					}
 
-					if (!serverConfigDefined[key].list[apiKey].headerKeyName) {
-						serverConfigDefined[key].list[apiKey].headerKeyName =
+					if (!serverConfigDefined[key].list[apiKey].headerSecretKeyName) {
+						serverConfigDefined[key].list[apiKey].headerSecretKeyName =
 							'Authorization'
 					}
 				}
