@@ -12,6 +12,11 @@ export const fetchData = async (
 	input: RequestInfo | URL,
 	init?: RequestInit | undefined
 ): Promise<{ status: number; data: any; message?: string }> => {
+	if (!input) {
+		Console.error('URL is required!')
+		return { status: 500, data: {}, message: 'URL is required' }
+	}
+
 	try {
 		const response = await fetch(input, {
 			...(init || {}),

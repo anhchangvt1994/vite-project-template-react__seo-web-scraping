@@ -105,6 +105,7 @@
     "decode": true,
     "encode": true,
     "hashCode": true,
-    "ProxyAPI": true
+    "ProxyAPI": true,
+    "getAPIStore": true
   }
 }

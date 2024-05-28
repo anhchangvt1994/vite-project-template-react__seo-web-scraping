@@ -34,6 +34,7 @@ declare global {
   const generatePath: typeof import('react-router-dom')['generatePath']
   const generateSentenceCase: typeof import('utils/StringHelper.ts')['generateSentenceCase']
   const generateTitleCase: typeof import('utils/StringHelper.ts')['generateTitleCase']
+  const getAPIStore: typeof import('store/APIStore.ts')['getAPIStore']
   const getCookie: typeof import('utils/CookieHelper.ts')['getCookie']
   const getCustomSlug: typeof import('utils/StringHelper.ts')['getCustomSlug']
   const getLocale: typeof import('utils/StringHelper.ts')['getLocale']

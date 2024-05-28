@@ -32,6 +32,11 @@ var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _utils = require('../CacheManager/utils')
 
 const fetchData = async (input, init) => {
+	if (!input) {
+		_ConsoleHandler2.default.error('URL is required!')
+		return { status: 500, data: {}, message: 'URL is required' }
+	}
+
 	try {
 		const response = await fetch(input, {
 			...(init || {}),

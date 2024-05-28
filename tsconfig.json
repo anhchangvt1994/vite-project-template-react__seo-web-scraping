@@ -58,7 +58,6 @@
 		// https://www.typescriptlang.org/tsconfig#jsx
 		// https://stackoverflow.com/questions/62859458/what-is-the-use-of-jsx-property-in-tsconfig-json
 		// "jsx": "preserve",
-		// "jsx": "preserve",
 		// "jsx": "react",
 		"jsx": "react-jsx",
 
