@@ -7,8 +7,6 @@ export const getAPIStore = (key?: string) => {
 
 	key = hashCode(key)
 
-	console.log(key)
-
 	if (!API_STORE_CLONED[key]) return
 
 	return API_STORE_CLONED[key]
