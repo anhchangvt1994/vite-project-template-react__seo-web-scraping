@@ -41,25 +41,7 @@ export let BotInfo: IBotInfo
 
 export let DeviceInfo: IDeviceInfo
 
-export let LocaleInfo: ILocaleInfo = {
-	lang: '',
-	country: '',
-	clientLang: '',
-	clientCountry: '',
-	defaultLang: '',
-	defaultCountry: '',
-	langSelected: '',
-	countrySelected: '',
-	hideDefaultLocale: false,
-	range: [0, 0],
-	region: '',
-	eu: '',
-	timezone: '',
-	city: '',
-	ll: [0, 0],
-	metro: 0,
-	area: 0,
-}
+export let LocaleInfo: ILocaleInfo
 
 export const ServerStore = (() => {
 	const html = document.documentElement
@@ -99,7 +81,7 @@ export const ServerStore = (() => {
 				LocaleInfo = (() => {
 					const strInfo = getCookie('LocaleInfo')
 
-					const info = strInfo ? JSON.parse(strInfo) : {}
+					const info = strInfo ? JSON.parse(strInfo) : LocaleInfo || {}
 
 					return info
 				})()
