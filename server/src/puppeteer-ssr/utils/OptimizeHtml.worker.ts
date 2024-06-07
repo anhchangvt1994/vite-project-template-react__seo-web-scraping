@@ -1,4 +1,4 @@
-import { minify } from 'html-minifier'
+import { minify } from 'html-minifier-terser'
 import workerpool from 'workerpool'
 import { brotliDecompressSync } from 'zlib'
 import { POWER_LEVEL, POWER_LEVEL_LIST } from '../../constants'

@@ -23,7 +23,7 @@ function _optionalChain(ops) {
 	}
 	return value
 }
-var _htmlminifier = require('html-minifier')
+var _htmlminifierterser = require('html-minifier-terser')
 var _workerpool = require('workerpool')
 var _workerpool2 = _interopRequireDefault(_workerpool)
 var _zlib = require('zlib')
@@ -40,7 +40,7 @@ const compressContent = (html) => {
 	if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.ONE) return html
 
 	if (_InitEnv.ENV !== 'development') {
-		html = _htmlminifier.minify.call(void 0, html, {
+		html = _htmlminifierterser.minify.call(void 0, html, {
 			collapseBooleanAttributes: true,
 			collapseInlineTagWhitespace: true,
 			collapseWhitespace: true,

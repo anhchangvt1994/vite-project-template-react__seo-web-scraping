@@ -9,7 +9,7 @@
 	"license": "ISC",
 	"dependencies": {
 		"puppeteer": "^22.6.3",
-		"html-minifier": "^4.0.0",
+		"html-minifier-terser": "^7.2.0",
 		"@sparticuz/chromium-min": "123.0.1"
 	}
 }
