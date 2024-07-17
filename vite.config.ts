@@ -70,6 +70,17 @@ export default defineConfig(async ({ mode }) => {
 						],
 					},
 					{
+						from: 'react',
+						imports: [
+							'Dispatch',
+							'SetStateAction',
+							'HTMLProps',
+							'HTMLAttributes',
+							'ComponentType',
+						],
+						type: true,
+					},
+					{
 						'react-dom/client': ['createRoot'],
 					},
 					'react-router-dom',

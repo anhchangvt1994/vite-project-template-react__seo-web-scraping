@@ -7,7 +7,7 @@ const INIT_LOCALE_INFO: ILocaleInfo = {}
 
 export const LocaleInfoContext = createContext<{
 	localeState: ILocaleInfo
-	setLocaleState: React.Dispatch<React.SetStateAction<ILocaleInfo>>
+	setLocaleState: Dispatch<SetStateAction<ILocaleInfo>>
 }>({
 	localeState: INIT_LOCALE_INFO,
 	setLocaleState: () => null,

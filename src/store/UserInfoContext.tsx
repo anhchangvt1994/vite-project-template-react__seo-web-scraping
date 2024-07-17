@@ -7,7 +7,7 @@ const INIT_USER_INFO: IUserInfo = { email: '' }
 export const UserInfoContext = createContext<{
 	userInfo: IUserInfo
 	userState: IUserInfo
-	setUserState: React.Dispatch<React.SetStateAction<IUserInfo>>
+	setUserState: Dispatch<SetStateAction<IUserInfo>>
 }>({
 	userInfo: INIT_USER_INFO,
 	userState: INIT_USER_INFO,

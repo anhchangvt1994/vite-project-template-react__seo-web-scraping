@@ -10,7 +10,7 @@ export const INIT_LOADING_INFO: ILoadingInfo = {
 
 export const LoadingInfoContext = createContext<{
 	loadingState: ILoadingInfo
-	setLoadingState: React.Dispatch<React.SetStateAction<ILoadingInfo>>
+	setLoadingState: Dispatch<SetStateAction<ILoadingInfo>>
 }>({
 	loadingState: INIT_LOADING_INFO,
 	setLoadingState: () => null,

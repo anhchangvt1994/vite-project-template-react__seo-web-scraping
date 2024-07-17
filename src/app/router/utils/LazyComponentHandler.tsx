@@ -1,6 +1,6 @@
 export function withLazy(
 	f: () => Promise<{
-		default: React.ComponentType<any>
+		default: ComponentType<any>
 	}>
 ) {
 	try {
@@ -10,7 +10,7 @@ export function withLazy(
 		} else {
 			throw Object.assign(
 				new Error(
-					'The param of withLazy function must be a Function return a Promise or a Dynamic Import that give a React.ComponentType'
+					'The param of withLazy function must be a Function return a Promise or a Dynamic Import that give a ComponentType'
 				),
 				{ code: 402 }
 			)

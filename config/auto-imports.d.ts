@@ -113,3 +113,9 @@ declare global {
   const useTransition: typeof import('react')['useTransition']
   const useUnsignedLetters: typeof import('hooks/useStringHelper.ts')['useUnsignedLetters']
 }
+// for type re-export
+declare global {
+  // @ts-ignore
+  export type { Dispatch, SetStateAction, HTMLProps, HTMLAttributes, ComponentType } from 'react'
+  import('react')
+}
