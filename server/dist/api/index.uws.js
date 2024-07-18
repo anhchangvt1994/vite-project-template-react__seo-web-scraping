@@ -380,16 +380,20 @@ const apiService = (async () => {
 						_FetchManager.refreshData.call(void 0, requestInfo.relativeCacheKey)
 					}
 
-					res.cork(() => {
-						res
-							.writeStatus(
-								`${result.status}${result.message ? ' ' + result.message : ''}`
-							)
-							.writeHeader('Content-Type', 'application/json')
-							.writeHeader('Cache-Control', 'no-store')
-							.writeHeader('Content-Encoding', contentEncoding)
-							.end(data, true)
-					})
+					if (!res.writAbleEnded) {
+						res.cork(() => {
+							res
+								.writeStatus(
+									`${result.status}${
+										result.message ? ' ' + result.message : ''
+									}`
+								)
+								.writeHeader('Content-Type', 'application/json')
+								.writeHeader('Cache-Control', 'no-store')
+								.writeHeader('Content-Encoding', contentEncoding)
+								.end(data, true)
+						})
+					}
 				}
 			} // IF !res.writableEnded
 		})
