@@ -1,21 +1,17 @@
 import Layout from 'Layout'
 import NotFoundPage from 'pages/NotFoundPage'
 import { RouteObject } from 'react-router-dom'
-import { RouteObjectCustomize } from 'static'
+import { ServerStore } from 'store/ServerStore'
+import { LoadingInfoProvider } from './context/LoadingInfoContext'
+import { RouteObjectCustomize } from './types'
 import { withLazy } from './utils/LazyComponentHandler'
 import RouterDeliver from './utils/RouterDeliver'
 import RouterInit from './utils/RouterInit'
 import RouterProtection from './utils/RouterProtection'
 import RouterValidation from './utils/RouterValidation'
 import ServerRouterHandler from './utils/ServerRouterHandler'
-import { ServerStore } from 'store/ServerStore'
-import { LoadingInfoProvider } from './context/LoadingInfoContext'
 
 ServerStore.init()
-
-const WAITING_VERIFY_ROUTER_ID_LIST: { [key: string]: Array<string> } = {
-	[import.meta.env.ROUTER_COMMENT_ID]: [import.meta.env.ROUTER_LOGIN_ID],
-}
 
 // NOTE - Router Configuration
 const routes: RouteObjectCustomize[] = [
@@ -27,9 +23,7 @@ const routes: RouteObjectCustomize[] = [
 					<RouterInit>
 						<RouterValidation NotFoundPage={NotFoundPage}>
 							<RouterDeliver>
-								<RouterProtection
-									WatingVerifyRouterIDList={WAITING_VERIFY_ROUTER_ID_LIST}
-								>
+								<RouterProtection>
 									<Layout />
 								</RouterProtection>
 							</RouterDeliver>

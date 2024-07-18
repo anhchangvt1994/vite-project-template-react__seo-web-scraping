@@ -116,6 +116,6 @@ declare global {
 // for type re-export
 declare global {
   // @ts-ignore
-  export type { Dispatch, SetStateAction, HTMLProps, HTMLAttributes, ComponentType } from 'react'
+  export type { Dispatch, SetStateAction, HTMLProps, HTMLAttributes, ComponentType, ReactNode } from 'react'
   import('react')
 }

@@ -111,6 +111,7 @@
     "useSyncExternalStore": true,
     "useTitleCase": true,
     "useTransition": true,
-    "useUnsignedLetters": true
+    "useUnsignedLetters": true,
+    "ReactNode": true
   }
 }
