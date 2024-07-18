@@ -118,7 +118,7 @@ export const regexNotFoundPageID = new RegExp(
 export const CACHEABLE_STATUS_CODE = { 200: true, 302: true }
 
 export const chromiumPath =
-	'https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'
+	'https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'
 
 export const canUseLinuxChromium =
 	PROCESS_ENV.PLATFORM.toLowerCase() === 'linux' &&

@@ -142,7 +142,7 @@ const CACHEABLE_STATUS_CODE = { 200: true, 302: true }
 exports.CACHEABLE_STATUS_CODE = CACHEABLE_STATUS_CODE
 
 const chromiumPath =
-	'https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar'
+	'https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'
 exports.chromiumPath = chromiumPath
 
 const canUseLinuxChromium =
