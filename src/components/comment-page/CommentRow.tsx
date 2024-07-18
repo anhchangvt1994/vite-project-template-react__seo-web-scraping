@@ -38,7 +38,7 @@ export default function CommentRow({ total }: { total?: number }) {
 	const amount = total ? total : Math.floor(Math.random() * 4) + 1
 
 	suspender.start(() => {
-		const duration = 5000
+		const duration = 1500
 		new Promise((res) => {
 			setTimeout(function () {
 				res('OK')
