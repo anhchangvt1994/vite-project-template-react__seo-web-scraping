@@ -40,7 +40,9 @@ export default function CommentRow({ total }: { total?: number }) {
 	suspender.start(() => {
 		const duration = 5000
 		new Promise((res) => {
-			setTimeout(function () {}, duration)
+			setTimeout(function () {
+				res('OK')
+			}, duration)
 		})
 			.then((result) => {
 				console.log(result)
