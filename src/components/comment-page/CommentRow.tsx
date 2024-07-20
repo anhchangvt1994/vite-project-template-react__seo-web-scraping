@@ -45,7 +45,6 @@ export default function CommentRow({ total }: { total?: number }) {
 			}, duration)
 		})
 			.then((result) => {
-				console.log(result)
 				suspender.resolve(result)
 			})
 			.catch((err) => suspender.reject(err))
