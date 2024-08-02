@@ -3,7 +3,6 @@ import path from 'path'
 import { pagesPath, resourceExtension } from '../../constants'
 import ServerConfig from '../../server.config'
 import Console from '../../utils/ConsoleHandler'
-import { PROCESS_ENV } from '../../utils/InitEnv'
 import WorkerManager from '../../utils/WorkerManager'
 import { ISSRResult } from '../types'
 import {

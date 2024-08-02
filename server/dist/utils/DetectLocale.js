@@ -1,5 +1,21 @@
 'use strict'
 Object.defineProperty(exports, '__esModule', { value: true })
+function _interopRequireWildcard(obj) {
+	if (obj && obj.__esModule) {
+		return obj
+	} else {
+		var newObj = {}
+		if (obj != null) {
+			for (var key in obj) {
+				if (Object.prototype.hasOwnProperty.call(obj, key)) {
+					newObj[key] = obj[key]
+				}
+			}
+		}
+		newObj.default = obj
+		return newObj
+	}
+}
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj }
 }
@@ -24,13 +40,21 @@ function _optionalChain(ops) {
 	}
 	return value
 }
-var _geoiplite = require('geoip-lite')
 
 var _constants = require('../constants')
 var _serverconfig = require('../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
 var _CookieHandler = require('./CookieHandler')
+
+let geoip
+;async () => {
+	if (['true', 'TRUE', '1'].includes(process.env.DISABLE_DETECT_LOCALE)) return
+
+	geoip = await Promise.resolve().then(() =>
+		_interopRequireWildcard(require('geoip-lite'))
+	)
+}
 
 const LOCALE_INFO_DEFAULT = {
 	lang: _constants.LANGUAGE_CODE_DEFAULT,
@@ -53,8 +77,14 @@ const LOCALE_INFO_DEFAULT = {
 }
 
 function detectLocale(req) {
-	if (!req) return LOCALE_INFO_DEFAULT
+	if (
+		['true', 'TRUE', '1'].includes(process.env.DISABLE_DETECT_LOCALE) ||
+		!geoip ||
+		!req
+	)
+		return LOCALE_INFO_DEFAULT
 
+	const { lookup } = geoip
 	const clientIp = (
 		req.headers['x-forwarded-for'] ||
 		req.connection.remoteAddress ||
@@ -63,8 +93,7 @@ function detectLocale(req) {
 		.toString()
 		.replace(/::ffff:|::1/, '')
 
-	const localInfo =
-		_geoiplite.lookup.call(void 0, clientIp) || LOCALE_INFO_DEFAULT
+	const localInfo = lookup(clientIp) || LOCALE_INFO_DEFAULT
 
 	const acceptLanguage = req.headers['accept-language']
 	let clientLang = LOCALE_INFO_DEFAULT.lang

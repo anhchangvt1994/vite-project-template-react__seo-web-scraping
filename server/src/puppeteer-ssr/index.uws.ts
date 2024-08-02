@@ -372,7 +372,6 @@ const puppeteerSSRService = (async () => {
 						if (SERVER_LESS) {
 							await ISRGenerator({
 								url,
-								isSkipWaiting: true,
 							})
 						} else {
 							ISRGenerator({

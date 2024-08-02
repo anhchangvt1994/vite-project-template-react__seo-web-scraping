@@ -33,7 +33,6 @@ var _serverconfig = require('../../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
-
 var _WorkerManager = require('../../utils/WorkerManager')
 var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
 

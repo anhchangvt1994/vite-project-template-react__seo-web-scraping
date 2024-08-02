@@ -1,0 +1,35 @@
+{
+	"version": 2,
+	"env": {
+		"PUPPETEER_SKIP_DOWNLOAD": "true",
+		"DISABLE_DETECT_LOCALE": "true",
+		"CRAWLER": "https://on-ferret-above.ngrok-free.app"
+	},
+	"builds": [
+		{
+			"src": "package.json",
+			"use": "@vercel/node"
+		},
+		{
+			"src": "server/dist/index.js",
+			"use": "@vercel/node"
+		}
+	],
+	"rewrites": [
+		{
+			"source": "/(.*)",
+			"destination": "server/dist/index.js"
+		}
+	],
+	"headers": [
+		{
+			"source": "/(.*)",
+			"headers": [
+				{
+					"key": "Cache-Control",
+					"value": "no-cache"
+				}
+			]
+		}
+	]
+}

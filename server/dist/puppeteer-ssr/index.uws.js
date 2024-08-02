@@ -444,7 +444,6 @@ const puppeteerSSRService = (async () => {
 						if (_constants.SERVER_LESS) {
 							await _ISRGeneratornext2.default.call(void 0, {
 								url,
-								isSkipWaiting: true,
 							})
 						} else {
 							_ISRGeneratornext2.default.call(void 0, {

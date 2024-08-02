@@ -390,7 +390,10 @@ const ISRHandler = async ({ hasCache, url }) => {
 		}
 	}
 
-	if (!_serverconfig2.default.crawler || [404, 500].includes(status)) {
+	if (
+		browserManager &&
+		(!_serverconfig2.default.crawler || [404, 500].includes(status))
+	) {
 		enableOptimizeAndCompressIfRemoteCrawlerFail = true
 		_ConsoleHandler2.default.log('Create new page')
 		const page = await browserManager.newPage()

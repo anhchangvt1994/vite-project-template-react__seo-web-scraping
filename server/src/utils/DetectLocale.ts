@@ -1,4 +1,3 @@
-import { lookup } from 'geoip-lite'
 import {
 	COUNTRY_CODE_DEFAULT,
 	LANGUAGE_CODE_DEFAULT,
@@ -8,6 +7,16 @@ import {
 import ServerConfig from '../server.config'
 import { ILocaleInfo } from '../types'
 import { getCookieFromRequest } from './CookieHandler'
+
+let geoip
+;async () => {
+	if (
+		['true', 'TRUE', '1'].includes(process.env.DISABLE_DETECT_LOCALE as string)
+	)
+		return
+
+	geoip = await import('geoip-lite')
+}
 
 const LOCALE_INFO_DEFAULT: ILocaleInfo = {
 	lang: LANGUAGE_CODE_DEFAULT,
@@ -30,8 +39,16 @@ const LOCALE_INFO_DEFAULT: ILocaleInfo = {
 }
 
 export default function detectLocale(req): ILocaleInfo {
-	if (!req) return LOCALE_INFO_DEFAULT
+	if (
+		['true', 'TRUE', '1'].includes(
+			process.env.DISABLE_DETECT_LOCALE as string
+		) ||
+		!geoip ||
+		!req
+	)
+		return LOCALE_INFO_DEFAULT
 
+	const { lookup } = geoip
 	const clientIp = (
 		req.headers['x-forwarded-for'] ||
 		req.connection.remoteAddress ||

@@ -211,6 +211,7 @@ const set = async (
 } // set
 
 const renew = async (url) => {
+	if (!url) return _ConsoleHandler2.default.log('Url can not empty!')
 	const key = _utils.getKey.call(void 0, url)
 	let hasRenew = true
 

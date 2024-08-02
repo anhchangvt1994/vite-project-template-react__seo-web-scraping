@@ -176,6 +176,7 @@ const set = async (
 } // set
 
 const renew = async (url) => {
+	if (!url) return Console.log('Url can not empty!')
 	const key = getKey(url)
 	let hasRenew = true
 
