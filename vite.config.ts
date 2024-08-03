@@ -20,6 +20,8 @@ import { getPort } from './config/utils/PortHandler'
 const resolve = resolveTsconfigPathsToAlias()
 const PUPPETEER_SSR_PORT = getPort('PUPPETEER_SSR_PORT') || 8080
 
+console.log('process.env.FORCE_ESM', process.env.FORCE_ESM)
+
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
 	// const react =
@@ -211,7 +213,7 @@ export default defineConfig(async ({ mode }) => {
 			rollupOptions: {
 				output: {
 					chunkFileNames() {
-						return '[name].[hash].js'
+						return `[name].[hash].${process.env.FORCE_ESM ? 'mjs' : 'js'}`
 					},
 				},
 			},

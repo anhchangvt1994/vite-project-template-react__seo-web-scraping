@@ -3,7 +3,15 @@
 	"env": {
 		"PUPPETEER_SKIP_DOWNLOAD": "true",
 		"DISABLE_DETECT_LOCALE": "true",
+		"DISABLE_COMPRESS_HTML": "true",
+		"DISABLE_DEEP_OPTIMIZE": "true",
+		"FORCE_ESM": "true",
 		"CRAWLER": "https://on-ferret-above.ngrok-free.app"
+	},
+	"build": {
+		"env": {
+			"NODE_ENV": "production"
+		}
 	},
 	"builds": [
 		{
