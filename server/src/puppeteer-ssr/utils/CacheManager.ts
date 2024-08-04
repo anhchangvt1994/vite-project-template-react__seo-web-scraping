@@ -24,10 +24,18 @@ const maintainFile = path.resolve(__dirname, '../../../maintain.html')
 
 const CacheManager = (url: string) => {
 	const pathname = new URL(url).pathname
+
 	const enableToCache =
-		ServerConfig.crawl.routes[pathname]?.compress ||
-		ServerConfig.crawl.custom?.(pathname)?.compress ||
-		ServerConfig.crawl.compress
+		ServerConfig.crawl.enable &&
+		(ServerConfig.crawl.routes[pathname] === undefined ||
+			ServerConfig.crawl.routes[pathname].enable ||
+			ServerConfig.crawl.custom?.(pathname) === undefined ||
+			ServerConfig.crawl.custom?.(pathname).enable) &&
+		ServerConfig.crawl.cache.enable &&
+		(ServerConfig.crawl.routes[pathname] === undefined ||
+			ServerConfig.crawl.routes[pathname].cache.enable ||
+			ServerConfig.crawl.custom?.(pathname) === undefined ||
+			ServerConfig.crawl.custom?.(pathname).cache.enable)
 
 	const get = async () => {
 		if (!enableToCache)

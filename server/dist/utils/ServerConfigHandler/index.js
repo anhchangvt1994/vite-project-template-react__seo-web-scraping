@@ -160,12 +160,25 @@ const defineServerConfig = (options) => {
 											serverConfigDefined[key].routes[localeRouteKey].compress
 									  ),
 							cache: {
-								enable:
-									serverConfigDefined[key].routes[localeRouteKey].cache.enable,
-								renewTime:
-									serverConfigDefined[key].routes[localeRouteKey].cache
-										.renewTime ||
-									_constants.defaultServerConfig[key].cache.renewTime,
+								enable: serverConfigDefined[key].routes[localeRouteKey].cache
+									? serverConfigDefined[key].routes[localeRouteKey].cache.enable
+									: serverConfigDefined[key].routes[localeRouteKey].enable,
+								renewTime: _nullishCoalesce(
+									_optionalChain([
+										serverConfigDefined,
+										'access',
+										(_13) => _13[key],
+										'access',
+										(_14) => _14.routes,
+										'access',
+										(_15) => _15[localeRouteKey],
+										'access',
+										(_16) => _16.cache,
+										'optionalAccess',
+										(_17) => _17.renewTime,
+									]),
+									() => _constants.defaultServerConfig[key].cache.renewTime
+								),
 							},
 						}
 					} else

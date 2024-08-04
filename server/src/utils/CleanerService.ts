@@ -76,7 +76,7 @@ const CleanerService = async () => {
 
 	// if (!SERVER_LESS) cleanBrowsers()
 	if (process.env.MODE === 'development') cleanBrowsers(0)
-	else cleanBrowsers(360)
+	else cleanBrowsers(60)
 
 	// NOTE - Pages Cleaner
 	const cleanPages = async (

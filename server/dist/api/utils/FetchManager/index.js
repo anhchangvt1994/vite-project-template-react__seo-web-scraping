@@ -23,7 +23,7 @@ const workerManager = _WorkerManager2.default.init(
 const fetchData = async (input, init) => {
 	if (!input) {
 		_ConsoleHandler2.default.error('input is required!')
-		return
+		return { status: 500, data: {}, message: 'input is required' }
 	}
 
 	const freePool = workerManager.getFreePool()
@@ -35,7 +35,7 @@ const fetchData = async (input, init) => {
 		return result
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
-		return
+		return { status: 500, data: {}, message: 'input is required' }
 	} finally {
 		freePool.terminate()
 	}

@@ -23,8 +23,6 @@ function _optionalChain(ops) {
 	}
 	return value
 }
-var _chromiummin = require('@sparticuz/chromium-min')
-var _chromiummin2 = _interopRequireDefault(_chromiummin)
 var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
@@ -34,7 +32,7 @@ var _workerpool2 = _interopRequireDefault(_workerpool)
 
 var _zlib = require('zlib')
 var _constants = require('../../constants')
-var _constants3 = require('../../puppeteer-ssr/constants')
+
 var _ConsoleHandler = require('../ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _utils = require('./utils')
@@ -136,6 +134,7 @@ const scanToCleanBrowsers = async (
 
 			for (const file of browserList) {
 				const absolutePath = _path2.default.join(dirPath, file)
+
 				if (
 					absolutePath === curUserDataPath ||
 					absolutePath === reserveUserDataPath
@@ -151,56 +150,70 @@ const scanToCleanBrowsers = async (
 					60000
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
-					const browser = await new Promise(async (res) => {
-						let promiseBrowser
-						if (browserStore.executablePath) {
-							promiseBrowser = await _constants3.puppeteer.launch({
-								..._constants3.defaultBrowserOptions,
-								userDataDir: absolutePath,
-								args: _chromiummin2.default.args,
-								executablePath: browserStore.executablePath,
-							})
-						} else {
-							promiseBrowser = await _constants3.puppeteer.launch({
-								..._constants3.defaultBrowserOptions,
-								userDataDir: absolutePath,
-							})
-						}
+					// NOTE - browser.pages is broken
+					// const browser = await new Promise<Browser>(async (res) => {
+					// 	let promiseBrowser
+					// 	if (browserStore.executablePath) {
+					// 		promiseBrowser = puppeteer.launch({
+					// 			...defaultBrowserOptions,
+					// 			userDataDir: absolutePath,
+					// 			args: Chromium.args,
+					// 			executablePath: browserStore.executablePath,
+					// 		})
+					// 	} else {
+					// 		promiseBrowser = puppeteer.launch({
+					// 			...defaultBrowserOptions,
+					// 			userDataDir: absolutePath,
+					// 		})
+					// 	}
 
-						res(promiseBrowser)
-					})
+					// 	res(promiseBrowser)
+					// })
 
-					const pages = await browser.pages()
+					// const pages = await browser.pages()
 
-					if (pages.length <= 1) {
-						await browser.close()
-						try {
-							await _optionalChain([
-								_workerpool2.default,
-								'access',
-								(_) => _.pool,
-								'call',
-								(_2) =>
-									_2(
-										_path2.default.resolve(
-											__dirname,
-											`./index.${_constants.resourceExtension}`
-										)
-									),
-								'optionalAccess',
-								(_3) => _3.exec,
-								'call',
-								(_4) => _4('deleteResource', [absolutePath]),
-							])
-						} catch (err) {
-							_ConsoleHandler2.default.error(err)
-						} finally {
-							counter++
+					// if (pages.length <= 1) {
+					// 	await browser.close()
+					// 	try {
+					// 		await WorkerPool.pool(
+					// 			path.resolve(__dirname, `./index.${resourceExtension}`)
+					// 		)?.exec('deleteResource', [absolutePath])
+					// 	} catch (err) {
+					// 		Console.error(err)
+					// 	} finally {
+					// 		counter++
 
-							if (counter === browserList.length) res(null)
-						}
-					} else {
+					// 		if (counter === browserList.length) res(null)
+					// 	}
+					// } else {
+					// 	counter++
+					// 	if (counter === browserList.length) res(null)
+					// }
+
+					// NOTE - Remove without check pages
+					try {
+						await _optionalChain([
+							_workerpool2.default,
+							'access',
+							(_) => _.pool,
+							'call',
+							(_2) =>
+								_2(
+									_path2.default.resolve(
+										__dirname,
+										`./index.${_constants.resourceExtension}`
+									)
+								),
+							'optionalAccess',
+							(_3) => _3.exec,
+							'call',
+							(_4) => _4('deleteResource', [absolutePath]),
+						])
+					} catch (err) {
+						_ConsoleHandler2.default.error(err)
+					} finally {
 						counter++
+
 						if (counter === browserList.length) res(null)
 					}
 				} else {

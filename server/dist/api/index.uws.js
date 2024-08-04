@@ -382,6 +382,11 @@ const apiService = (async () => {
 
 					if (!res.writAbleEnded) {
 						res.cork(() => {
+							if (result.cookies && result.cookies.length) {
+								for (const cookie of result.cookies) {
+									res.writeHeader('Set-Cookie', cookie)
+								}
+							}
 							res
 								.writeStatus(
 									`${result.status}${

@@ -1,6 +1,7 @@
 import { PROCESS_ENV, ENV } from './utils/InitEnv'
 import fs from 'fs'
 import path from 'path'
+import ServerConfig from './server.config'
 
 export const pagesPath = PROCESS_ENV.IS_SERVER
 	? (() => {
@@ -404,8 +405,8 @@ export const LOCALE_LIST_WITH_LANGUAGE = {
 	vi: ['vn'],
 }
 
-export const COUNTRY_CODE_DEFAULT = 'us'
-export const LANGUAGE_CODE_DEFAULT = 'en'
+export const COUNTRY_CODE_DEFAULT = ServerConfig.locale.defaultCountry || 'vn'
+export const LANGUAGE_CODE_DEFAULT = ServerConfig.locale.defaultLang || 'vi'
 export const ENABLE_CONSOLE_DEBUGGER = Boolean(
 	PROCESS_ENV.ENABLE_CONSOLE_DEBUGGER
 )

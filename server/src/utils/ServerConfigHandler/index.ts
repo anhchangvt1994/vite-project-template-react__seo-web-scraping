@@ -102,11 +102,12 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 											serverConfigDefined[key].routes[localeRouteKey].compress
 									  ),
 							cache: {
-								enable:
-									serverConfigDefined[key].routes[localeRouteKey].cache.enable,
+								enable: serverConfigDefined[key].routes[localeRouteKey].cache
+									? serverConfigDefined[key].routes[localeRouteKey].cache.enable
+									: serverConfigDefined[key].routes[localeRouteKey].enable,
 								renewTime:
 									serverConfigDefined[key].routes[localeRouteKey].cache
-										.renewTime || defaultServerConfig[key].cache.renewTime,
+										?.renewTime ?? defaultServerConfig[key].cache.renewTime,
 							},
 						}
 					} else

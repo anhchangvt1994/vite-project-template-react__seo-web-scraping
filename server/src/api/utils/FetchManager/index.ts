@@ -15,10 +15,15 @@ const workerManager = WorkerManager.init(
 export const fetchData = async (
 	input: RequestInfo | URL,
 	init?: RequestInit | undefined
-) => {
+): Promise<{
+	status: number
+	data: any
+	cookies?: string[]
+	message?: string
+}> => {
 	if (!input) {
 		Console.error('input is required!')
-		return
+		return { status: 500, data: {}, message: 'input is required' }
 	}
 
 	const freePool = workerManager.getFreePool()
@@ -30,7 +35,7 @@ export const fetchData = async (
 		return result
 	} catch (err) {
 		Console.error(err)
-		return
+		return { status: 500, data: {}, message: 'input is required' }
 	} finally {
 		freePool.terminate()
 	}

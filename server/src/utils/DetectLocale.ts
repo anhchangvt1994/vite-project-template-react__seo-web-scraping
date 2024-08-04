@@ -9,14 +9,14 @@ import { ILocaleInfo } from '../types'
 import { getCookieFromRequest } from './CookieHandler'
 
 let geoip
-;async () => {
+;(async () => {
 	if (
 		['true', 'TRUE', '1'].includes(process.env.DISABLE_DETECT_LOCALE as string)
 	)
 		return
 
 	geoip = await import('geoip-lite')
-}
+})()
 
 const LOCALE_INFO_DEFAULT: ILocaleInfo = {
 	lang: LANGUAGE_CODE_DEFAULT,

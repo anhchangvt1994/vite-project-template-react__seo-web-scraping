@@ -48,13 +48,13 @@ var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _CookieHandler = require('./CookieHandler')
 
 let geoip
-;async () => {
+;(async () => {
 	if (['true', 'TRUE', '1'].includes(process.env.DISABLE_DETECT_LOCALE)) return
 
 	geoip = await Promise.resolve().then(() =>
 		_interopRequireWildcard(require('geoip-lite'))
 	)
-}
+})()
 
 const LOCALE_INFO_DEFAULT = {
 	lang: _constants.LANGUAGE_CODE_DEFAULT,

@@ -11,7 +11,12 @@ import {
 export const fetchData = async (
 	input: RequestInfo | URL,
 	init?: RequestInit | undefined
-): Promise<{ status: number; data: any; message?: string }> => {
+): Promise<{
+	status: number
+	data: any
+	cookies?: string[]
+	message?: string
+}> => {
 	if (!input) {
 		Console.error('URL is required!')
 		return { status: 500, data: {}, message: 'URL is required' }
@@ -48,6 +53,7 @@ export const fetchData = async (
 				return {
 					status: res.status,
 					message: res.statusText,
+					cookies: res.headers.getSetCookie(),
 					data,
 				}
 			})

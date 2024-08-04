@@ -255,6 +255,10 @@ const apiService = (async () => {
 				refreshData(requestInfo.relativeCacheKey)
 			}
 
+			if (result.cookies && result.cookies.length) {
+				res.raw.setHeader('Set-Cookie', result.cookies)
+			}
+
 			res.raw.statusMessage = result.message || res.raw.statusMessage
 
 			res.status(result.status).send(data)

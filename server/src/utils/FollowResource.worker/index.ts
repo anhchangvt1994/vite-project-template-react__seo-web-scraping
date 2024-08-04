@@ -127,6 +127,7 @@ const scanToCleanBrowsers = async (
 
 			for (const file of browserList) {
 				const absolutePath = path.join(dirPath, file)
+
 				if (
 					absolutePath === curUserDataPath ||
 					absolutePath === reserveUserDataPath
@@ -141,42 +142,56 @@ const scanToCleanBrowsers = async (
 					60000
 
 				if (dirExistDurationInMinutes >= durationValidToKeep) {
-					const browser = await new Promise<Browser>(async (res) => {
-						let promiseBrowser
-						if (browserStore.executablePath) {
-							promiseBrowser = await puppeteer.launch({
-								...defaultBrowserOptions,
-								userDataDir: absolutePath,
-								args: Chromium.args,
-								executablePath: browserStore.executablePath,
-							})
-						} else {
-							promiseBrowser = await puppeteer.launch({
-								...defaultBrowserOptions,
-								userDataDir: absolutePath,
-							})
-						}
+					// NOTE - browser.pages is broken
+					// const browser = await new Promise<Browser>(async (res) => {
+					// 	let promiseBrowser
+					// 	if (browserStore.executablePath) {
+					// 		promiseBrowser = puppeteer.launch({
+					// 			...defaultBrowserOptions,
+					// 			userDataDir: absolutePath,
+					// 			args: Chromium.args,
+					// 			executablePath: browserStore.executablePath,
+					// 		})
+					// 	} else {
+					// 		promiseBrowser = puppeteer.launch({
+					// 			...defaultBrowserOptions,
+					// 			userDataDir: absolutePath,
+					// 		})
+					// 	}
 
-						res(promiseBrowser)
-					})
+					// 	res(promiseBrowser)
+					// })
 
-					const pages = await browser.pages()
+					// const pages = await browser.pages()
 
-					if (pages.length <= 1) {
-						await browser.close()
-						try {
-							await WorkerPool.pool(
-								path.resolve(__dirname, `./index.${resourceExtension}`)
-							)?.exec('deleteResource', [absolutePath])
-						} catch (err) {
-							Console.error(err)
-						} finally {
-							counter++
+					// if (pages.length <= 1) {
+					// 	await browser.close()
+					// 	try {
+					// 		await WorkerPool.pool(
+					// 			path.resolve(__dirname, `./index.${resourceExtension}`)
+					// 		)?.exec('deleteResource', [absolutePath])
+					// 	} catch (err) {
+					// 		Console.error(err)
+					// 	} finally {
+					// 		counter++
 
-							if (counter === browserList.length) res(null)
-						}
-					} else {
+					// 		if (counter === browserList.length) res(null)
+					// 	}
+					// } else {
+					// 	counter++
+					// 	if (counter === browserList.length) res(null)
+					// }
+
+					// NOTE - Remove without check pages
+					try {
+						await WorkerPool.pool(
+							path.resolve(__dirname, `./index.${resourceExtension}`)
+						)?.exec('deleteResource', [absolutePath])
+					} catch (err) {
+						Console.error(err)
+					} finally {
 						counter++
+
 						if (counter === browserList.length) res(null)
 					}
 				} else {

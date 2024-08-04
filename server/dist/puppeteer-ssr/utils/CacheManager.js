@@ -54,30 +54,56 @@ const maintainFile = _path2.default.resolve(__dirname, '../../../maintain.html')
 
 const CacheManager = (url) => {
 	const pathname = new URL(url).pathname
+
 	const enableToCache =
-		_optionalChain([
-			_serverconfig2.default,
-			'access',
-			(_) => _.crawl,
-			'access',
-			(_2) => _2.routes,
-			'access',
-			(_3) => _3[pathname],
-			'optionalAccess',
-			(_4) => _4.compress,
-		]) ||
-		_optionalChain([
-			_serverconfig2.default,
-			'access',
-			(_5) => _5.crawl,
-			'access',
-			(_6) => _6.custom,
-			'optionalCall',
-			(_7) => _7(pathname),
-			'optionalAccess',
-			(_8) => _8.compress,
-		]) ||
-		_serverconfig2.default.crawl.compress
+		_serverconfig2.default.crawl.enable &&
+		(_serverconfig2.default.crawl.routes[pathname] === undefined ||
+			_serverconfig2.default.crawl.routes[pathname].enable ||
+			_optionalChain([
+				_serverconfig2.default,
+				'access',
+				(_) => _.crawl,
+				'access',
+				(_2) => _2.custom,
+				'optionalCall',
+				(_3) => _3(pathname),
+			]) === undefined ||
+			_optionalChain([
+				_serverconfig2.default,
+				'access',
+				(_4) => _4.crawl,
+				'access',
+				(_5) => _5.custom,
+				'optionalCall',
+				(_6) => _6(pathname),
+				'access',
+				(_7) => _7.enable,
+			])) &&
+		_serverconfig2.default.crawl.cache.enable &&
+		(_serverconfig2.default.crawl.routes[pathname] === undefined ||
+			_serverconfig2.default.crawl.routes[pathname].cache.enable ||
+			_optionalChain([
+				_serverconfig2.default,
+				'access',
+				(_8) => _8.crawl,
+				'access',
+				(_9) => _9.custom,
+				'optionalCall',
+				(_10) => _10(pathname),
+			]) === undefined ||
+			_optionalChain([
+				_serverconfig2.default,
+				'access',
+				(_11) => _11.crawl,
+				'access',
+				(_12) => _12.custom,
+				'optionalCall',
+				(_13) => _13(pathname),
+				'access',
+				(_14) => _14.cache,
+				'access',
+				(_15) => _15.enable,
+			]))
 
 	const get = async () => {
 		if (!enableToCache)

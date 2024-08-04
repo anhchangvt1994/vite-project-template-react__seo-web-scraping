@@ -8,6 +8,8 @@ var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
+var _serverconfig = require('./server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
 const pagesPath = _InitEnv.PROCESS_ENV.IS_SERVER
 	? (() => {
@@ -426,9 +428,10 @@ const LOCALE_LIST_WITH_LANGUAGE = {
 }
 exports.LOCALE_LIST_WITH_LANGUAGE = LOCALE_LIST_WITH_LANGUAGE
 
-const COUNTRY_CODE_DEFAULT = 'us'
+const COUNTRY_CODE_DEFAULT =
+	_serverconfig2.default.locale.defaultCountry || 'vn'
 exports.COUNTRY_CODE_DEFAULT = COUNTRY_CODE_DEFAULT
-const LANGUAGE_CODE_DEFAULT = 'en'
+const LANGUAGE_CODE_DEFAULT = _serverconfig2.default.locale.defaultLang || 'vi'
 exports.LANGUAGE_CODE_DEFAULT = LANGUAGE_CODE_DEFAULT
 const ENABLE_CONSOLE_DEBUGGER = Boolean(
 	_InitEnv.PROCESS_ENV.ENABLE_CONSOLE_DEBUGGER

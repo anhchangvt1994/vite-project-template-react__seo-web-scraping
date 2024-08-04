@@ -80,6 +80,7 @@ const fetchData = async (input, init) => {
 				return {
 					status: res.status,
 					message: res.statusText,
+					cookies: res.headers.getSetCookie(),
 					data,
 				}
 			})

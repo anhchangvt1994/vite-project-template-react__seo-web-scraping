@@ -39,8 +39,8 @@ export interface IServerConfigOptional {
 				NonNullable<IServerConfigOptional['crawl']>,
 				'routes' | 'custom' | 'cache' | 'content'
 			> & {
-				cache: Omit<
-					NonNullable<IServerConfigOptional['crawl']>['cache'],
+				cache?: Omit<
+					NonNullable<NonNullable<IServerConfigOptional['crawl']>['cache']>,
 					'time'
 				>
 			}
@@ -50,7 +50,10 @@ export interface IServerConfigOptional {
 			NonNullable<IServerConfigOptional['crawl']>,
 			'routes' | 'custom' | 'cache' | 'content'
 		> & {
-			cache: Omit<NonNullable<IServerConfigOptional['crawl']>['cache'], 'time'>
+			cache?: Omit<
+				NonNullable<NonNullable<IServerConfigOptional['crawl']>>['cache'],
+				'time'
+			>
 		}
 	}
 	crawler?: string

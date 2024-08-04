@@ -4,12 +4,7 @@ import {
 	RecognizedString,
 	TemplatedApp,
 } from 'uWebSockets.js'
-import {
-	brotliCompressSync,
-	brotliDecompressSync,
-	gunzipSync,
-	gzipSync,
-} from 'zlib'
+import { brotliCompressSync, gzipSync } from 'zlib'
 import {
 	getStore as getStoreCache,
 	setStore as setStoreCache,
@@ -50,6 +45,7 @@ const convertData = (
 	result: {
 		status: number
 		data: any
+		cookies?: string[]
 		message?: string
 	},
 	contentEncoding: 'br' | 'gzip' | string | undefined
@@ -316,6 +312,11 @@ const apiService = (async () => {
 
 					if (!res.writAbleEnded) {
 						res.cork(() => {
+							if (result.cookies && result.cookies.length) {
+								for (const cookie of result.cookies) {
+									res.writeHeader('Set-Cookie', cookie)
+								}
+							}
 							res
 								.writeStatus(
 									`${result.status}${
