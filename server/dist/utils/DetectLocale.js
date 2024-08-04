@@ -82,7 +82,15 @@ function detectLocale(req) {
 		!geoip ||
 		!req
 	)
-		return LOCALE_INFO_DEFAULT
+		return {
+			...LOCALE_INFO_DEFAULT,
+			langSelected: _serverconfig2.default.locale.enable
+				? LOCALE_INFO_DEFAULT.langSelected
+				: '',
+			countrySelected: _serverconfig2.default.locale.enable
+				? LOCALE_INFO_DEFAULT.countrySelected
+				: '',
+		}
 
 	const { lookup } = geoip
 	const clientIp = (

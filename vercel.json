@@ -28,16 +28,5 @@
 			"source": "/(.*)",
 			"destination": "server/dist/index.js"
 		}
-	],
-	"headers": [
-		{
-			"source": "/(.*)",
-			"headers": [
-				{
-					"key": "Cache-Control",
-					"value": "no-cache"
-				}
-			]
-		}
 	]
 }
