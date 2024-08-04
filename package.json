@@ -29,7 +29,7 @@
 		"prettier:fix": "npm run prettier -- --write",
 		"format": "npm run prettier:fix && npm run lint:fix",
 		"server-build": "npx sucrase --quiet ./server/src -d ./server/dist --transforms typescript,imports",
-		"vercel-build": "yarn add -W -D vite && yarn build",
+		"vercel-build": "yarn build",
 		"pre-commit": "npm run server-build && git add ./server/dist & npx tsc && lint-staged",
 		"prepare": "git config core.autocrlf false && npx husky install",
 		"preinstall": "node server/src/utils/GenerateServerInfo.js"
