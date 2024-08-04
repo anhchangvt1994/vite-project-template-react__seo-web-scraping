@@ -211,7 +211,7 @@ export default defineConfig(async ({ mode }) => {
 			rollupOptions: {
 				output: {
 					chunkFileNames() {
-						return `[name].[hash].mjs}`
+						return `[name].[hash].js}`
 					},
 				},
 			},
