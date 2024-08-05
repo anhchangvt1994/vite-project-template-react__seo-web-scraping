@@ -17,7 +17,7 @@ export const optionArgs = [
 	'--headless',
 	`--window-size=${_windowWidth},${_windowHeight}`,
 	`--ozone-override-screen-size=${_windowWidth},${_windowHeight}`,
-	// '--disable-gpu',
+	'--disable-gpu',
 	'--disable-software-rasterizer',
 	'--hide-scrollbars',
 	'--disable-translate',
@@ -71,8 +71,8 @@ export const defaultBrowserOptions: PuppeteerLaunchOptions = {
 		height: _windowHeight,
 	},
 	userDataDir: `${userDataPath}/user_data`,
-	args: optionArgs,
-	protocolTimeout: 240000, // NOTE - Handle for error protocol timeout (can test adidas site to got detail of this issue)
+	// args: optionArgs,
+	// protocolTimeout: 240000, // NOTE - Handle for error protocol timeout (can test adidas site to got detail of this issue)
 	ignoreDefaultArgs: false,
 	ignoreHTTPSErrors: true,
 }
