@@ -10,7 +10,7 @@ const CLUSTER_INSTANCES =
 		? 0
 		: Number(PROCESS_ENV.CLUSTER_INSTANCES || 2)
 const CLUSTER_KILL_TIMEOUT =
-	PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
+	PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 2000
 
 // connect to pm2 daemon
 pm2.connect(false, (err) => {
@@ -59,8 +59,10 @@ pm2.connect(false, (err) => {
 					script: `server/${resourceDirectory}/index.uws.${resourceExtension}`,
 					instances: CLUSTER_INSTANCES,
 					exec_mode: 'cluster',
-					interpreter: './node_modules/.bin/sucrase',
-					interpreter_args: '--require sucrase/register',
+					interpreter:
+						resourceExtension === 'ts' ? './node_modules/.bin/sucrase' : 'node',
+					interpreter_args:
+						resourceExtension === 'ts' ? '--require sucrase/register' : '',
 					wait_ready: true,
 					kill_timeout: CLUSTER_KILL_TIMEOUT,
 					cwd: '.',

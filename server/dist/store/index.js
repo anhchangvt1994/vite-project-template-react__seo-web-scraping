@@ -19,6 +19,10 @@ exports.APIStore = APIStore
 
 const store = {
 	browser: exports.BrowserStore,
+	threadAdvanceInfo: {
+		order: 0,
+	},
+	totalRequestToCrawl: 0,
 	headers: exports.HeadersStore,
 	promise: exports.PromiseStore,
 	api: exports.APIStore,

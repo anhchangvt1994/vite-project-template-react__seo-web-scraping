@@ -9,8 +9,11 @@ var _serverconfig = require('../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
 // NOTE - Browser Options
-const _windowWidth = 1920
-const _windowHeight = 99999
+const WINDOW_VIEWPORT_WIDTH = 1920
+exports.WINDOW_VIEWPORT_WIDTH = WINDOW_VIEWPORT_WIDTH
+// export const WINDOW_VIEWPORT_HEIGHT = 2160
+const WINDOW_VIEWPORT_HEIGHT = 99999
+exports.WINDOW_VIEWPORT_HEIGHT = WINDOW_VIEWPORT_HEIGHT
 const _userAgent =
 	_serverconfig2.default.crawl.content === 'desktop'
 		? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
@@ -19,9 +22,8 @@ const optionArgs = [
 	`--user-agent=${_userAgent}`,
 	'--no-sandbox',
 	'--disable-setuid-sandbox',
-	'--headless',
-	`--window-size=${_windowWidth},${_windowHeight}`,
-	`--ozone-override-screen-size=${_windowWidth},${_windowHeight}`,
+	`--window-size=${exports.WINDOW_VIEWPORT_WIDTH},${exports.WINDOW_VIEWPORT_HEIGHT}`,
+	`--ozone-override-screen-size=${exports.WINDOW_VIEWPORT_WIDTH},${exports.WINDOW_VIEWPORT_HEIGHT}`,
 	'--disable-gpu',
 	'--disable-software-rasterizer',
 	'--hide-scrollbars',
@@ -65,7 +67,9 @@ const optionArgs = [
 	'--use-gl=swiftshader',
 	'--use-mock-keychain',
 	// '--use-gl=angle',
-	// '--use-angle=gl-egl',
+	// '--use-angle=gl',
+	// '--enable-unsafe-webgpu',
+	// '--use-angle=disabled',
 	// "--shm-size=4gb",
 ]
 exports.optionArgs = optionArgs
@@ -73,37 +77,47 @@ exports.optionArgs = optionArgs
 const defaultBrowserOptions = {
 	headless: 'shell',
 	defaultViewport: {
-		width: _windowWidth,
-		height: _windowHeight,
+		width: exports.WINDOW_VIEWPORT_WIDTH,
+		height: exports.WINDOW_VIEWPORT_HEIGHT,
 	},
 	userDataDir: `${_constants.userDataPath}/user_data`,
-	// args: optionArgs,
-	// protocolTimeout: 240000, // NOTE - Handle for error protocol timeout (can test adidas site to got detail of this issue)
+	args: exports.optionArgs,
+	protocolTimeout: 240000, // NOTE - Handle for error protocol timeout (can test adidas site to got detail of this issue)
 	ignoreDefaultArgs: false,
-	ignoreHTTPSErrors: true,
+	// ignoreHTTPSErrors: true,
 }
 exports.defaultBrowserOptions = defaultBrowserOptions
 
 // NOTE - Regex Handler
-const regexOptimizeForScriptBlockPerformance =
+const regexRemoveScriptTag =
 	/(<script(?![\s\S]type="application\/(ld\+json|xml|rdf\+xml)")(\s[^>]+)*>(.|[\r\n])*?<\/script>|<script(?![\s\S]type="application\/(ld\+json|xml|rdf\+xml)")(\s[^>]+)*\/>)/g
-exports.regexOptimizeForScriptBlockPerformance =
-	regexOptimizeForScriptBlockPerformance
-const regexOptimizeForPerformanceNormally =
+exports.regexRemoveScriptTag = regexRemoveScriptTag
+const regexRemoveSpecialTag =
 	/(<link\s+(?=.*(rel=["']?(dns-prefetch|preconnect|modulepreload|preload|prefetch)["']?).*?(\/|)?)(?:.*?\/?>))|<iframe\s+(?:[^>]*?\s+)?((src|id)=["']?[^"]*\b((partytown|insider-worker)(?:-[a-z]+)?)\b[^"]*["']|\bvideo\b)?[^>]*>(?:[^<]*|<(?!\/iframe>))*<\/iframe>|(<style(\s[^>]+)*>(.|[\r\n])*?<\/style>|<style(\s[^>]+)*\/>|<link\s+(?=.*(rel=["']?(stylesheet|shortcut icon)["']?|href=["']?.*?(css|style).*?["']?).*?(\/|)?)(?:.*?\/?>))/g
-exports.regexOptimizeForPerformanceNormally =
-	regexOptimizeForPerformanceNormally
-const regexOptimizeForPerformanceHardly =
-	/<video(?![\s\S]*seo-tag=("|'|)true("|'|\s))(\s[^>]+)*>(.|[\r\n])*?<\/video>|<audio(?![\s\S]*seo-tag=("|'|)true("|'|\s))(\s[^>]+)*>(.|[\r\n])*?<\/audio>|<(video|audio)(?![\s\S]*seo-tag=("|'|)true("|'|\s))(\s[^>]+)*\/>|<form(\s[^>]+)*>(.|[\r\n])*?<\/form>|<input(?![^>]*\b(?:type=['"](?:button|submit)['"]|type=(?:button|submit)\b)[^>]*>)[^>]*>|<textarea(\s[^>]+)*\/>|<textarea(\s[^>]+)*>(.|[\r\n])*?<\/textarea>|<label\s+(?=.*(for=["']?.*?["']?).*?(\/|)?)(?:.*?\/?>)|<svg(\s[^>]+)*>(.|[\r\n])*?<\/svg>|<span\s+(?:[^>]*?\s+)?class=["']?[^"]*\b((fa-|material-icons|icon(-\w*)*|ri-)(?:-[a-z]+)?)\b[^"]*["']?[^>]*>(?:[^<]*|<(?!\/span>))*<\/span>|<i\s+(?:[^>]*?\s+)?class=["']?[^"]*\b((fa-|material-icons|icon(-\w*)*|ri-)(?:-[a-z]+)?)\b[^"]*["']?[^>]*>(?:[^<]*|<(?!\/i>))*<\/i>|<img\s+(?=.*class=["']?.*?\b((fa-|material-icons|icon(-\w*)|ri-)?)\b.*?["']?.*?(\/|)?)(?:.*?\/?>)|<img\s+(?=.*alt=["']?.*?\b(icon(-\w*)*(?:-[a-z]+)?)\b.*?["']?.*?(\/|)?)(?:.*?\/?>)|style=(?:("|'|)([^"']+)("|'|\s)[^>\s]*)|class=(?:("|'|)([^"']+)("|'|\s)[^>\s]*)|(<div(>|[\s\S]*?(>))|<\/div>)(?:[\s\S]*?|$)/g
-exports.regexOptimizeForPerformanceHardly = regexOptimizeForPerformanceHardly
+exports.regexRemoveSpecialTag = regexRemoveSpecialTag
+const regexFullOptimizeBody =
+	/<video(?![\s\S]*seo-tag=("|'|)true("|'|\s))(\s[^>]+)*>(.|[\r\n])*?<\/video>|<audio(?![\s\S]*seo-tag=("|'|)true("|'|\s))(\s[^>]+)*>(.|[\r\n])*?<\/audio>|<(video|audio)(?![\s\S]*seo-tag=("|'|)true("|'|\s))(\s[^>]+)*\/>|<form(\s[^>]+)*>(.|[\r\n])*?<\/form>|<input(?![^>]*\b(?:type=['"](?:button|submit)['"]|type=(?:button|submit)\b)[^>]*>)[^>]*>|<textarea(\s[^>]+)*\/>|<textarea(\s[^>]+)*>(.|[\r\n])*?<\/textarea>|<label\s+(?=.*(for=["']?.*?["']?).*?(\/|)?)(?:.*?\/?>)|<svg(\s[^>]+)*>(.|[\r\n])*?<\/svg>|<span\s+(?:[^>]*?\s+)?class=["']?[^"]*\b((fa-|material-icons|icon(-\w*)*|ri-)(?:-[a-z]+)?)\b[^"]*["']?[^>]*>(?:[^<]*|<(?!\/span>))*<\/span>|<i\s+(?:[^>]*?\s+)?class=["']?[^"]*\b((fa-|material-icons|icon(-\w*)*|ri-)(?:-[a-z]+)?)\b[^"]*["']?[^>]*>(?:[^<]*|<(?!\/i>))*<\/i>|<img\s+(?=.*class=["']?.*?\b(fa-|material-icons|icon(-\w*)|ri-).*?["']?.*?(\/|)?)(?:.*?\/?>)|<img\s+(?=.*alt=["']?.*?\b(icon(-\w*)*(?:-[a-z]+)?)\b.*?["']?.*?(\/|)?)(?:.*?\/?>)|style=(?:("|'|)([^"']+)("|'|\s)[^>\s]*)|class=(?:("|'|)([^"']+)("|'|\s)[^>\s]*)|(<div(>|[\s\S]*?(>))|<\/div>)(?:[\s\S]*?|$)/g
+exports.regexFullOptimizeBody = regexFullOptimizeBody
 // const regexRemoveDivTag =
 // 	/<div(>|[\s\S](?!only-dev)[\s\S]*?(>))[\s\S]*?<\/div>(?:[\s\S]*?|$)/g
 // export const regexRemoveDivTag: RegExp =
 // 	/(<div(>|[\s\S]*?(>))|<\/div>)(?:[\s\S]*?|$)/g
+const regexRemoveIconTagFirst =
+	/<img\s+(?=.*alt=["']?.*?\b(icon(-\w*)*(?:-[a-z]+)?)\b.*?["']?.*?(\/|)?)(?:.*?\/?>)/g
+exports.regexRemoveIconTagFirst = regexRemoveIconTagFirst
+const regexRemoveIconTagSecond =
+	/<img\s+(?=.*class=["']?.*?\b(fa-|material-icons|icon(-\w*)|ri-).*?["']?.*?(\/|)?)(?:.*?\/?>)/g
+exports.regexRemoveIconTagSecond = regexRemoveIconTagSecond
+const regexRemoveClassAndStyleAttrs =
+	/style=(?:("|'|)([^"']+)("|'|\s)[^>\s]*)|class=(?:("|'|)([^"']+)("|'|\s)[^>\s]*)/g
+exports.regexRemoveClassAndStyleAttrs = regexRemoveClassAndStyleAttrs
 const regexHandleAttrsImageTag = /<(source|img)([^>]*)(\/|)>/g
 exports.regexHandleAttrsImageTag = regexHandleAttrsImageTag
 const regexHandleAttrsHtmlTag = /<(html)([^>]*)>/g
 exports.regexHandleAttrsHtmlTag = regexHandleAttrsHtmlTag
+const regexHalfOptimizeBody =
+	/<video(?![\s\S]*seo-tag=("|'|)true("|'|\s))(\s[^>]+)*>(.|[\r\n])*?<\/video>|<audio(?![\s\S]*seo-tag=("|'|)true("|'|\s))(\s[^>]+)*>(.|[\r\n])*?<\/audio>|<(video|audio)(?![\s\S]*seo-tag=("|'|)true("|'|\s))(\s[^>]+)*\/>|<form(\s[^>]+)*>(.|[\r\n])*?<\/form>|<input(?![^>]*\b(?:type=['"](?:button|submit)['"]|type=(?:button|submit)\b)[^>]*>)[^>]*>|<textarea(\s[^>]+)*\/>|<textarea(\s[^>]+)*>(.|[\r\n])*?<\/textarea>|<label\s+(?=.*(for=["']?.*?["']?).*?(\/|)?)(?:.*?\/?>)|<svg(\s[^>]+)*>(.|[\r\n])*?<\/svg>|<span\s+(?:[^>]*?\s+)?class=["']?[^"]*\b((fa-|material-icons|icon(-\w*)*|ri-)(?:-[a-z]+)?)\b[^"]*["']?[^>]*>(?:[^<]*|<(?!\/span>))*<\/span>|<i\s+(?:[^>]*?\s+)?class=["']?[^"]*\b((fa-|material-icons|icon(-\w*)*|ri-)(?:-[a-z]+)?)\b[^"]*["']?[^>]*>(?:[^<]*|<(?!\/i>))*<\/i>|(<div(>|[\s\S]*?(>))|<\/div>)(?:[\s\S]*?|$)/g
+exports.regexHalfOptimizeBody = regexHalfOptimizeBody
 // export const regexHandleAttrsInteractiveTag: RegExp =
 // 	/<(a|button|input)(?![^>]*rel="nofollow")([^>]*)(\/|)>([\s\S]*?)<\/(a|button)>/g
 const regexHandleAttrsInteractiveTag =
@@ -142,7 +156,7 @@ const CACHEABLE_STATUS_CODE = { 200: true, 302: true }
 exports.CACHEABLE_STATUS_CODE = CACHEABLE_STATUS_CODE
 
 const chromiumPath =
-	'https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'
+	'https://github.com/Sparticuz/chromium/releases/download/v127.0.0/chromium-v127.0.0-pack.tar'
 exports.chromiumPath = chromiumPath
 
 const canUseLinuxChromium =

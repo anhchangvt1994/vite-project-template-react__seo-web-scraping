@@ -39,7 +39,7 @@ const startServer = async () => {
 	const server = require('http').createServer(app)
 
 	app.use(cors())
-	if (ServerConfig.crawler && !ServerConfig.isRemoteCrawler) {
+	if (!ServerConfig.isRemoteCrawler) {
 		app
 			.use(
 				'/robots.txt',

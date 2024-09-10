@@ -12,7 +12,7 @@ var _CleanerService2 = _interopRequireDefault(_CleanerService)
 var _ConsoleHandler = require('../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _constants3 = require('./constants')
-var _ForamatUrlbun = require('./utils/ForamatUrl.bun')
+var _FormatUrlbun = require('./utils/FormatUrl.bun')
 var _SSRGeneratornext = require('./utils/SSRGenerator.next')
 var _SSRGeneratornext2 = _interopRequireDefault(_SSRGeneratornext)
 var _SSRHandler = require('./utils/SSRHandler')
@@ -82,9 +82,9 @@ const puppeteerSSRService = (async () => {
 				value: ctx.store['Device-Info'],
 				maxAge: _constants3.COOKIE_EXPIRED,
 			})
-			const url = _ForamatUrlbun.convertUrlHeaderToQueryString.call(
+			const url = _FormatUrlbun.convertUrlHeaderToQueryString.call(
 				void 0,
-				_ForamatUrlbun.getUrl.call(void 0, ctx.store['url']),
+				_FormatUrlbun.getUrl.call(void 0, ctx.store['url']),
 				[ctx.store['Bot-Info'], ctx.store['Device-Info']],
 				true
 			)
@@ -171,7 +171,7 @@ const puppeteerSSRService = (async () => {
 	return {
 		init(app) {
 			if (!app)
-				return _ConsoleHandler2.default.warn('You need provide express app!')
+				return _ConsoleHandler2.default.warn('You need provide bun app!')
 			_app = app
 			_allRequestHandler()
 		},

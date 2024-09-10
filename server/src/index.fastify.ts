@@ -55,7 +55,7 @@ const startServer = async () => {
 
 	app.use(cors())
 
-	if (ServerConfig.crawler && !ServerConfig.isRemoteCrawler) {
+	if (!ServerConfig.isRemoteCrawler) {
 		app
 			.use('/robots.txt', serveStatic(path.resolve(__dirname, '../robots.txt')))
 			.use(function (req, res, next) {

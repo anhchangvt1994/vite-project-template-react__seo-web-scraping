@@ -18,7 +18,7 @@ const CLUSTER_INSTANCES =
 		? 0
 		: Number(_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES || 2)
 const CLUSTER_KILL_TIMEOUT =
-	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
+	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 2000
 
 // connect to pm2 daemon
 _pm22.default.connect(false, (err) => {
@@ -67,8 +67,14 @@ _pm22.default.connect(false, (err) => {
 					script: `server/${_constants.resourceDirectory}/index.fastify.${_constants.resourceExtension}`,
 					instances: CLUSTER_INSTANCES,
 					exec_mode: CLUSTER_INSTANCES === 1 ? 'fork' : 'cluster',
-					interpreter: './node_modules/.bin/sucrase',
-					interpreter_args: '--require sucrase/register',
+					interpreter:
+						_constants.resourceExtension === 'ts'
+							? './node_modules/.bin/sucrase'
+							: 'node',
+					interpreter_args:
+						_constants.resourceExtension === 'ts'
+							? '--require sucrase/register'
+							: '',
 					wait_ready: true,
 					kill_timeout: CLUSTER_KILL_TIMEOUT,
 					cwd: '.',

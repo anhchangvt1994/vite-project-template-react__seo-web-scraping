@@ -7,7 +7,7 @@ const workerManager = WorkerManager.init(
 	path.resolve(__dirname, `./worker.${resourceExtension}`),
 	{
 		minWorkers: 1,
-		maxWorkers: 4,
+		maxWorkers: 3,
 	},
 	['fetchData', 'refreshData']
 )
@@ -26,19 +26,22 @@ export const fetchData = async (
 		return { status: 500, data: {}, message: 'input is required' }
 	}
 
-	const freePool = workerManager.getFreePool()
+	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
+	let result
 
 	try {
-		const result = await pool.exec('fetchData', [input, init])
-
-		return result
+		result = await pool.exec('fetchData', [input, init])
 	} catch (err) {
 		Console.error(err)
-		return { status: 500, data: {}, message: 'input is required' }
-	} finally {
-		freePool.terminate()
+		result = { status: 500, data: {}, message: 'input is required' }
 	}
+
+	freePool.terminate({
+		force: true,
+	})
+
+	return result
 } // fetchData
 
 export const refreshData = async (cacheKeyList: string[]) => {
@@ -47,17 +50,20 @@ export const refreshData = async (cacheKeyList: string[]) => {
 		return
 	}
 
-	const freePool = workerManager.getFreePool()
+	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
+	let result
 
 	try {
 		await pool.exec('refreshData', [cacheKeyList])
-
-		return 'finish'
+		result = 'finish'
 	} catch (err) {
 		Console.error(err)
-		return
-	} finally {
-		freePool.terminate()
 	}
+
+	freePool.terminate({
+		force: true,
+	})
+
+	return result
 } // refreshData

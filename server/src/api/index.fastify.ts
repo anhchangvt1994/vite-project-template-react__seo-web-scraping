@@ -267,7 +267,7 @@ const apiService = (async () => {
 
 	return {
 		init(app: FastifyInstance) {
-			if (!app) return Console.warn('You need provide express app!')
+			if (!app) return Console.warn('You need provide fastify app!')
 			_app = app
 			_allRequestHandler()
 		},

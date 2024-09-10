@@ -17,42 +17,43 @@ const workerManager = _WorkerManager2.default.init(
 	_path2.default.resolve(__dirname, `./worker.${_constants.resourceExtension}`),
 	{
 		minWorkers: 1,
-		maxWorkers: 4,
+		maxWorkers: 2,
 	},
 	['get', 'set', 'remove', 'updateStatus']
 )
 
 const getData = async (key, options) => {
-	const freePool = workerManager.getFreePool()
+	const freePool = await workerManager.getFreePool({
+		delay: 150,
+	})
 	const pool = freePool.pool
+	let result
 
 	try {
-		const result = await pool.exec('get', [
-			_constants.dataPath,
-			key,
-			'br',
-			options,
-		])
+		result = await pool.exec('get', [_constants.dataPath, key, 'br', options])
 
 		if (result && result.status === 200) {
 			result.data = _fs2.default.readFileSync(result.response)
 		}
-
-		return result
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
-		return
-	} finally {
-		freePool.terminate()
 	}
+
+	freePool.terminate({
+		force: true,
+	})
+
+	return result
 }
 exports.getData = getData // getData
+
 const getStore = async (key, options) => {
-	const freePool = workerManager.getFreePool()
+	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
+	let result
 
 	try {
-		const result = await pool.exec('get', [
+		result = await pool.exec('get', [
 			_constants.storePath,
 			key,
 			'json',
@@ -63,44 +64,50 @@ const getStore = async (key, options) => {
 			const tmpData = _fs2.default.readFileSync(result.response)
 			result.data = tmpData ? JSON.parse(tmpData) : tmpData
 		}
-
-		return result
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
-		return
-	} finally {
-		freePool.terminate()
 	}
+
+	freePool.terminate({
+		force: true,
+	})
+
+	return result
 }
 exports.getStore = getStore // getStore
 
 const setData = async (key, content, options) => {
-	const freePool = workerManager.getFreePool()
+	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
+	let result
 
 	try {
-		const result = await pool.exec('set', [
+		result = await pool.exec('set', [
 			_constants.dataPath,
 			key,
 			'br',
 			content,
 			options,
 		])
-		return result
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
-		return
-	} finally {
-		freePool.terminate()
 	}
+
+	freePool.terminate({
+		force: true,
+	})
+
+	return result
 }
 exports.setData = setData // setData
+
 const setStore = async (key, content) => {
-	const freePool = workerManager.getFreePool()
+	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
+	let result
 
 	try {
-		const result = await pool.exec('set', [
+		result = await pool.exec('set', [
 			_constants.storePath,
 			key,
 			'json',
@@ -109,58 +116,68 @@ const setStore = async (key, content) => {
 				isCompress: false,
 			},
 		])
-		return result
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
-		return
-	} finally {
-		freePool.terminate()
 	}
+
+	freePool.terminate({
+		force: true,
+	})
+
+	return result
 }
 exports.setStore = setStore // setStore
 
 const removeData = async (key) => {
-	const freePool = workerManager.getFreePool()
+	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
+	let result
 
 	try {
-		const result = await pool.exec('remove', [_constants.dataPath, key, 'br'])
-		return result
+		result = await pool.exec('remove', [_constants.dataPath, key, 'br'])
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
-		return
-	} finally {
-		freePool.terminate()
 	}
+
+	freePool.terminate({
+		force: true,
+	})
+
+	return result
 }
 exports.removeData = removeData // removeData
+
 const removeStore = async (key) => {
-	const freePool = workerManager.getFreePool()
+	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
+	let result
 
 	try {
-		const result = await pool.exec('remove', [_constants.storePath, key])
-		return result
+		result = await pool.exec('remove', [_constants.storePath, key])
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
-		return
-	} finally {
-		freePool.terminate()
 	}
+
+	freePool.terminate({
+		force: true,
+	})
+
+	return result
 }
 exports.removeStore = removeStore // removeStore
 
-const updateDataStatus = (key, newStatus) => {
-	const freePool = workerManager.getFreePool()
+const updateDataStatus = async (key, newStatus) => {
+	const freePool = await workerManager.getFreePool()
 	const pool = freePool.pool
 
 	try {
 		pool.exec('updateStatus', [_constants.dataPath, key, 'br', newStatus])
 	} catch (err) {
 		_ConsoleHandler2.default.error(err)
-		return
-	} finally {
-		freePool.terminate()
 	}
+
+	freePool.terminate({
+		force: true,
+	})
 }
 exports.updateDataStatus = updateDataStatus // updateDataStatus

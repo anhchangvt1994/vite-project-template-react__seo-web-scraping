@@ -228,7 +228,7 @@ export const set = async (
 	directory: string,
 	key: string,
 	extension: 'json' | 'br',
-	content: string | ISetCacheContent,
+	content: string | Buffer | ISetCacheContent,
 	options?: ISetCacheOptionsParam
 ): Promise<ICacheResult> => {
 	if (!directory) {
@@ -327,3 +327,101 @@ export const remove = (
 		throw err
 	}
 } // remove
+
+export const getData = async (key: string, options?: IGetCacheOptionsParam) => {
+	let result
+
+	try {
+		result = await get(dataPath, key, 'br', options)
+
+		if (result && result.status === 200) {
+			result.data = fs.readFileSync(result.response)
+		}
+	} catch (err) {
+		Console.error(err)
+	}
+
+	return result
+} // getData
+
+export const getStore = async (
+	key: string,
+	options?: IGetCacheOptionsParam
+) => {
+	let result
+
+	try {
+		result = await get(storePath, key, 'json', options)
+
+		if (result && result.status === 200) {
+			const tmpData = fs.readFileSync(result.response) as unknown as string
+			result.data = tmpData ? JSON.parse(tmpData) : tmpData
+		}
+	} catch (err) {
+		Console.error(err)
+	}
+
+	return result
+} // getStore
+
+export const setData = async (
+	key: string,
+	content: string | Buffer | ISetCacheContent,
+	options?: ISetCacheOptionsParam
+) => {
+	let result
+
+	try {
+		result = await set(dataPath, key, 'br', content, options)
+	} catch (err) {
+		Console.error(err)
+	}
+
+	return result
+} // setData
+
+export const setStore = async (key: string, content: any) => {
+	let result
+
+	try {
+		result = await set(storePath, key, 'json', content, {
+			isCompress: false,
+		})
+	} catch (err) {
+		Console.error(err)
+	}
+
+	return result
+} // setStore
+
+export const removeData = async (key: string) => {
+	let result
+
+	try {
+		result = await remove(dataPath, key, 'br')
+	} catch (err) {
+		Console.error(err)
+	}
+
+	return result
+} // removeData
+
+export const removeStore = async (key: string) => {
+	let result
+
+	try {
+		result = await remove(storePath, key, 'json')
+	} catch (err) {
+		Console.error(err)
+	}
+
+	return result
+} // removeStore
+
+export const updateDataStatus = async (key: string, newStatus?: IStatus) => {
+	try {
+		updateStatus(dataPath, key, 'br', newStatus)
+	} catch (err) {
+		Console.error(err)
+	}
+} // updateDataStatus

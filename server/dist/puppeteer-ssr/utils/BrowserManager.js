@@ -35,39 +35,50 @@ var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _store = require('../../store')
 var _ConsoleHandler = require('../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _FileHandler = require('../../utils/FileHandler')
 var _WorkerManager = require('../../utils/WorkerManager')
 var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
 
 var _constants3 = require('../constants')
+const { parentPort, isMainThread } = require('worker_threads')
 
-const workerManager = _WorkerManager2.default.init(
-	_path2.default.resolve(
-		__dirname,
-		`../../utils/FollowResource.worker/index.${_constants.resourceExtension}`
-	),
-	{
-		minWorkers: 1,
-		maxWorkers: 3,
-	},
-	['deleteResource']
-)
+const workerManager = (() => {
+	if (!isMainThread) return
 
-const deleteUserDataDir = async (dir) => {
+	return _WorkerManager2.default.init(
+		_path2.default.resolve(
+			__dirname,
+			`../../utils/FollowResource.worker/index.${_constants.resourceExtension}`
+		),
+		{
+			minWorkers: 1,
+			maxWorkers: 1,
+			enableGlobalCounter: !isMainThread,
+		},
+		['deleteResource']
+	)
+})()
+
+const _deleteUserDataDir = async (dir) => {
+	if (!workerManager) return
 	if (dir) {
-		const freePool = workerManager.getFreePool()
+		const freePool = await workerManager.getFreePool({
+			delay: 250,
+		})
 		const pool = freePool.pool
 
 		try {
-			pool.exec('deleteResource', [dir])
+			await pool.exec('deleteResource', [dir])
 		} catch (err) {
 			_ConsoleHandler2.default.log('BrowserManager line 39:')
 			_ConsoleHandler2.default.error(err)
-		} finally {
-			freePool.terminate()
 		}
+
+		freePool.terminate({
+			force: true,
+		})
 	}
-}
-exports.deleteUserDataDir = deleteUserDataDir // deleteUserDataDir
+} // _deleteUserDataDir
 
 const _getSafePage = (page) => {
 	let SafePage = page
@@ -78,33 +89,71 @@ const _getSafePage = (page) => {
 	}
 } // _getSafePage
 
-const BrowserManager = (
-	userDataDir = () => `${_constants.userDataPath}/user_data`
-) => {
+const _getBrowserForSubThreads = (() => {
+	const limit = 3
+	let counter = 0
+	const _get = async () => {
+		if (isMainThread) return
+
+		const wsEndpoint = _FileHandler.getTextData.call(
+			void 0,
+			`${_constants.userDataPath}/wsEndpoint.txt`
+		)
+
+		if (!wsEndpoint && counter < limit) {
+			counter++
+			// await new Promise((res) => setTimeout(res, 150))
+			return _get()
+		}
+
+		const browser = await _constants3.puppeteer.connect({
+			browserWSEndpoint: wsEndpoint,
+		})
+
+		if ((!browser || !browser.connected) && counter < limit) {
+			counter++
+			// await new Promise((res) => setTimeout(res, 150))
+			return _get()
+		}
+
+		counter = 0
+
+		return browser
+	} // get
+
+	return () => _get()
+})() // _getBrowserForSubThreads
+
+let browserManager
+function BrowserManager() {
 	if (process.env.PUPPETEER_SKIP_DOWNLOAD && !_constants3.canUseLinuxChromium)
 		return
 
-	const maxRequestPerBrowser = 20
-	let totalRequests = 0
-	let browserLaunch
-	let reserveUserDataDirPath
-	let executablePath
+	if (browserManager) return browserManager
+	else browserManager = this
 
-	const __launch = async () => {
-		totalRequests = 0
+	if (isMainThread) {
+		const userDataDir = () =>
+			`${_constants.userDataPath}/user_data_${Date.now()}`
+		const strUserDataDir = userDataDir()
+		const maxRequestPerBrowser = 10
+		let totalRequests = 0
+		let browserLaunch
+		let reserveUserDataDirPath
+		let executablePath
 
-		const selfUserDataDirPath =
-			reserveUserDataDirPath ||
-			`${userDataDir()}${
+		const __launch = async () => {
+			totalRequests = 0
+
+			const selfUserDataDirPath =
+				reserveUserDataDirPath ||
+				`${strUserDataDir}${
+					_serverconfig2.default.isRemoteCrawler ? '_remote' : ''
+				}`
+			reserveUserDataDirPath = `${strUserDataDir}_reserve${
 				_serverconfig2.default.isRemoteCrawler ? '_remote' : ''
 			}`
-		reserveUserDataDirPath = `${userDataDir()}_reserve${
-			_serverconfig2.default.isRemoteCrawler ? '_remote' : ''
-		}`
 
-		browserLaunch = new Promise(async (res, rej) => {
-			let isError = false
-			let promiseBrowser
 			const browserStore = (() => {
 				const tmpBrowserStore = _store.getStore.call(void 0, 'browser')
 				return tmpBrowserStore || {}
@@ -114,200 +163,237 @@ const BrowserManager = (
 				return tmpPromiseStore || {}
 			})()
 
-			try {
-				if (_constants3.canUseLinuxChromium && !promiseStore.executablePath) {
-					_ConsoleHandler2.default.log('Create executablePath')
-					promiseStore.executablePath = _chromiummin2.default.executablePath(
-						_constants3.chromiumPath
-					)
-				}
+			browserLaunch = new Promise(async (res, rej) => {
+				let isError = false
+				let promiseBrowser
 
-				browserStore.userDataPath = selfUserDataDirPath
-				browserStore.reserveUserDataPath = reserveUserDataDirPath
+				try {
+					if (_constants3.canUseLinuxChromium && !promiseStore.executablePath) {
+						_ConsoleHandler2.default.log('Create executablePath')
+						promiseStore.executablePath = _chromiummin2.default.executablePath(
+							_constants3.chromiumPath
+						)
+					}
 
-				_store.setStore.call(void 0, 'browser', browserStore)
-				_store.setStore.call(void 0, 'promise', promiseStore)
+					browserStore.userDataPath = selfUserDataDirPath
+					browserStore.reserveUserDataPath = reserveUserDataDirPath
 
-				if (!executablePath && promiseStore.executablePath) {
-					executablePath = await promiseStore.executablePath
-				}
+					_store.setStore.call(void 0, 'browser', browserStore)
+					_store.setStore.call(void 0, 'promise', promiseStore)
 
-				if (promiseStore.executablePath) {
-					_ConsoleHandler2.default.log('Start browser with executablePath')
-					promiseBrowser = _constants3.puppeteer.launch({
-						..._constants3.defaultBrowserOptions,
-						userDataDir: selfUserDataDirPath,
-						args: _chromiummin2.default.args,
-						executablePath,
-					})
+					if (!executablePath && promiseStore.executablePath) {
+						executablePath = await promiseStore.executablePath
+					}
 
-					// NOTE - Create a preventive browser to replace when current browser expired
-					new Promise(async (res) => {
-						const reserveBrowser = await _constants3.puppeteer.launch({
+					if (promiseStore.executablePath) {
+						_ConsoleHandler2.default.log('Start browser with executablePath')
+						promiseBrowser = _constants3.puppeteer.launch({
 							..._constants3.defaultBrowserOptions,
-							userDataDir: reserveUserDataDirPath,
+							userDataDir: selfUserDataDirPath,
 							args: _chromiummin2.default.args,
 							executablePath,
 						})
-						try {
-							await reserveBrowser.close()
-						} catch (err) {
-							_ConsoleHandler2.default.log('BrowserManager line 121')
-							_ConsoleHandler2.default.error(err)
-						}
 
-						res(null)
-					})
-				} else {
-					_ConsoleHandler2.default.log('Start browser without executablePath')
-					promiseBrowser = _constants3.puppeteer.launch({
-						..._constants3.defaultBrowserOptions,
-						userDataDir: selfUserDataDirPath,
-					})
-
-					// NOTE - Create a preventive browser to replace when current browser expired
-					new Promise(async (res) => {
-						const reserveBrowser = await _constants3.puppeteer.launch({
-							..._constants3.defaultBrowserOptions,
-							userDataDir: reserveUserDataDirPath,
-						})
-						try {
-							await reserveBrowser.close()
-						} catch (err) {
-							_ConsoleHandler2.default.log('BrowserManager line 143')
-							_ConsoleHandler2.default.error(err)
-						}
-						res(null)
-					})
-				}
-			} catch (err) {
-				isError = true
-				_ConsoleHandler2.default.error(err)
-			} finally {
-				if (isError) return rej(undefined)
-				_ConsoleHandler2.default.log('Start browser success!')
-				res(promiseBrowser)
-			}
-		})
-
-		if (browserLaunch) {
-			try {
-				let tabsClosed = 0
-				const browser = await browserLaunch
-
-				browser.on('createNewPage', async (page) => {
-					const safePage = _getSafePage(page)
-					await new Promise((resolveCloseTab) => {
-						const timeoutCloseTab = setTimeout(async () => {
-							const tmpPage = safePage()
-							if (!tmpPage) resolveCloseTab(null)
-							else if (browser.connected && !tmpPage.isClosed()) {
-								try {
-									await tmpPage.close()
-								} catch (err) {
-									_ConsoleHandler2.default.log('BrowserManager line 164')
-									_ConsoleHandler2.default.error(err)
-								}
-							}
-						}, 180000)
-
-						_optionalChain([
-							safePage,
-							'call',
-							(_) => _(),
-							'optionalAccess',
-							(_2) => _2.once,
-							'call',
-							(_3) =>
-								_3('close', () => {
-									clearTimeout(timeoutCloseTab)
-									resolveCloseTab(null)
-								}),
-						])
-					})
-
-					tabsClosed++
-
-					if (!_constants.SERVER_LESS && tabsClosed === maxRequestPerBrowser) {
-						if (browser.connected)
+						// NOTE - Create a preventive browser to replace when current browser expired
+						new Promise(async (res) => {
+							const reserveBrowser = await _constants3.puppeteer.launch({
+								..._constants3.defaultBrowserOptions,
+								userDataDir: reserveUserDataDirPath,
+								args: _chromiummin2.default.args,
+								executablePath,
+							})
 							try {
-								await browser.close()
+								await reserveBrowser.close()
 							} catch (err) {
-								_ConsoleHandler2.default.log('BrowserManager line 193')
+								_ConsoleHandler2.default.log('BrowserManager line 121')
 								_ConsoleHandler2.default.error(err)
 							}
+
+							res(null)
+						})
+					} else {
+						_ConsoleHandler2.default.log('Start browser without executablePath')
+						promiseBrowser = _constants3.puppeteer.launch({
+							..._constants3.defaultBrowserOptions,
+							userDataDir: selfUserDataDirPath,
+						})
+
+						// NOTE - Create a preventive browser to replace when current browser expired
+						new Promise(async (res) => {
+							const reserveBrowser = await _constants3.puppeteer.launch({
+								..._constants3.defaultBrowserOptions,
+								userDataDir: reserveUserDataDirPath,
+							})
+							try {
+								await reserveBrowser.close()
+							} catch (err) {
+								_ConsoleHandler2.default.log('BrowserManager line 143')
+								_ConsoleHandler2.default.error(err)
+							}
+							res(null)
+						})
 					}
-				})
+				} catch (err) {
+					isError = true
+					_ConsoleHandler2.default.error(err)
+				} finally {
+					if (isError) return rej(undefined)
+					_ConsoleHandler2.default.log('Start browser success!')
+					res(promiseBrowser)
+				}
+			})
 
-				browser.once('disconnected', () => {
-					exports.deleteUserDataDir.call(void 0, selfUserDataDirPath)
-				})
+			if (browserLaunch) {
+				try {
+					let tabsClosed = 0
+					const browser = await browserLaunch
+
+					browserStore.wsEndpoint = browser.wsEndpoint()
+					_store.setStore.call(void 0, 'browser', browserStore)
+
+					_FileHandler.setTextData.call(
+						void 0,
+						`${_constants.userDataPath}/wsEndpoint.txt`,
+						browserStore.wsEndpoint
+					)
+
+					// let closePageTimeout: NodeJS.Timeout
+					let closeBrowserTimeout
+
+					browser.on('closePage', async (url) => {
+						tabsClosed++
+						const currentWsEndpoint = _store.getStore.call(
+							void 0,
+							'browser'
+						).wsEndpoint
+
+						if (
+							!_constants.SERVER_LESS &&
+							currentWsEndpoint !== browser.wsEndpoint()
+						) {
+							if (browser.connected)
+								try {
+									// if (closePageTimeout) clearTimeout(closePageTimeout)
+
+									if (closeBrowserTimeout) clearTimeout(closeBrowserTimeout)
+									if (tabsClosed === maxRequestPerBrowser) {
+										browser.close().then(() => {
+											browser.emit('closed', true)
+											_ConsoleHandler2.default.log('Browser closed')
+										})
+									} else {
+										closeBrowserTimeout = setTimeout(() => {
+											if (!browser.connected) return
+											browser.close().then(() => {
+												browser.emit('closed', true)
+												_ConsoleHandler2.default.log('Browser closed')
+											})
+										}, 60000)
+									}
+								} catch (err) {
+									_ConsoleHandler2.default.log('BrowserManager line 193')
+									_ConsoleHandler2.default.error(err)
+								}
+						}
+						// else {
+						// 	if (closePageTimeout) clearTimeout(closePageTimeout)
+						// 	closePageTimeout = setTimeout(() => {
+						// 		browser.pages().then(async (pages) => {
+						// 			if (pages.length) {
+						// 				for (const page of pages) {
+						// 					if (browser.connected && !page.isClosed()) page.close()
+						// 				}
+						// 			}
+						// 		})
+						// 	}, 30000)
+						// }
+					})
+
+					browser.once('disconnected', () => {
+						_deleteUserDataDir(selfUserDataDirPath)
+					})
+				} catch (err) {
+					_ConsoleHandler2.default.log('Browser manager line 177:')
+					_ConsoleHandler2.default.error(err)
+				}
+			}
+		} // __launch()
+
+		if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE) {
+			__launch()
+		}
+
+		const _get = async () => {
+			if (!browserLaunch || !_isReady()) {
+				__launch()
+			}
+
+			totalRequests++
+			const browser = await browserLaunch
+
+			return browser
+		} // _get
+
+		const _newPage = async () => {
+			try {
+				const browser = await _get()
+
+				if (!browser.connected) {
+					browser.close()
+					__launch()
+					return _newPage()
+				}
+
+				const page = await _optionalChain([
+					browser,
+					'optionalAccess',
+					(_) => _.newPage,
+					'optionalCall',
+					(_2) => _2(),
+				])
+
+				if (!page) {
+					browser.close()
+					__launch()
+					return _newPage()
+				}
+
+				browser.emit('createNewPage', page)
+				return page
 			} catch (err) {
-				_ConsoleHandler2.default.log('Browser manager line 177:')
-				_ConsoleHandler2.default.error(err)
-			}
-		}
-	} // __launch()
-
-	if (_constants.POWER_LEVEL === _constants.POWER_LEVEL_LIST.THREE) {
-		__launch()
-	}
-
-	const _get = async () => {
-		if (!browserLaunch || !_isReady()) {
-			__launch()
-		}
-
-		totalRequests++
-		const curBrowserLaunch = browserLaunch
-
-		// const pages = (await (await curBrowserLaunch)?.pages())?.length ?? 0;
-		// await new Promise((res) => setTimeout(res, pages * 10));
-
-		return curBrowserLaunch
-	} // _get
-
-	const _newPage = async () => {
-		try {
-			const browser = await _get()
-
-			if (!browser.connected) {
-				browser.close()
 				__launch()
 				return _newPage()
 			}
+		} // _newPage
 
-			const page = await _optionalChain([
-				browser,
-				'optionalAccess',
-				(_4) => _4.newPage,
-				'optionalCall',
-				(_5) => _5(),
-			])
+		const _isReady = () => {
+			return totalRequests < maxRequestPerBrowser
+		} // _isReady
 
-			if (!page) {
-				browser.close()
-				__launch()
-				return _newPage()
-			}
-
-			browser.emit('createNewPage', page)
-			return page
-		} catch (err) {
-			__launch()
-			return _newPage()
+		return {
+			get: _get,
+			newPage: _newPage,
+			isReady: _isReady,
 		}
-	} // _newPage
+	} else {
+		const _get = async () => {
+			parentPort.postMessage({
+				name: 'getBrowser',
+			})
+			const browser = await _getBrowserForSubThreads()
 
-	const _isReady = () => {
-		return totalRequests < maxRequestPerBrowser
-	} // _isReady
+			return browser
+		} // _get
 
-	return {
-		get: _get,
-		newPage: _newPage,
-		isReady: _isReady,
+		return {
+			get: _get,
+		}
 	}
 }
 
-exports.default = BrowserManager
+exports.default = () => {
+	if (browserManager) return browserManager
+
+	browserManager = BrowserManager()
+	return browserManager
+}

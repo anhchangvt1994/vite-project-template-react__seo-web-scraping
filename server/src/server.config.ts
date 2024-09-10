@@ -1,4 +1,3 @@
-import { ENV_MODE } from './utils/InitEnv'
 import { defineServerConfig } from './utils/ServerConfigHandler'
 
 const ServerConfig = defineServerConfig({

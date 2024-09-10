@@ -12,6 +12,10 @@ export const APIStore: IStores['api'] = {
 
 export const store: IStores = {
 	browser: BrowserStore,
+	threadAdvanceInfo: {
+		order: 0,
+	},
+	totalRequestToCrawl: 0,
 	headers: HeadersStore,
 	promise: PromiseStore,
 	api: APIStore,

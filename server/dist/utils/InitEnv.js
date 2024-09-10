@@ -62,7 +62,7 @@ const PROCESS_ENV = (() => {
 			break
 	}
 
-	const tmpProcessEnv = process.env
+	const tmpProcessEnv = { ...process.env }
 
 	tmpProcessEnv.BUILD_TOOL = 'vite'
 	tmpProcessEnv.RESET_RESOURCE = true
@@ -74,6 +74,25 @@ const PROCESS_ENV = (() => {
 			? false
 			: true
 	}
+	tmpProcessEnv.DISABLE_COMPRESS = Boolean(
+		process.env.DISABLE_COMPRESS === undefined
+			? false
+			: ['true', '1'].includes(
+					(process.env.DISABLE_COMPRESS || '').toLowerCase()
+			  )
+	)
+	tmpProcessEnv.DISABLE_DEEP_OPTIMIZE =
+		process.env.DISABLE_DEEP_OPTIMIZE === undefined
+			? false
+			: ['true', '1'].includes(
+					(process.env.DISABLE_DEEP_OPTIMIZE || '').toLowerCase()
+			  )
+	tmpProcessEnv.DISABLE_OPTIMIZE =
+		process.env.DISABLE_OPTIMIZE === undefined
+			? false
+			: ['true', '1'].includes(
+					(process.env.DISABLE_OPTIMIZE || '').toLowerCase()
+			  )
 
 	return tmpProcessEnv
 })()

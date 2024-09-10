@@ -3,13 +3,13 @@
 	"name": "puppeteer-ssr",
 	"version": "1.0.0",
 	"description": "puppeteer-ssr",
-	"main": "index.ts",
+	"main": "./index/index.ts",
 	"scripts": {},
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"puppeteer": "^22.6.3",
+		"puppeteer": "^23.0.0",
 		"html-minifier-terser": "^7.2.0",
-		"@sparticuz/chromium-min": "126.0.0"
+		"@sparticuz/chromium-min": "127.0.0"
 	}
 }

@@ -30,7 +30,7 @@ var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _zlib = require('zlib')
 
-var _CacheManager = require('../api/utils/CacheManager')
+var _utils = require('../api/utils/CacheManager/utils')
 var _constants = require('../constants')
 var _serverconfig = require('../server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
@@ -46,8 +46,8 @@ var _constants3 = require('./constants')
 var _ForamatUrl = require('./utils/ForamatUrl')
 var _ISRGeneratornext = require('./utils/ISRGenerator.next')
 var _ISRGeneratornext2 = _interopRequireDefault(_ISRGeneratornext)
-var _ISRHandler = require('./utils/ISRHandler')
-var _ISRHandler2 = _interopRequireDefault(_ISRHandler)
+var _ISRHandlerworker = require('./utils/ISRHandler.worker')
+var _ISRHandlerworker2 = _interopRequireDefault(_ISRHandlerworker)
 
 const _resetCookie = (res) => {
 	_CookieHandler.setCookie.call(void 0, res, `BotInfo=;Max-Age=0;Path=/`)
@@ -109,7 +109,7 @@ const puppeteerSSRService = (async () => {
 						  )
 						: ''
 
-					const result = await _ISRHandler2.default.call(void 0, {
+					const result = await _ISRHandlerworker2.default.call(void 0, {
 						startGenerating,
 						hasCache: isFirstRequest,
 						url,
@@ -131,7 +131,7 @@ const puppeteerSSRService = (async () => {
 								'MTr cleaner service can not run in none serverless environment'
 							)
 
-					await _CleanerService2.default.call(void 0)
+					await _CleanerService2.default.call(void 0, true)
 
 					_ConsoleHandler2.default.log('Finish clean service!')
 
@@ -286,7 +286,7 @@ const puppeteerSSRService = (async () => {
 													)
 
 													if (contentEncoding === 'br') return tmpContent
-													else
+													else if (tmpContent && Buffer.isBuffer(tmpContent))
 														tmpContent = _zlib.brotliDecompressSync
 															.call(void 0, tmpContent)
 															.toString()
@@ -304,9 +304,10 @@ const puppeteerSSRService = (async () => {
 									} else if (result.response.indexOf('.br') !== -1) {
 										const content = _fs2.default.readFileSync(result.response)
 
-										tmpBody = _zlib.brotliDecompressSync
-											.call(void 0, content)
-											.toString()
+										if (content && Buffer.isBuffer(content))
+											tmpBody = _zlib.brotliDecompressSync
+												.call(void 0, content)
+												.toString()
 									} else {
 										tmpBody = _fs2.default.readFileSync(result.response)
 									}
@@ -396,7 +397,7 @@ const puppeteerSSRService = (async () => {
 
 						tmpStoreKey = _StringHelper.hashCode.call(void 0, req.url)
 
-						tmpAPIStore = await _CacheManager.getStore.call(void 0, tmpStoreKey)
+						tmpAPIStore = await _utils.getStore.call(void 0, tmpStoreKey)
 
 						if (tmpAPIStore) return tmpAPIStore.data
 
@@ -420,7 +421,7 @@ const puppeteerSSRService = (async () => {
 									: '?device=' + deviceType
 							}`
 						)
-						tmpAPIStore = await _CacheManager.getStore.call(void 0, tmpStoreKey)
+						tmpAPIStore = await _utils.getStore.call(void 0, tmpStoreKey)
 
 						if (tmpAPIStore) return tmpAPIStore.data
 
@@ -432,10 +433,7 @@ const puppeteerSSRService = (async () => {
 					if (apiStoreData) {
 						if (apiStoreData.length) {
 							for (const cacheKey of apiStoreData) {
-								const apiCache = await _CacheManager.getData.call(
-									void 0,
-									cacheKey
-								)
+								const apiCache = await _utils.getData.call(void 0, cacheKey)
 								if (
 									!apiCache ||
 									!apiCache.cache ||
@@ -484,7 +482,7 @@ const puppeteerSSRService = (async () => {
 	return {
 		init(app) {
 			if (!app)
-				return _ConsoleHandler2.default.warn('You need provide express app!')
+				return _ConsoleHandler2.default.warn('You need provide fastify app!')
 			_app = app
 			_allRequestHandler()
 		},

@@ -35,6 +35,23 @@ var _InitEnv = require('./utils/InitEnv')
 
 require('events').EventEmitter.setMaxListeners(200)
 
+const setupCors = (res) => {
+	res
+		.writeHeader('Access-Control-Allow-Origin', '*')
+		.writeHeader('Access-Control-Allow-Credentials', 'true')
+		.writeHeader(
+			'Access-Control-Allow-Methods',
+			'GET, POST, PUT, DELETE, OPTIONS'
+		)
+		.writeHeader(
+			'Access-Control-Allow-Headers',
+			'origin, content-type, accept,' +
+				' x-requested-with, authorization, lang, domain-key, Access-Control-Allow-Origin'
+		)
+		.writeHeader('Access-Control-Max-Age', '2592000')
+		.writeHeader('Vary', 'Origin')
+}
+
 const startServer = async () => {
 	let port =
 		_InitEnv.PROCESS_ENV.PORT || _InitEnv.ENV_MODE === 'production'
@@ -56,22 +73,25 @@ const startServer = async () => {
 		cert_file_name: 'misc/cert.pem',
 	})
 
-	if (
-		_serverconfig2.default.crawler &&
-		!_serverconfig2.default.isRemoteCrawler
-	) {
+	if (!_serverconfig2.default.isRemoteCrawler) {
 		app.get('/robots.txt', (res, req) => {
 			try {
 				const body = _fs2.default.readFileSync(
 					_path2.default.resolve(__dirname, '../robots.txt')
 				)
-				res.end(body)
+				res.end(body, true)
 			} catch (e) {
 				res.writeStatus('404')
-				res.end('File not found')
+				res.end('File not found', true)
 			}
 		})
 	}
+
+	app.any('/*', (res, req) => {
+		setupCors(res)
+
+		res.end('', true) // end the request
+	})
 	;(await require('./api/index.uws').default).init(app)
 	;(await require('./puppeteer-ssr/index.uws').default).init(app)
 

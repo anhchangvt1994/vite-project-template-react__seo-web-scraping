@@ -4,7 +4,7 @@ import { IBotInfo } from '../types'
 import CleanerService from '../utils/CleanerService'
 import Console from '../utils/ConsoleHandler'
 import { CACHEABLE_STATUS_CODE, COOKIE_EXPIRED } from './constants'
-import { convertUrlHeaderToQueryString, getUrl } from './utils/ForamatUrl.bun'
+import { convertUrlHeaderToQueryString, getUrl } from './utils/FormatUrl.bun'
 import ISRGenerator from './utils/SSRGenerator.next'
 import SSRHandler from './utils/SSRHandler'
 import Elysia from 'elysia'
@@ -159,7 +159,7 @@ const puppeteerSSRService = (async () => {
 
 	return {
 		init(app: Elysia) {
-			if (!app) return Console.warn('You need provide express app!')
+			if (!app) return Console.warn('You need provide bun app!')
 			_app = app
 			_allRequestHandler()
 		},

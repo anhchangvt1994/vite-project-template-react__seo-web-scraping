@@ -7,16 +7,17 @@ import {
 import { brotliCompressSync, gzipSync } from 'zlib'
 import {
 	getStore as getStoreCache,
-	setStore as setStoreCache,
 	getData as getDataCache,
+	setStore as setStoreCache,
 	setData as setDataCache,
 	removeData as removeDataCache,
 	updateDataStatus as updateDataCacheStatus,
-} from './utils/CacheManager'
+} from './utils/CacheManager/utils'
 import Console from '../utils/ConsoleHandler'
 import { decode } from '../utils/StringHelper'
 import ServerConfig from '../server.config'
 import { fetchData, refreshData } from './utils/FetchManager'
+import apiLighthouse from './routes/lighthouse/index.uws'
 
 const handleArrayBuffer = (message: ArrayBuffer | string) => {
 	if (message instanceof ArrayBuffer) {
@@ -260,17 +261,21 @@ const apiService = (async () => {
 
 							const data = convertData(cache, contentEncoding)
 
-							res.cork(() => {
-								res.writableEnded = true
-								res
-									.writeStatus(
-										`${cache.status}${cache.message ? ' ' + cache.message : ''}`
-									)
-									.writeHeader('Content-Type', 'application/json')
-									.writeHeader('Cache-Control', 'no-store')
-									.writeHeader('Content-Encoding', contentEncoding)
-									.end(data, true)
-							})
+							if (!res.writableEnded) {
+								res.cork(() => {
+									res.writableEnded = true
+									res
+										.writeStatus(
+											`${cache.status}${
+												cache.message ? ' ' + cache.message : ''
+											}`
+										)
+										.writeHeader('Content-Type', 'application/json')
+										.writeHeader('Cache-Control', 'no-store')
+										.writeHeader('Content-Encoding', contentEncoding)
+										.end(data, true)
+								})
+							}
 						} // IF expiredTime is valid
 					} // IF has apiCache
 				} // IF requestInfo.expiredTime > 0
@@ -336,7 +341,11 @@ const apiService = (async () => {
 
 	return {
 		init(app: TemplatedApp) {
-			if (!app) return Console.warn('You need provide express app!')
+			if (!app) return Console.warn('You need provide uWebsockets app!')
+
+			// NOTE - Handle API Lighthouse
+			apiLighthouse.init(app)
+
 			_app = {
 				all: (pattern, handler) => {
 					app.get(pattern, handler)

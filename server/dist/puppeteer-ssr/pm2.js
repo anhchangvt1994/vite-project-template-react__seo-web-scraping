@@ -18,7 +18,7 @@ const CLUSTER_INSTANCES =
 		? 0
 		: Number(_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES || 2)
 const CLUSTER_KILL_TIMEOUT =
-	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 1600
+	_InitEnv.PROCESS_ENV.CLUSTER_INSTANCES === 'max' ? 7000 : 2000
 
 // connect to pm2 daemon
 _pm22.default.connect(false, (err) => {
@@ -40,16 +40,7 @@ _pm22.default.connect(false, (err) => {
 
 			let counter = 0
 			for (const process of processList) {
-				if (process.name === 'cleaner-service' && process.pm_id !== undefined) {
-					// pm2.restart(process.pm_id, function (err) {
-					// 	counter++
-					// 	if (err) {
-					// 		console.error(err)
-					// 		selfProcess.exit(2)
-					// 	}
-					// 	if (counter === totalProcess) resAfterCheckToRestart(true)
-					// })
-				} else if (
+				if (
 					(process.name === 'start-puppeteer-ssr' ||
 						process.name === 'puppeteer-ssr') &&
 					process.pm_id !== undefined
@@ -70,35 +61,20 @@ _pm22.default.connect(false, (err) => {
 		})
 
 		if (!hasRestarted) {
-			// pm2.start(
-			// 	{
-			// 		name: 'cleaner-service',
-			// 		script: `${distPath}/utils/CleanerService.${resourceExtension}`,
-			// 		instances: 1,
-			// 		exec_mode: 'cluster',
-			// 		interpreter: './node_modules/.bin/sucrase',
-			// 		interpreter_args: '--require sucrase/register',
-			// 		wait_ready: true,
-			// 		kill_timeout: CLUSTER_KILL_TIMEOUT,
-			// 		cwd: '.',
-			// 		env: {},
-			// 	},
-			// 	function (err, apps) {
-			// 		if (err) {
-			// 			Console.error(err)
-			// 			return
-			// 		}
-			// 	}
-			// )
-
 			_pm22.default.start(
 				{
 					name: 'puppeteer-ssr',
 					script: `server/${_constants.resourceDirectory}/index.${_constants.resourceExtension}`,
 					instances: CLUSTER_INSTANCES,
-					exec_mode: CLUSTER_INSTANCES === 1 ? 'fork' : 'cluster',
-					interpreter: './node_modules/.bin/sucrase',
-					interpreter_args: '--require sucrase/register',
+					exec_mode: 'cluster',
+					interpreter:
+						_constants.resourceExtension === 'ts'
+							? './node_modules/.bin/sucrase'
+							: 'node',
+					interpreter_args:
+						_constants.resourceExtension === 'ts'
+							? '--require sucrase/register'
+							: '',
 					wait_ready: true,
 					kill_timeout: CLUSTER_KILL_TIMEOUT,
 					cwd: '.',

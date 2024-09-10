@@ -355,3 +355,132 @@ const remove = (directory, key, extension) => {
 	}
 }
 exports.remove = remove // remove
+
+const getData = async (key, options) => {
+	let result
+
+	try {
+		result = await exports.get.call(
+			void 0,
+			_constants.dataPath,
+			key,
+			'br',
+			options
+		)
+
+		if (result && result.status === 200) {
+			result.data = _fs2.default.readFileSync(result.response)
+		}
+	} catch (err) {
+		_ConsoleHandler2.default.error(err)
+	}
+
+	return result
+}
+exports.getData = getData // getData
+
+const getStore = async (key, options) => {
+	let result
+
+	try {
+		result = await exports.get.call(
+			void 0,
+			_constants.storePath,
+			key,
+			'json',
+			options
+		)
+
+		if (result && result.status === 200) {
+			const tmpData = _fs2.default.readFileSync(result.response)
+			result.data = tmpData ? JSON.parse(tmpData) : tmpData
+		}
+	} catch (err) {
+		_ConsoleHandler2.default.error(err)
+	}
+
+	return result
+}
+exports.getStore = getStore // getStore
+
+const setData = async (key, content, options) => {
+	let result
+
+	try {
+		result = await exports.set.call(
+			void 0,
+			_constants.dataPath,
+			key,
+			'br',
+			content,
+			options
+		)
+	} catch (err) {
+		_ConsoleHandler2.default.error(err)
+	}
+
+	return result
+}
+exports.setData = setData // setData
+
+const setStore = async (key, content) => {
+	let result
+
+	try {
+		result = await exports.set.call(
+			void 0,
+			_constants.storePath,
+			key,
+			'json',
+			content,
+			{
+				isCompress: false,
+			}
+		)
+	} catch (err) {
+		_ConsoleHandler2.default.error(err)
+	}
+
+	return result
+}
+exports.setStore = setStore // setStore
+
+const removeData = async (key) => {
+	let result
+
+	try {
+		result = await exports.remove.call(void 0, _constants.dataPath, key, 'br')
+	} catch (err) {
+		_ConsoleHandler2.default.error(err)
+	}
+
+	return result
+}
+exports.removeData = removeData // removeData
+
+const removeStore = async (key) => {
+	let result
+
+	try {
+		result = await exports.remove.call(
+			void 0,
+			_constants.storePath,
+			key,
+			'json'
+		)
+	} catch (err) {
+		_ConsoleHandler2.default.error(err)
+	}
+
+	return result
+}
+exports.removeStore = removeStore // removeStore
+
+const updateDataStatus = async (key, newStatus) => {
+	try {
+		exports.updateStatus.call(void 0, _constants.dataPath, key, 'br', newStatus)
+	} catch (err) {
+		_ConsoleHandler2.default.error(err)
+	}
+}
+exports.updateDataStatus = updateDataStatus // updateDataStatus

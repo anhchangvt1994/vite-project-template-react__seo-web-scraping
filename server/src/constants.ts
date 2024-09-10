@@ -39,6 +39,15 @@ export const userDataPath = PROCESS_ENV.IS_SERVER
 	  })()
 	: path.resolve(__dirname, './puppeteer-ssr/browsers')
 
+export const workerManagerPath = PROCESS_ENV.IS_SERVER
+	? (() => {
+			const tmpPath = '/tmp'
+			if (fs.existsSync(tmpPath)) return tmpPath + '/WorkerManager'
+
+			return path.resolve(__dirname, './utils/WorkerManager')
+	  })()
+	: path.resolve(__dirname, './puppeteer-ssr/browsers')
+
 export const resourceExtension = PROCESS_ENV.IS_SERVER ? 'js' : 'ts'
 export const resourceDirectory = PROCESS_ENV.IS_SERVER ? 'dist' : 'src'
 

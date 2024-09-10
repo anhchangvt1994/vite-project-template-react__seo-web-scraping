@@ -7,6 +7,7 @@ import {
 	resourceExtension,
 	storePath,
 	userDataPath,
+	workerManagerPath,
 } from '../constants'
 import { canUseLinuxChromium, chromiumPath } from '../puppeteer-ssr/constants'
 import ServerConfig from '../server.config'
@@ -15,141 +16,199 @@ import Console from './ConsoleHandler'
 import { PROCESS_ENV } from './InitEnv'
 import WorkerManager from './WorkerManager'
 
-const workerManager = WorkerManager.init(
-	path.resolve(__dirname, `./FollowResource.worker/index.${resourceExtension}`),
-	{
-		minWorkers: 1,
-		maxWorkers: 4,
-	},
-	['scanToCleanBrowsers', 'scanToCleanPages', 'scanToCleanAPIDataCache']
-)
+const { isMainThread } = require('worker_threads')
 
-const CleanerService = async () => {
-	// NOTE - Browsers Cleaner
-	const cleanBrowsers = (() => {
-		let executablePath: string
-		return async (durationValidToKeep = PROCESS_ENV.RESET_RESOURCE ? 0 : 1) => {
-			const browserStore = (() => {
-				const tmpBrowserStore = getStore('browser')
-				return tmpBrowserStore || {}
-			})()
-			const promiseStore = (() => {
-				const tmpPromiseStore = getStore('promise')
-				return tmpPromiseStore || {}
-			})()
+let isFirstInitCompleted = false
 
-			if (canUseLinuxChromium && !promiseStore.executablePath) {
-				Console.log('Create executablePath')
-				promiseStore.executablePath = Chromium.executablePath(chromiumPath)
-			}
+const workerManager = (() => {
+	if (!isMainThread) return
+	return WorkerManager.init(
+		path.resolve(
+			__dirname,
+			`./FollowResource.worker/index.${resourceExtension}`
+		),
+		{
+			minWorkers: 1,
+			maxWorkers: 5,
+		},
+		[
+			'scanToCleanBrowsers',
+			'scanToCleanPages',
+			'scanToCleanAPIDataCache',
+			'deleteResource',
+		]
+	)
+})()
 
-			setStore('browser', browserStore)
-			setStore('promise', promiseStore)
+const CleanerService = async (force = false) => {
+	if (isFirstInitCompleted && !force) return
+	if (!process.env.PUPPETEER_SKIP_DOWNLOAD && !canUseLinuxChromium) {
+		if (!workerManager) return
 
-			if (!executablePath && promiseStore.executablePath) {
-				executablePath = await promiseStore.executablePath
-			}
+		// NOTE - Browsers Cleaner
+		const cleanBrowsers = (() => {
+			let executablePath: string
+			return async (
+				durationValidToKeep = PROCESS_ENV.RESET_RESOURCE ? 0 : 1
+			) => {
+				const browserStore = (() => {
+					const tmpBrowserStore = getStore('browser')
+					return tmpBrowserStore || {}
+				})()
+				const promiseStore = (() => {
+					const tmpPromiseStore = getStore('promise')
+					return tmpPromiseStore || {}
+				})()
 
-			const freePool = workerManager.getFreePool()
-			const pool = freePool.pool
+				if (canUseLinuxChromium && !promiseStore.executablePath) {
+					Console.log('Create executablePath')
+					promiseStore.executablePath = Chromium.executablePath(chromiumPath)
+				}
 
-			browserStore.executablePath = executablePath
+				setStore('browser', browserStore)
+				setStore('promise', promiseStore)
 
-			try {
-				await pool.exec('scanToCleanBrowsers', [
-					userDataPath,
-					durationValidToKeep,
-					browserStore,
-				])
-			} catch (err) {
-				Console.error(err)
-			} finally {
-				freePool.terminate()
+				if (!executablePath && promiseStore.executablePath) {
+					executablePath = await promiseStore.executablePath
+				}
+
+				const freePool = await workerManager.getFreePool()
+				const pool = freePool.pool
+
+				browserStore.executablePath = executablePath
+
+				try {
+					await pool.exec('scanToCleanBrowsers', [
+						userDataPath,
+						durationValidToKeep,
+						browserStore,
+					])
+				} catch (err) {
+					Console.error(err)
+				}
+
+				freePool.terminate({
+					force: true,
+				})
 
 				if (!SERVER_LESS)
 					setTimeout(() => {
 						cleanBrowsers(5)
 					}, 300000)
 			}
-		}
-	})()
+		})()
 
-	// if (!SERVER_LESS) cleanBrowsers()
-	if (process.env.MODE === 'development') cleanBrowsers(0)
-	else cleanBrowsers(60)
+		if (process.env.MODE === 'development') cleanBrowsers(0)
+		else cleanBrowsers(360)
+	}
 
 	// NOTE - Pages Cleaner
 	const cleanPages = async (
 		durationValidToKeep = PROCESS_ENV.RESET_RESOURCE ? 0 : 1
 	) => {
-		const freePool = workerManager.getFreePool()
+		if (!workerManager) return
+
+		const freePool = await workerManager.getFreePool()
 		const pool = freePool.pool
 
 		try {
 			await pool.exec('scanToCleanPages', [pagesPath, durationValidToKeep])
 		} catch (err) {
 			Console.error(err)
-		} finally {
-			freePool.terminate()
+		}
 
-			if (!SERVER_LESS) {
-				const cacheTimeHour = ServerConfig.crawl.cache.time / 3600
+		freePool.terminate({
+			force: true,
+		})
 
-				setTimeout(() => {
-					cleanPages(cacheTimeHour)
-				}, 21600000)
-			}
+		if (!SERVER_LESS) {
+			setTimeout(() => {
+				cleanPages(ServerConfig.crawl.cache.time)
+			}, ServerConfig.crawl.cache.time)
 		}
 	}
 
 	if (process.env.MODE === 'development') cleanPages(0)
-	else cleanPages(360)
+	else cleanPages(ServerConfig.crawl.cache.time)
 
 	// NOTE - API Data Cache Cleaner
 	const cleanAPIDataCache = async () => {
-		const freePool = workerManager.getFreePool()
+		if (!workerManager) return
+
+		const freePool = await workerManager.getFreePool()
 		const pool = freePool.pool
 
 		try {
 			await pool.exec('scanToCleanAPIDataCache', [dataPath])
 		} catch (err) {
 			Console.error(err)
-		} finally {
-			freePool.terminate()
+		}
 
-			if (!SERVER_LESS) {
-				setTimeout(() => {
-					cleanAPIDataCache()
-				}, 10000)
-			}
+		freePool.terminate({
+			force: true,
+		})
+
+		if (!SERVER_LESS) {
+			setTimeout(() => {
+				cleanAPIDataCache()
+			}, 30000)
 		}
 	}
 
-	if (process.env.MODE === 'development') cleanAPIDataCache()
-	else cleanAPIDataCache()
+	cleanAPIDataCache()
 
 	// NOTE - API Store Cache Cleaner
 	const cleanAPIStoreCache = async () => {
-		const freePool = workerManager.getFreePool()
+		if (!workerManager) return
+
+		const freePool = await workerManager.getFreePool()
 		const pool = freePool.pool
 
 		try {
 			await pool.exec('scanToCleanAPIStoreCache', [storePath])
 		} catch (err) {
 			Console.error(err)
-		} finally {
-			freePool.terminate()
+		}
 
-			if (!SERVER_LESS) {
-				setTimeout(() => {
-					cleanAPIStoreCache()
-				}, 10000)
-			}
+		freePool.terminate({
+			force: true,
+		})
+
+		if (!SERVER_LESS) {
+			setTimeout(() => {
+				cleanAPIStoreCache()
+			}, 30000)
 		}
 	}
 
-	if (process.env.MODE === 'development') cleanAPIStoreCache()
-	else cleanAPIStoreCache()
+	cleanAPIStoreCache()
+
+	// NOTE - Other cleaner
+	const cleanOther = async () => {
+		if (!workerManager) return
+
+		const clean = async (path) => {
+			if (!path) return
+
+			const freePool = await workerManager.getFreePool()
+			const pool = freePool.pool
+
+			return pool.exec('deleteResource', [path])
+		}
+
+		try {
+			await Promise.all([
+				clean(`${userDataPath}/wsEndpoint.txt`),
+				clean(`${workerManagerPath}/counter.txt`),
+			])
+		} catch (err) {
+			Console.error(err)
+		}
+	}
+
+	cleanOther()
+
+	isFirstInitCompleted = true
 }
 
 if (!SERVER_LESS) CleanerService()

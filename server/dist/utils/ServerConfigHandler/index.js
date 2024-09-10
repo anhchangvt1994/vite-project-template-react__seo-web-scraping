@@ -1,8 +1,5 @@
 'use strict'
 Object.defineProperty(exports, '__esModule', { value: true })
-function _interopRequireDefault(obj) {
-	return obj && obj.__esModule ? obj : { default: obj }
-}
 function _nullishCoalesce(lhs, rhsFn) {
 	if (lhs != null) {
 		return lhs
@@ -53,6 +50,7 @@ const defineServerConfig = (options) => {
 						defaultCountry: tmpOptionCastingType.defaultCountry,
 						hideDefaultLocale: tmpOptionCastingType.hideDefaultLocale,
 						routes: tmpOptionCastingType.routes || {},
+						custom: tmpOptionCastingType.custom,
 					}
 
 					for (const localeRouteKey in serverConfigDefined[key].routes) {
@@ -139,6 +137,7 @@ const defineServerConfig = (options) => {
 										_constants.defaultServerConfig[key].cache.renewTime,
 							  },
 					routes: tmpOptionCastingType.routes || {},
+					custom: tmpOptionCastingType.custom,
 				}
 
 				for (const localeRouteKey in serverConfigDefined[key].routes) {

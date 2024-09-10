@@ -1,15 +1,26 @@
+interface IWorkerInfo {
+	counter: number
+}
+
+export interface IWorkerInfoList {
+	[key: string]: IWorkerInfo
+}
+
 export interface IStores {
 	browser: {
 		userDataPath?: string
 		reserveUserDataPath?: string
-		[key: string]: string | number | undefined
+		wsEndpoint?: string
 	}
+	threadAdvanceInfo: {
+		order: number
+	}
+	totalRequestToCrawl: number
 	headers: {
 		botInfo?: string
 		deviceInfo?: string
 		localeInfo?: string
 		accept?: string
-		[key: string]: string | number | undefined
 	}
 	promise: {
 		executablePath?: Promise<string>

@@ -28,11 +28,7 @@ const DetectStaticMiddle = (res, req) => {
 	 * https://www.inchcalculator.com/convert/month-to-second/
 	 */
 
-	if (
-		isStatic &&
-		_serverconfig2.default.crawler &&
-		!_serverconfig2.default.isRemoteCrawler
-	) {
+	if (isStatic && !_serverconfig2.default.isRemoteCrawler) {
 		const staticPath = _path2.default.resolve(
 			__dirname,
 			`../../../../dist/${req.getUrl()}`
@@ -46,7 +42,7 @@ const DetectStaticMiddle = (res, req) => {
 					.writeStatus('200')
 					.writeHeader('Cache-Control', 'public, max-age=31556952')
 					.writeHeader('Content-Type', mimeType)
-					.end(body)
+					.end(body, true)
 			} else {
 				const contentEncoding = (() => {
 					const tmpHeaderAcceptEncoding = req.getHeader('accept-encoding') || ''
@@ -73,10 +69,10 @@ const DetectStaticMiddle = (res, req) => {
 					.writeHeader('Cache-Control', 'public, max-age=31556952')
 					.writeHeader('Content-Encoding', contentEncoding)
 					.writeHeader('Content-Type', mimeType)
-					.end(body)
+					.end(body, true)
 			}
 		} catch (e) {
-			res.writeStatus('404').end('File not found')
+			res.writeStatus('404').end('File not found', true)
 		}
 
 		res.writableEnded = true

@@ -1,4 +1,3 @@
-import ServerConfig from '../../server.config'
 import { ENV_MODE, PROCESS_ENV } from '../InitEnv'
 import { defaultServerConfig } from './constants'
 import { IServerConfig, IServerConfigOptional } from './types'
@@ -22,6 +21,7 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 						defaultCountry: tmpOptionCastingType.defaultCountry,
 						hideDefaultLocale: tmpOptionCastingType.hideDefaultLocale,
 						routes: tmpOptionCastingType.routes || {},
+						custom: tmpOptionCastingType.custom,
 					}
 
 					for (const localeRouteKey in serverConfigDefined[key].routes) {
@@ -81,6 +81,7 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 										defaultServerConfig[key].cache.renewTime,
 							  },
 					routes: tmpOptionCastingType.routes || {},
+					custom: tmpOptionCastingType.custom,
 				}
 
 				for (const localeRouteKey in serverConfigDefined[key].routes) {
