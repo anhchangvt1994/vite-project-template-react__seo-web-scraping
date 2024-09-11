@@ -33,8 +33,8 @@ var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _InitEnv = require('../../utils/InitEnv')
 var _constants3 = require('../constants')
 
-var _utils = require('./CacheManager.worker/utils')
-var _utils2 = _interopRequireDefault(_utils)
+var _CacheManagerworker = require('./CacheManager.worker')
+var _CacheManagerworker2 = _interopRequireDefault(_CacheManagerworker)
 var _ISRHandlerworker = require('./ISRHandler.worker')
 var _ISRHandlerworker2 = _interopRequireDefault(_ISRHandlerworker)
 
@@ -86,7 +86,10 @@ const getRestOfDuration = (startGenerating, gapDuration = 0) => {
 } // getRestOfDuration
 
 const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
-	const cacheManager = _utils2.default.call(void 0, ISRHandlerParams.url)
+	const cacheManager = _CacheManagerworker2.default.call(
+		void 0,
+		ISRHandlerParams.url
+	)
 	if (!_InitEnv.PROCESS_ENV.BASE_URL) {
 		_ConsoleHandler2.default.error('Missing base url!')
 		return

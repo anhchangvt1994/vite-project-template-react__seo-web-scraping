@@ -6,10 +6,11 @@ import DetectRedirect from '../../utils/DetectRedirect.uws'
 const COOKIE_EXPIRED_SECOND = COOKIE_EXPIRED / 1000
 
 const DetectRedirectMiddle = (res: HttpResponse, req: HttpRequest): Boolean => {
+	res.urlForCrawler = req.getUrl()
+
 	if (ServerConfig.isRemoteCrawler) return false
 	const redirectResult = DetectRedirect(req, res)
 	const isRedirect = redirectResult.status !== 200
-	res.urlForCrawler = req.getUrl()
 
 	if (isRedirect) {
 		if (req.getHeader('accept') === 'application/json') {

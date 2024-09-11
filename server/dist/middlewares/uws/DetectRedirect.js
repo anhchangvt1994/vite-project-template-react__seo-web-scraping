@@ -12,10 +12,11 @@ var _DetectRedirectuws2 = _interopRequireDefault(_DetectRedirectuws)
 const COOKIE_EXPIRED_SECOND = _constants.COOKIE_EXPIRED / 1000
 
 const DetectRedirectMiddle = (res, req) => {
+	res.urlForCrawler = req.getUrl()
+
 	if (_serverconfig2.default.isRemoteCrawler) return false
 	const redirectResult = _DetectRedirectuws2.default.call(void 0, req, res)
 	const isRedirect = redirectResult.status !== 200
-	res.urlForCrawler = req.getUrl()
 
 	if (isRedirect) {
 		if (req.getHeader('accept') === 'application/json') {

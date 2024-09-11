@@ -25,12 +25,12 @@ const CacheManager = (url: string) => {
 		(ServerConfig.crawl.routes[pathname] === undefined ||
 			ServerConfig.crawl.routes[pathname].enable ||
 			ServerConfig.crawl.custom?.(pathname) === undefined ||
-			ServerConfig.crawl.custom?.(pathname).enable) &&
+			ServerConfig.crawl.custom?.(pathname)?.enable) &&
 		ServerConfig.crawl.cache.enable &&
 		(ServerConfig.crawl.routes[pathname] === undefined ||
 			ServerConfig.crawl.routes[pathname].cache.enable ||
 			ServerConfig.crawl.custom?.(pathname) === undefined ||
-			ServerConfig.crawl.custom?.(pathname).cache.enable)
+			ServerConfig.crawl.custom?.(pathname)?.cache.enable)
 
 	const get = async () => {
 		if (!enableToCache)

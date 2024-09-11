@@ -187,7 +187,7 @@ export const get = async (
 			ttRenderMs: 200,
 			available: false,
 			isInit:
-				Date.now() - new Date(info?.createdAt ?? curTime).getTime() >= 38000,
+				Date.now() - new Date(info?.createdAt ?? curTime).getTime() >= 53000,
 			isRaw,
 		}
 	}

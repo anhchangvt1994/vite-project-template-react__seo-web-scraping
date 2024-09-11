@@ -62,7 +62,7 @@ const CacheManager = (url) => {
 				(_5) => _5.custom,
 				'optionalCall',
 				(_6) => _6(pathname),
-				'access',
+				'optionalAccess',
 				(_7) => _7.enable,
 			])) &&
 		_serverconfig2.default.crawl.cache.enable &&
@@ -85,7 +85,7 @@ const CacheManager = (url) => {
 				(_12) => _12.custom,
 				'optionalCall',
 				(_13) => _13(pathname),
-				'access',
+				'optionalAccess',
 				(_14) => _14.cache,
 				'access',
 				(_15) => _15.enable,

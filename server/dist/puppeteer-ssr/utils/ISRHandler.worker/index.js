@@ -91,7 +91,7 @@ const ISRHandler = async (params) => {
 				} else {
 					res(undefined)
 				}
-			}, 35000)
+			}, 52000)
 			try {
 				const tmpResult = await pool.exec(
 					'ISRHandler',

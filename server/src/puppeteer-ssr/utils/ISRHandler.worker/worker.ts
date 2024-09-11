@@ -82,15 +82,15 @@ const fetchData = async (
 
 const waitResponse = (() => {
 	const firstWaitingDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1000 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1500 : 500
 	const defaultRequestWaitingDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1000 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1500 : 500
 	const requestServedFromCacheDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1000 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1500 : 500
 	const requestFailDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1000 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1500 : 500
 	const maximumTimeout =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 15000 : 15000
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 20000 : 20000
 
 	return async (page: Page, url: string, duration: number) => {
 		// console.log(url.split('?')[0])

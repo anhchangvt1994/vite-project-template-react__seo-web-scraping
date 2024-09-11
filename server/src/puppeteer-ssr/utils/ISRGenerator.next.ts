@@ -8,7 +8,7 @@ import Console from '../../utils/ConsoleHandler'
 import { PROCESS_ENV } from '../../utils/InitEnv'
 import { DURATION_TIMEOUT } from '../constants'
 import { ISSRResult } from '../types'
-import CacheManager from './CacheManager.worker/utils'
+import CacheManager from './CacheManager.worker'
 import ISRHandler from './ISRHandler.worker'
 
 interface IISRGeneratorParams {
