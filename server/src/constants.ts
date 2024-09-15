@@ -2,9 +2,24 @@ import { PROCESS_ENV, ENV } from './utils/InitEnv'
 import fs from 'fs'
 import path from 'path'
 import ServerConfig from './server.config'
+import Console from './utils/ConsoleHandler'
 
 export const pagesPath = PROCESS_ENV.IS_SERVER
 	? (() => {
+			if (ServerConfig.crawl.cache.path) {
+				if (fs.existsSync(ServerConfig.crawl.cache.path))
+					return ServerConfig.crawl.cache.path
+				else {
+					try {
+						fs.mkdirSync(ServerConfig.crawl.cache.path)
+
+						return ServerConfig.crawl.cache.path
+					} catch (err) {
+						Console.error(err.message)
+					}
+				}
+			}
+
 			const tmpPath = '/tmp'
 			if (fs.existsSync(tmpPath)) return tmpPath + '/pages'
 

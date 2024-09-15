@@ -194,6 +194,10 @@ const CacheManager = (url) => {
 	const remove = async (url) => {
 		if (!enableToCache) return
 
+		const tmpCacheInfo = await achieve()
+
+		if (tmpCacheInfo) return
+
 		try {
 			await _utils.remove.call(void 0, url)
 		} catch (err) {

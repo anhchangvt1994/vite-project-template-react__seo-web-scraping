@@ -10,9 +10,25 @@ var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
+var _ConsoleHandler = require('./utils/ConsoleHandler')
+var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 
 const pagesPath = _InitEnv.PROCESS_ENV.IS_SERVER
 	? (() => {
+			if (_serverconfig2.default.crawl.cache.path) {
+				if (_fs2.default.existsSync(_serverconfig2.default.crawl.cache.path))
+					return _serverconfig2.default.crawl.cache.path
+				else {
+					try {
+						_fs2.default.mkdirSync(_serverconfig2.default.crawl.cache.path)
+
+						return _serverconfig2.default.crawl.cache.path
+					} catch (err) {
+						_ConsoleHandler2.default.error(err.message)
+					}
+				}
+			}
+
 			const tmpPath = '/tmp'
 			if (_fs2.default.existsSync(tmpPath)) return tmpPath + '/pages'
 

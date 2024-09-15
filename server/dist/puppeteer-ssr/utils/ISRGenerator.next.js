@@ -127,8 +127,8 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 	if (result) {
 		const NonNullableResult = result
 		const pathname = new URL(ISRHandlerParams.url).pathname
-		const renewTime =
-			(_optionalChain([
+		if (
+			_optionalChain([
 				_serverconfig2.default,
 				'access',
 				(_) => _.crawl,
@@ -140,133 +140,156 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 				(_4) => _4.cache,
 				'access',
 				(_5) => _5.renewTime,
-			]) ||
-				_optionalChain([
+			]) !== 'infinite'
+		) {
+			const renewTime =
+				(_optionalChain([
 					_serverconfig2.default,
 					'access',
 					(_6) => _6.crawl,
 					'access',
-					(_7) => _7.custom,
-					'optionalCall',
-					(_8) => _8(pathname),
+					(_7) => _7.routes,
+					'access',
+					(_8) => _8[pathname],
 					'optionalAccess',
 					(_9) => _9.cache,
 					'access',
 					(_10) => _10.renewTime,
 				]) ||
-				_serverconfig2.default.crawl.cache.renewTime) * 1000
+					_optionalChain([
+						_serverconfig2.default,
+						'access',
+						(_11) => _11.crawl,
+						'access',
+						(_12) => _12.custom,
+						'optionalCall',
+						(_13) => _13(pathname),
+						'optionalAccess',
+						(_14) => _14.cache,
+						'access',
+						(_15) => _15.renewTime,
+					]) ||
+					_serverconfig2.default.crawl.cache.renewTime) * 1000
 
-		if (
-			Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
-			renewTime
-		) {
-			cacheManager.renew().then((hasRenew) => {
-				if (
-					!hasRenew &&
-					(totalRequestsToCrawl < certainLimitRequestToCrawl ||
-						ISRHandlerParams.forceToCrawl)
-				) {
-					if (!ISRHandlerParams.forceToCrawl) {
-						totalRequestsToCrawl++
-					}
-
-					if (waitingToCrawlList.has(ISRHandlerParams.url)) {
-						waitingToCrawlList.delete(ISRHandlerParams.url)
-					}
-
-					if (_constants.SERVER_LESS)
-						fetchData(
-							`${_InitEnv.PROCESS_ENV.BASE_URL}/web-scraping`,
-							{
-								method: 'GET',
-								headers: new Headers({
-									Authorization: 'web-scraping-service',
-									Accept: 'application/json',
-									service: 'web-scraping-service',
-								}),
-							},
-							{
-								startGenerating,
-								hasCache: NonNullableResult.available,
-								url: ISRHandlerParams.url,
-							}
-						).finally(() => {
-							if (ISRHandlerParams.forceToCrawl) {
-								totalRequestsWaitingToCrawl--
-							} else {
-								totalRequestsToCrawl =
-									totalRequestsToCrawl > certainLimitRequestToCrawl
-										? totalRequestsToCrawl - certainLimitRequestToCrawl - 1
-										: totalRequestsToCrawl - 1
-							}
-
+			if (
+				Date.now() - new Date(NonNullableResult.updatedAt).getTime() >
+				renewTime
+			) {
+				await new Promise((res) => {
+					cacheManager
+						.renew()
+						.then((hasRenew) => {
 							if (
-								waitingToCrawlList.size &&
-								totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+								!hasRenew &&
+								(totalRequestsToCrawl < certainLimitRequestToCrawl ||
+									ISRHandlerParams.forceToCrawl)
 							) {
-								totalRequestsWaitingToCrawl++
-								const nextCrawlItem = waitingToCrawlList.values().next().value
-								waitingToCrawlList.delete(nextCrawlItem.url)
+								if (!ISRHandlerParams.forceToCrawl) {
+									totalRequestsToCrawl++
+								}
 
-								SSRGenerator({
-									isSkipWaiting: true,
-									forceToCrawl: true,
-									...nextCrawlItem,
-								})
+								if (waitingToCrawlList.has(ISRHandlerParams.url)) {
+									waitingToCrawlList.delete(ISRHandlerParams.url)
+								}
+
+								if (_constants.SERVER_LESS)
+									fetchData(
+										`${_InitEnv.PROCESS_ENV.BASE_URL}/web-scraping`,
+										{
+											method: 'GET',
+											headers: new Headers({
+												Authorization: 'web-scraping-service',
+												Accept: 'application/json',
+												service: 'web-scraping-service',
+											}),
+										},
+										{
+											startGenerating,
+											hasCache: NonNullableResult.available,
+											url: ISRHandlerParams.url,
+										}
+									).finally(() => {
+										if (ISRHandlerParams.forceToCrawl) {
+											totalRequestsWaitingToCrawl--
+										} else {
+											totalRequestsToCrawl =
+												totalRequestsToCrawl > certainLimitRequestToCrawl
+													? totalRequestsToCrawl -
+													  certainLimitRequestToCrawl -
+													  1
+													: totalRequestsToCrawl - 1
+										}
+
+										if (
+											waitingToCrawlList.size &&
+											totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+										) {
+											totalRequestsWaitingToCrawl++
+											const nextCrawlItem = waitingToCrawlList
+												.values()
+												.next().value
+											waitingToCrawlList.delete(nextCrawlItem.url)
+
+											SSRGenerator({
+												isSkipWaiting: true,
+												forceToCrawl: true,
+												...nextCrawlItem,
+											})
+										}
+									})
+								else
+									_ISRHandlerworker2.default
+										.call(void 0, {
+											startGenerating,
+											hasCache: NonNullableResult.available,
+											...ISRHandlerParams,
+										})
+										.finally(() => {
+											if (ISRHandlerParams.forceToCrawl) {
+												totalRequestsWaitingToCrawl--
+											} else {
+												totalRequestsToCrawl =
+													totalRequestsToCrawl > certainLimitRequestToCrawl
+														? totalRequestsToCrawl -
+														  certainLimitRequestToCrawl -
+														  1
+														: totalRequestsToCrawl - 1
+											}
+
+											if (
+												waitingToCrawlList.size &&
+												totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+											) {
+												totalRequestsWaitingToCrawl++
+												const nextCrawlItem = waitingToCrawlList
+													.values()
+													.next().value
+												waitingToCrawlList.delete(nextCrawlItem.url)
+
+												SSRGenerator({
+													isSkipWaiting: true,
+													forceToCrawl: true,
+													...nextCrawlItem,
+												})
+											}
+										})
+							} else if (!waitingToCrawlList.has(ISRHandlerParams.url)) {
+								waitingToCrawlList.set(ISRHandlerParams.url, ISRHandlerParams)
 							}
 						})
-					else
-						_ISRHandlerworker2.default
-							.call(void 0, {
-								startGenerating,
-								hasCache: NonNullableResult.available,
-								...ISRHandlerParams,
-							})
-							.finally(() => {
-								if (ISRHandlerParams.forceToCrawl) {
-									totalRequestsWaitingToCrawl--
-								} else {
-									totalRequestsToCrawl =
-										totalRequestsToCrawl > certainLimitRequestToCrawl
-											? totalRequestsToCrawl - certainLimitRequestToCrawl - 1
-											: totalRequestsToCrawl - 1
-								}
+						.finally(() => res('finish'))
+				})
 
-								if (
-									waitingToCrawlList.size &&
-									totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
-								) {
-									totalRequestsWaitingToCrawl++
-									const nextCrawlItem = waitingToCrawlList.values().next().value
-									waitingToCrawlList.delete(nextCrawlItem.url)
-
-									SSRGenerator({
-										isSkipWaiting: true,
-										forceToCrawl: true,
-										...nextCrawlItem,
-									})
-								}
-							})
-				} else if (!waitingToCrawlList.has(ISRHandlerParams.url)) {
-					waitingToCrawlList.set(ISRHandlerParams.url, ISRHandlerParams)
-				}
-			})
-
-			result = await cacheManager.achieve()
+				result = await cacheManager.achieve()
+			}
 		}
-	} else if (
-		totalRequestsToCrawl < certainLimitRequestToCrawl ||
-		ISRHandlerParams.forceToCrawl
-	) {
-		if (!ISRHandlerParams.forceToCrawl) {
-			totalRequestsToCrawl++
-		}
+	} else {
 		result = await cacheManager.get()
 
 		_ConsoleHandler2.default.log('Check for condition to create new page.')
 		_ConsoleHandler2.default.log(
 			'result.available',
-			_optionalChain([result, 'optionalAccess', (_11) => _11.available])
+			_optionalChain([result, 'optionalAccess', (_16) => _16.available])
 		)
 
 		if (result) {
@@ -274,64 +297,41 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 			const isValidToScraping = NonNullableResult.isInit
 
 			if (isValidToScraping) {
-				await cacheManager.remove(ISRHandlerParams.url)
-				cacheManager.get()
+				if (
+					totalRequestsToCrawl < certainLimitRequestToCrawl ||
+					ISRHandlerParams.forceToCrawl
+				) {
+					if (ISRHandlerParams.forceToCrawl) {
+						// NOTE - update create time
+						await cacheManager.remove(ISRHandlerParams.url)
+						cacheManager.get()
+					} else {
+						totalRequestsToCrawl++
+					}
 
-				if (waitingToCrawlList.has(ISRHandlerParams.url)) {
-					waitingToCrawlList.delete(ISRHandlerParams.url)
-				}
+					if (waitingToCrawlList.has(ISRHandlerParams.url)) {
+						waitingToCrawlList.delete(ISRHandlerParams.url)
+					}
 
-				const tmpResult = await new Promise(async (res) => {
-					const handle = (() => {
-						if (_constants.SERVER_LESS)
-							return fetchData(
-								`${_InitEnv.PROCESS_ENV.BASE_URL}/web-scraping`,
-								{
-									method: 'GET',
-									headers: new Headers({
-										Authorization: 'web-scraping-service',
-										Accept: 'application/json',
-										service: 'web-scraping-service',
-									}),
-								},
-								{
-									startGenerating,
-									hasCache: NonNullableResult.available,
-									url: ISRHandlerParams.url,
-								}
-							).finally(() => {
-								if (ISRHandlerParams.forceToCrawl) {
-									totalRequestsWaitingToCrawl--
-								} else {
-									totalRequestsToCrawl =
-										totalRequestsToCrawl > certainLimitRequestToCrawl
-											? totalRequestsToCrawl - certainLimitRequestToCrawl - 1
-											: totalRequestsToCrawl - 1
-								}
-
-								if (
-									waitingToCrawlList.size &&
-									totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
-								) {
-									totalRequestsWaitingToCrawl++
-									const nextCrawlItem = waitingToCrawlList.values().next().value
-									waitingToCrawlList.delete(nextCrawlItem.url)
-
-									SSRGenerator({
-										isSkipWaiting: true,
-										forceToCrawl: true,
-										...nextCrawlItem,
-									})
-								}
-							})
-						else
-							return _ISRHandlerworker2.default
-								.call(void 0, {
-									startGenerating,
-									hasCache: NonNullableResult.available,
-									...ISRHandlerParams,
-								})
-								.finally(() => {
+					const tmpResult = await new Promise(async (res) => {
+						const handle = (() => {
+							if (_constants.SERVER_LESS)
+								return fetchData(
+									`${_InitEnv.PROCESS_ENV.BASE_URL}/web-scraping`,
+									{
+										method: 'GET',
+										headers: new Headers({
+											Authorization: 'web-scraping-service',
+											Accept: 'application/json',
+											service: 'web-scraping-service',
+										}),
+									},
+									{
+										startGenerating,
+										hasCache: NonNullableResult.available,
+										url: ISRHandlerParams.url,
+									}
+								).finally(() => {
 									if (ISRHandlerParams.forceToCrawl) {
 										totalRequestsWaitingToCrawl--
 									} else {
@@ -358,31 +358,70 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 										})
 									}
 								})
-					})()
+							else
+								return _ISRHandlerworker2.default
+									.call(void 0, {
+										startGenerating,
+										hasCache: NonNullableResult.available,
+										...ISRHandlerParams,
+									})
+									.finally(() => {
+										if (ISRHandlerParams.forceToCrawl) {
+											totalRequestsWaitingToCrawl--
+										} else {
+											totalRequestsToCrawl =
+												totalRequestsToCrawl > certainLimitRequestToCrawl
+													? totalRequestsToCrawl -
+													  certainLimitRequestToCrawl -
+													  1
+													: totalRequestsToCrawl - 1
+										}
 
-					if (isSkipWaiting) return res(undefined)
-					else
-						setTimeout(
-							res,
-							_constants.SERVER_LESS
-								? 5000
-								: _constants.BANDWIDTH_LEVEL >
-								  _constants.BANDWIDTH_LEVEL_LIST.ONE
-								? 60000
-								: 60000
-						)
+										if (
+											waitingToCrawlList.size &&
+											totalRequestsWaitingToCrawl < limitRequestWaitingToCrawl
+										) {
+											totalRequestsWaitingToCrawl++
+											const nextCrawlItem = waitingToCrawlList
+												.values()
+												.next().value
+											waitingToCrawlList.delete(nextCrawlItem.url)
 
-					const result = await (async () => {
-						return await handle
-					})()
+											SSRGenerator({
+												isSkipWaiting: true,
+												forceToCrawl: true,
+												...nextCrawlItem,
+											})
+										}
+									})
+						})()
 
-					res(result)
-				})
+						if (isSkipWaiting) return res(undefined)
+						else
+							setTimeout(
+								res,
+								_constants.SERVER_LESS
+									? 5000
+									: _constants.BANDWIDTH_LEVEL >
+									  _constants.BANDWIDTH_LEVEL_LIST.ONE
+									? 60000
+									: 60000
+							)
 
-				if (tmpResult && tmpResult.status) result = tmpResult
-				else {
-					const tmpResult = await cacheManager.achieve()
-					result = tmpResult || result
+						const result = await (async () => {
+							return await handle
+						})()
+
+						res(result)
+					})
+
+					if (tmpResult && tmpResult.status) result = tmpResult
+					else {
+						const tmpResult = await cacheManager.achieve()
+						result = tmpResult || result
+					}
+				} else if (!waitingToCrawlList.has(ISRHandlerParams.url)) {
+					waitingToCrawlList.set(ISRHandlerParams.url, ISRHandlerParams)
 				}
 			} else if (!isSkipWaiting) {
 				const restOfDuration = getRestOfDuration(startGenerating, 2000)
@@ -403,7 +442,7 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 									return res(tmpResult)
 								else if (tmpResult.isInit)
 									res(
-										await SSRGenerator({
+										SSRGenerator({
 											...ISRHandlerParams,
 											isSkipWaiting: false,
 											forceToCrawl: true,
@@ -433,8 +472,6 @@ const SSRGenerator = async ({ isSkipWaiting = false, ...ISRHandlerParams }) => {
 				}
 			}
 		}
-	} else if (!waitingToCrawlList.has(ISRHandlerParams.url)) {
-		waitingToCrawlList.set(ISRHandlerParams.url, ISRHandlerParams)
 	}
 
 	return result

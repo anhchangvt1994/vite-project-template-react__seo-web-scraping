@@ -225,6 +225,11 @@ const CacheManager = (url) => {
 
 	const remove = async (url) => {
 		if (!enableToCache) return
+
+		const tmpCacheInfo = await achieve()
+
+		if (tmpCacheInfo) return
+
 		const freePool = await workerManager.getFreePool()
 		const pool = freePool.pool
 

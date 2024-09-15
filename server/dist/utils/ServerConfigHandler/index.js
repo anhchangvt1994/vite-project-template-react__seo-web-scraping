@@ -129,6 +129,9 @@ const defineServerConfig = (options) => {
 							? _constants.defaultServerConfig[key].cache
 							: {
 									enable: tmpOptionCastingType.cache.enable,
+									path:
+										tmpOptionCastingType.cache.path ||
+										_constants.defaultServerConfig[key].cache.path,
 									time:
 										tmpOptionCastingType.cache.time ||
 										_constants.defaultServerConfig[key].cache.time,

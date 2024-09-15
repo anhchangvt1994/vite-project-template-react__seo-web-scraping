@@ -135,6 +135,10 @@ const CacheManager = (url: string) => {
 	const remove = async (url: string) => {
 		if (!enableToCache) return
 
+		const tmpCacheInfo = await achieve()
+
+		if (tmpCacheInfo) return
+
 		try {
 			await removeCache(url)
 		} catch (err) {

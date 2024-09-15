@@ -30,8 +30,9 @@ export interface IServerConfigOptional {
 
 		cache?: {
 			enable: boolean
-			time?: number
-			renewTime?: number
+			path?: string
+			time?: number | 'infinite'
+			renewTime?: number | 'infinite'
 		}
 
 		routes?: {
@@ -41,7 +42,7 @@ export interface IServerConfigOptional {
 			> & {
 				cache?: Omit<
 					NonNullable<NonNullable<IServerConfigOptional['crawl']>['cache']>,
-					'time'
+					'time' | 'path'
 				>
 			}
 		}
@@ -53,7 +54,7 @@ export interface IServerConfigOptional {
 			  > & {
 					cache?: Omit<
 						NonNullable<NonNullable<IServerConfigOptional['crawl']>>['cache'],
-						'time'
+						'time' | 'path'
 					>
 					onContentCrawled?: (payload: { html: string }) => string | void
 			  })
@@ -111,8 +112,9 @@ export interface IServerConfig extends IServerConfigOptional {
 
 		cache: {
 			enable: boolean
-			time: number
-			renewTime: number
+			path?: string
+			time: number | 'infinite'
+			renewTime: number | 'infinite'
 		}
 
 		routes: {
@@ -120,7 +122,7 @@ export interface IServerConfig extends IServerConfigOptional {
 				IServerConfig['crawl'],
 				'routes' | 'custom' | 'cache' | 'content'
 			> & {
-				cache: Omit<IServerConfig['crawl']['cache'], 'time'>
+				cache: Omit<IServerConfig['crawl']['cache'], 'time' | 'path'>
 			}
 		}
 
@@ -129,7 +131,7 @@ export interface IServerConfig extends IServerConfigOptional {
 					IServerConfig['crawl'],
 					'routes' | 'custom' | 'cache' | 'content'
 			  > & {
-					cache: Omit<IServerConfig['crawl']['cache'], 'time'>
+					cache: Omit<IServerConfig['crawl']['cache'], 'time' | 'path'>
 					onContentCrawled?: (payload: { html: string }) => string | void
 			  })
 			| undefined

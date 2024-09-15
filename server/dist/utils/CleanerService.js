@@ -110,37 +110,39 @@ const CleanerService = async (force = false) => {
 		else cleanBrowsers(360)
 	}
 
-	// NOTE - Pages Cleaner
-	const cleanPages = async (
-		durationValidToKeep = _InitEnv.PROCESS_ENV.RESET_RESOURCE ? 0 : 1
-	) => {
-		if (!workerManager) return
+	if (_serverconfig2.default.crawl.cache.time !== 'infinite') {
+		// NOTE - Pages Cleaner
+		const cleanPages = async (
+			durationValidToKeep = _InitEnv.PROCESS_ENV.RESET_RESOURCE ? 0 : 1
+		) => {
+			if (!workerManager) return
 
-		const freePool = await workerManager.getFreePool()
-		const pool = freePool.pool
+			const freePool = await workerManager.getFreePool()
+			const pool = freePool.pool
 
-		try {
-			await pool.exec('scanToCleanPages', [
-				_constants.pagesPath,
-				durationValidToKeep,
-			])
-		} catch (err) {
-			_ConsoleHandler2.default.error(err)
+			try {
+				await pool.exec('scanToCleanPages', [
+					_constants.pagesPath,
+					durationValidToKeep,
+				])
+			} catch (err) {
+				_ConsoleHandler2.default.error(err)
+			}
+
+			freePool.terminate({
+				force: true,
+			})
+
+			if (!_constants.SERVER_LESS) {
+				setTimeout(() => {
+					cleanPages(_serverconfig2.default.crawl.cache.time)
+				}, _serverconfig2.default.crawl.cache.time)
+			}
 		}
 
-		freePool.terminate({
-			force: true,
-		})
-
-		if (!_constants.SERVER_LESS) {
-			setTimeout(() => {
-				cleanPages(_serverconfig2.default.crawl.cache.time)
-			}, _serverconfig2.default.crawl.cache.time)
-		}
+		if (process.env.MODE === 'development') cleanPages(0)
+		else cleanPages(_serverconfig2.default.crawl.cache.time)
 	}
-
-	if (process.env.MODE === 'development') cleanPages(0)
-	else cleanPages(_serverconfig2.default.crawl.cache.time)
 
 	// NOTE - API Data Cache Cleaner
 	const cleanAPIDataCache = async () => {
@@ -204,7 +206,11 @@ const CleanerService = async (force = false) => {
 			const freePool = await workerManager.getFreePool()
 			const pool = freePool.pool
 
-			return pool.exec('deleteResource', [path])
+			return pool.exec('deleteResource', [path]).finally(() => {
+				freePool.terminate({
+					force: true,
+				})
+			})
 		}
 
 		try {

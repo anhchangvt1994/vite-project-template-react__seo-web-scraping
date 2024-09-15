@@ -73,6 +73,9 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 							? defaultServerConfig[key].cache
 							: {
 									enable: tmpOptionCastingType.cache.enable,
+									path:
+										tmpOptionCastingType.cache.path ||
+										defaultServerConfig[key].cache.path,
 									time:
 										tmpOptionCastingType.cache.time ||
 										defaultServerConfig[key].cache.time,

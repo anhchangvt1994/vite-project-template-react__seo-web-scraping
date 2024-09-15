@@ -102,34 +102,36 @@ const CleanerService = async (force = false) => {
 		else cleanBrowsers(360)
 	}
 
-	// NOTE - Pages Cleaner
-	const cleanPages = async (
-		durationValidToKeep = PROCESS_ENV.RESET_RESOURCE ? 0 : 1
-	) => {
-		if (!workerManager) return
+	if (ServerConfig.crawl.cache.time !== 'infinite') {
+		// NOTE - Pages Cleaner
+		const cleanPages = async (
+			durationValidToKeep = PROCESS_ENV.RESET_RESOURCE ? 0 : 1
+		) => {
+			if (!workerManager) return
 
-		const freePool = await workerManager.getFreePool()
-		const pool = freePool.pool
+			const freePool = await workerManager.getFreePool()
+			const pool = freePool.pool
 
-		try {
-			await pool.exec('scanToCleanPages', [pagesPath, durationValidToKeep])
-		} catch (err) {
-			Console.error(err)
+			try {
+				await pool.exec('scanToCleanPages', [pagesPath, durationValidToKeep])
+			} catch (err) {
+				Console.error(err)
+			}
+
+			freePool.terminate({
+				force: true,
+			})
+
+			if (!SERVER_LESS) {
+				setTimeout(() => {
+					cleanPages(ServerConfig.crawl.cache.time as number)
+				}, ServerConfig.crawl.cache.time as number)
+			}
 		}
 
-		freePool.terminate({
-			force: true,
-		})
-
-		if (!SERVER_LESS) {
-			setTimeout(() => {
-				cleanPages(ServerConfig.crawl.cache.time)
-			}, ServerConfig.crawl.cache.time)
-		}
+		if (process.env.MODE === 'development') cleanPages(0)
+		else cleanPages(ServerConfig.crawl.cache.time)
 	}
-
-	if (process.env.MODE === 'development') cleanPages(0)
-	else cleanPages(ServerConfig.crawl.cache.time)
 
 	// NOTE - API Data Cache Cleaner
 	const cleanAPIDataCache = async () => {
@@ -193,7 +195,11 @@ const CleanerService = async (force = false) => {
 			const freePool = await workerManager.getFreePool()
 			const pool = freePool.pool
 
-			return pool.exec('deleteResource', [path])
+			return pool.exec('deleteResource', [path]).finally(() => {
+				freePool.terminate({
+					force: true,
+				})
+			})
 		}
 
 		try {
