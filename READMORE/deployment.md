@@ -21,7 +21,7 @@ The nice hardware
 3. [Setup the system](#setup-system)
 3. [Setup the project](#setup-project)
 4. [Start the project](#start)
-6. [Issues](#issue)
+6. [Issues](#issues)
 7. [Bonus](#bonus)
 
 <h2 id="install-benefits">Install benefits</h2>
