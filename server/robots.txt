@@ -1,20 +1,29 @@
+User-agent:  *
+Disallow: /ajax
+
 User-agent: LinkedInBot
 Allow: /
+Crawl-delay: 10
 
 User-agent: Twitterbot
 Allow: /
+Crawl-delay: 10
 
 User-agent: Facebot
 Allow: /
+Crawl-delay: 10
 
 User-agent: facebookexternalhit
 Allow: /
+Crawl-delay: 10
 
 User-agent: coccocbot-web
 Allow: /
+Crawl-delay: 10
 
 User-agent: coccocbot
 Allow: /
+Crawl-delay: 10
 
 User-agent: Baiduspider
 User-agent: Baiduspider-video
