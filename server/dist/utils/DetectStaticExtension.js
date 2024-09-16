@@ -4,7 +4,11 @@ Object.defineProperty(exports, '__esModule', { value: true })
 const detectStaticExtension = (req) => {
 	const url = req.url
 
-	if (!url || /^.*(text\/html|application\/json)/.test(req.headers['accept'])) {
+	if (
+		!url ||
+		req.headers['sec-fetch-dest'] === 'document' ||
+		/application\/json/.test(req.headers['accept'])
+	) {
 		return false
 	}
 

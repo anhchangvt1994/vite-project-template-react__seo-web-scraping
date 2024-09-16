@@ -5,7 +5,8 @@ const detectStaticExtension = (req: HttpRequest) => {
 
 	if (
 		!url ||
-		/^.*(text\/html|application\/json)/.test(req.getHeader('accept') as string)
+		req.getHeader('sec-fetch-dest') === 'document' ||
+		/application\/json/.test(req.getHeader('accept') as string)
 	) {
 		return false
 	}
