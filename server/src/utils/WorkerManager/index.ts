@@ -138,9 +138,15 @@ const WorkerManager = (() => {
 									await Promise.all(promiseTaskList)
 								}
 
-								if (!pool.stats().activeTasks) {
-									pool.terminate(options.force)
+								const handleTerminate = () => {
+									if (!pool.stats().activeTasks) {
+										pool.terminate(options.force)
+									} else {
+										timeout = setTimeout(handleTerminate, 5000)
+									}
 								}
+
+								handleTerminate()
 							} catch (err) {
 								Console.error(err.message)
 							}

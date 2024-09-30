@@ -70,7 +70,6 @@ const _deleteUserDataDir = async (dir) => {
 		try {
 			await pool.exec('deleteResource', [dir])
 		} catch (err) {
-			_ConsoleHandler2.default.log('BrowserManager line 39:')
 			_ConsoleHandler2.default.error(err)
 		}
 
@@ -323,13 +322,23 @@ function BrowserManager() {
 			__launch()
 		}
 
-		const _get = async () => {
-			if (!browserLaunch || !_isReady()) {
-				__launch()
+		const _get = async (options) => {
+			options = {
+				forceLaunch: false,
+				...options,
+			}
+
+			if (options.forceLaunch || !browserLaunch || !_isReady()) {
+				await __launch()
+			}
+
+			const browser = await browserLaunch
+
+			if (!browser || !browser.connected) {
+				return _get({ forceLaunch: true })
 			}
 
 			totalRequests++
-			const browser = await browserLaunch
 
 			return browser
 		} // _get

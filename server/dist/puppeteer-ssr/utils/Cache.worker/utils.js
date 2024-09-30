@@ -33,14 +33,14 @@ function _optionalChain(ops) {
 }
 var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
-var _crypto = require('crypto')
-var _crypto2 = _interopRequireDefault(_crypto)
 var _ConsoleHandler = require('../../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _constants = require('../../../constants')
 var _path = require('path')
 var _path2 = _interopRequireDefault(_path)
 var _zlib = require('zlib')
+
+var _CryptoHandler = require('../../../utils/CryptoHandler')
 
 if (!_fs2.default.existsSync(_constants.pagesPath)) {
 	try {
@@ -50,8 +50,10 @@ if (!_fs2.default.existsSync(_constants.pagesPath)) {
 	}
 }
 
+// export const regexKeyConverter =
+// 	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
 const regexKeyConverter =
-	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
+	/www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
 exports.regexKeyConverter = regexKeyConverter
 
 const getKey = (url) => {
@@ -64,7 +66,11 @@ const getKey = (url) => {
 		.replace('/?', '?')
 		.replace(exports.regexKeyConverter, '')
 		.replace(/\?(?:\&|)$/g, '')
-	return _crypto2.default.createHash('md5').update(url).digest('hex')
+
+	const urlEncrypted = _CryptoHandler.encryptCrawlerKeyCache.call(void 0, url)
+	// const urlDecrypted = decryptCrawlerKeyCache(urlEncrypted)
+
+	return urlEncrypted
 }
 exports.getKey = getKey // getKey
 
@@ -401,3 +407,19 @@ const rename = (params) => {
 	}
 }
 exports.rename = rename // rename
+
+const isExist = (url) => {
+	if (!url) {
+		_ConsoleHandler2.default.log('Url can not empty!')
+		return false
+	}
+
+	const key = exports.getKey.call(void 0, url)
+
+	return (
+		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.raw.br`) ||
+		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.br`) ||
+		_fs2.default.existsSync(`${_constants.pagesPath}/${key}.renew.br`)
+	)
+}
+exports.isExist = isExist // isExist

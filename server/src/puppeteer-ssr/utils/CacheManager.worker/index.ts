@@ -9,6 +9,7 @@ import {
 	ICacheSetParams,
 	getKey as getCacheKey,
 	getFileInfo,
+	isExist,
 } from '../Cache.worker/utils'
 
 const workerManager = WorkerManager.init(
@@ -17,7 +18,7 @@ const workerManager = WorkerManager.init(
 		minWorkers: 1,
 		maxWorkers: 3,
 	},
-	['get', 'set', 'renew', 'remove']
+	['get', 'set', 'renew', 'remove', 'rename']
 )
 
 const maintainFile = path.resolve(__dirname, '../../../maintain.html')
@@ -155,12 +156,19 @@ const CacheManager = (url: string) => {
 		return result
 	} // renew
 
-	const remove = async (url: string) => {
+	const remove = async (url: string, options?: { force?: boolean }) => {
 		if (!enableToCache) return
 
-		const tmpCacheInfo = await achieve()
+		options = {
+			force: false,
+			...options,
+		}
 
-		if (tmpCacheInfo) return
+		if (!options.force) {
+			const tmpCacheInfo = await achieve()
+
+			if (tmpCacheInfo) return
+		}
 
 		const freePool = await workerManager.getFreePool()
 		const pool = freePool.pool
@@ -174,9 +182,24 @@ const CacheManager = (url: string) => {
 		freePool.terminate({
 			force: true,
 		})
-
-		return
 	} // remove
+
+	const rename = async (params: { url: string; type?: 'raw' | 'renew' }) => {
+		if (!enableToCache || !params || !params.url) return
+
+		const freePool = await workerManager.getFreePool()
+		const pool = freePool.pool
+
+		try {
+			await pool.exec('rename', [params])
+		} catch (err) {
+			Console.error(err)
+		}
+
+		freePool.terminate({
+			force: true,
+		})
+	} // rename
 
 	return {
 		achieve,
@@ -184,6 +207,8 @@ const CacheManager = (url: string) => {
 		set,
 		renew,
 		remove,
+		rename,
+		isExist,
 	}
 }
 

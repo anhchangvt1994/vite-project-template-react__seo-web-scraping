@@ -20,27 +20,17 @@ const browserManager = BrowserManager()
 export const runPageSpeed = async (url: string) => {
 	if (!browserManager || !url) return
 
-	const freePool = await workerManager.getFreePool({
-		delay: 1000,
-	})
-
 	const browser = await browserManager.get()
 
-	if (!browser || !browser.connected) {
-		freePool.terminate({
-			force: true,
-		})
-		return
-	}
+	if (!browser || !browser.connected) return
 
 	const wsEndpoint = browser.wsEndpoint()
 
-	if (!wsEndpoint) {
-		freePool.terminate({
-			force: true,
-		})
-		return
-	}
+	if (!wsEndpoint) return
+
+	const freePool = await workerManager.getFreePool({
+		delay: 1000,
+	})
 
 	const pool = freePool.pool
 	let result
@@ -70,27 +60,17 @@ export const runPageSpeed = async (url: string) => {
 export const getPageSpeedUrl = async (url: string) => {
 	if (!browserManager || !url) return
 
-	const freePool = await workerManager.getFreePool({
-		delay: 500,
-	})
-
 	const browser = await browserManager.get()
 
-	if (!browser || !browser.connected) {
-		freePool.terminate({
-			force: true,
-		})
-		return
-	}
+	if (!browser || !browser.connected) return
 
 	const wsEndpoint = browser.wsEndpoint()
 
-	if (!wsEndpoint) {
-		freePool.terminate({
-			force: true,
-		})
-		return
-	}
+	if (!wsEndpoint) return
+
+	const freePool = await workerManager.getFreePool({
+		delay: 500,
+	})
 
 	const pool = freePool.pool
 	let result

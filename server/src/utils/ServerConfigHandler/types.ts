@@ -8,13 +8,18 @@ export interface IServerConfigOptional {
 		routes?: {
 			[key: string]: Omit<
 				NonNullable<IServerConfigOptional['locale']>,
-				'routes' | 'custom'
-			>
+				'enable' | 'routes' | 'custom'
+			> & {
+				enable?: boolean
+			}
 		}
 
-		custom?: (
-			url: string
-		) => Omit<NonNullable<IServerConfigOptional['locale']>, 'routes' | 'custom'>
+		custom?: (url: string) => Omit<
+			NonNullable<IServerConfigOptional['locale']>,
+			'enable' | 'routes' | 'custom'
+		> & {
+			enable?: boolean
+		}
 	}
 
 	isRemoteCrawler?: boolean
@@ -24,7 +29,7 @@ export interface IServerConfigOptional {
 
 		content?: 'desktop' | 'mobile'
 
-		optimize?: boolean
+		optimize?: 'all' | Array<'shallow' | 'deep' | 'script' | 'style'>
 
 		compress?: boolean
 
@@ -38,23 +43,27 @@ export interface IServerConfigOptional {
 		routes?: {
 			[key: string]: Omit<
 				NonNullable<IServerConfigOptional['crawl']>,
-				'routes' | 'custom' | 'cache' | 'content'
+				'enable' | 'routes' | 'custom' | 'cache' | 'content'
 			> & {
+				enable?: boolean
 				cache?: Omit<
 					NonNullable<NonNullable<IServerConfigOptional['crawl']>['cache']>,
-					'time' | 'path'
-				>
+					'enable' | 'path'
+				> & {
+					enable?: boolean
+				}
 			}
 		}
 
 		custom?: (url: string) =>
 			| (Omit<
 					NonNullable<IServerConfigOptional['crawl']>,
-					'routes' | 'custom' | 'cache' | 'content'
+					'enable' | 'routes' | 'custom' | 'cache' | 'content'
 			  > & {
+					enable?: boolean
 					cache?: Omit<
 						NonNullable<NonNullable<IServerConfigOptional['crawl']>>['cache'],
-						'time' | 'path'
+						'path'
 					>
 					onContentCrawled?: (payload: { html: string }) => string | void
 			  })
@@ -94,9 +103,12 @@ export interface IServerConfig extends IServerConfigOptional {
 			>
 		}
 
-		custom?: (
-			url: string
-		) => Omit<NonNullable<IServerConfig['locale']>, 'routes' | 'custom'>
+		custom?: (url: string) => Omit<
+			NonNullable<IServerConfig['locale']>,
+			'enable' | 'routes' | 'custom'
+		> & {
+			enable?: boolean
+		}
 	}
 
 	isRemoteCrawler: boolean
@@ -106,7 +118,7 @@ export interface IServerConfig extends IServerConfigOptional {
 
 		content: 'desktop' | 'mobile'
 
-		optimize: boolean
+		optimize: 'all' | Array<'shallow' | 'deep' | 'script' | 'style'>
 
 		compress: boolean
 
@@ -122,7 +134,7 @@ export interface IServerConfig extends IServerConfigOptional {
 				IServerConfig['crawl'],
 				'routes' | 'custom' | 'cache' | 'content'
 			> & {
-				cache: Omit<IServerConfig['crawl']['cache'], 'time' | 'path'>
+				cache: Omit<IServerConfig['crawl']['cache'], 'path'>
 			}
 		}
 
@@ -131,7 +143,7 @@ export interface IServerConfig extends IServerConfigOptional {
 					IServerConfig['crawl'],
 					'routes' | 'custom' | 'cache' | 'content'
 			  > & {
-					cache: Omit<IServerConfig['crawl']['cache'], 'time' | 'path'>
+					cache: Omit<IServerConfig['crawl']['cache'], 'path'>
 					onContentCrawled?: (payload: { html: string }) => string | void
 			  })
 			| undefined

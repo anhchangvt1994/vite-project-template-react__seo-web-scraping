@@ -1,5 +1,21 @@
 const fs = require('fs')
 const { resolve } = require('path')
+const path = require('path')
+
+const serverInfo = (() => {
+	try {
+		const tmpServerInfo = fs.readFileSync(
+			path.resolve(__dirname, './server/server-info.json')
+		)
+
+		return JSON.parse(tmpServerInfo)
+	} catch (err) {
+		console.log(err)
+		return {}
+	}
+})()
+
+const canUseLinuxChromium = serverInfo.platform?.toLowerCase?.() === 'linux'
 
 const browserCachePath = (() => {
 	let path = ''
@@ -23,4 +39,5 @@ const browserCachePath = (() => {
 module.exports = {
 	// Changes the cache location for Puppeteer.
 	cacheDirectory: browserCachePath,
+	skipDownload: canUseLinuxChromium,
 }

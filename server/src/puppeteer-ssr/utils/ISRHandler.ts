@@ -17,6 +17,8 @@ import CacheManager from './CacheManager.worker/utils'
 import {
 	shallowOptimizeContent,
 	deepOptimizeContent,
+	scriptOptimizeContent,
+	styleOptimizeContent,
 } from './OptimizeHtml.worker'
 import { compressContent } from './OptimizeHtml.worker/utils'
 const { parentPort, isMainThread } = require('worker_threads')
@@ -361,7 +363,7 @@ const ISRHandler = async (params: IISRHandlerParam) => {
 				Console.log('ISRHandler line 297:')
 				Console.log('Crawler is fail!')
 				Console.error(err)
-				cacheManager.remove(url)
+				cacheManager.remove(url, { force: true })
 				safePage()?.close()
 				browser.emit('closePage', url)
 				if (!isMainThread) {
@@ -423,10 +425,32 @@ const ISRHandler = async (params: IISRHandlerParam) => {
 	let result: ISSRResult
 	if (CACHEABLE_STATUS_CODE[status]) {
 		const pathname = new URL(url).pathname
-		const enableToOptimize =
-			(ServerConfig.crawl.routes[pathname]?.optimize ||
-				ServerConfig.crawl.custom?.(pathname)?.optimize ||
-				ServerConfig.crawl.optimize) &&
+		const crawlCustomOption = ServerConfig.crawl.custom?.(url)
+
+		const optimizeOption = (
+			crawlCustomOption ??
+			ServerConfig.crawl.routes[pathname] ??
+			ServerConfig.crawl
+		).optimize
+
+		const enableShallowOptimize =
+			(optimizeOption === 'all' || optimizeOption.includes('shallow')) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableDeepOptimize =
+			(optimizeOption === 'all' || optimizeOption.includes('deep')) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableScriptOptimize =
+			optimizeOption !== 'all' &&
+			!optimizeOption.includes('shallow') &&
+			optimizeOption.includes('script') &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableStyleOptimize =
+			optimizeOption !== 'all' &&
+			!optimizeOption.includes('shallow') &&
+			optimizeOption.includes('style') &&
 			enableOptimizeAndCompressIfRemoteCrawlerFail
 
 		const enableToCompress =
@@ -437,11 +461,15 @@ const ISRHandler = async (params: IISRHandlerParam) => {
 
 		let isRaw = false
 		try {
-			if (enableToOptimize) html = await shallowOptimizeContent(html)
+			if (enableScriptOptimize) html = await scriptOptimizeContent(html)
 
-			if (enableToOptimize) html = await deepOptimizeContent(html)
+			if (enableStyleOptimize) html = await styleOptimizeContent(html)
+
+			if (enableShallowOptimize) html = await shallowOptimizeContent(html)
 
 			if (enableToCompress) html = await compressContent(html)
+
+			if (enableDeepOptimize) html = await deepOptimizeContent(html)
 			// console.log('finish optimize and compress: ', url.split('?')[0])
 			// console.log('-------')
 		} catch (err) {
@@ -460,7 +488,7 @@ const ISRHandler = async (params: IISRHandlerParam) => {
 			isRaw,
 		})
 	} else {
-		cacheManager.remove(url)
+		cacheManager.remove(url, { force: true })
 		return {
 			status,
 			html: status === 404 ? 'Page not found!' : html,

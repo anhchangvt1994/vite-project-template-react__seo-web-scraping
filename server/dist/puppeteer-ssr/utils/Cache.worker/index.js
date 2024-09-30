@@ -11,6 +11,8 @@ _workerpool2.default.worker({
 	set: _utils.set,
 	renew: _utils.renew,
 	remove: _utils.remove,
+	rename: _utils.rename,
+	isExist: _utils.isExist,
 	finish: () => {
 		return 'finish'
 	},

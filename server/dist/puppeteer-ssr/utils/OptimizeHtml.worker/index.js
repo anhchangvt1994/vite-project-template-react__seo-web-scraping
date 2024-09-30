@@ -10,7 +10,6 @@ var _ConsoleHandler = require('../../../utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _WorkerManager = require('../../../utils/WorkerManager')
 var _WorkerManager2 = _interopRequireDefault(_WorkerManager)
-var _InitEnv = require('../../../utils/InitEnv')
 
 const workerManager = _WorkerManager2.default.init(
 	_path2.default.resolve(__dirname, `./worker.${_constants.resourceExtension}`),
@@ -23,11 +22,13 @@ const workerManager = _WorkerManager2.default.init(
 		'optimizeContent',
 		'shallowOptimizeContent',
 		'deepOptimizeContent',
+		'scriptOptimizeContent',
+		'styleOptimizeContent',
 	]
 )
 
 const compressContent = async (html) => {
-	if (!html || _InitEnv.PROCESS_ENV.DISABLE_COMPRESS) return html
+	if (!html) return html
 
 	const freePool = await workerManager.getFreePool({
 		delay: 500,
@@ -59,7 +60,7 @@ const compressContent = async (html) => {
 exports.compressContent = compressContent // compressContent
 
 const optimizeContent = async (html, isFullOptimize = false) => {
-	if (!html || _InitEnv.PROCESS_ENV.DISABLE_OPTIMIZE) return html
+	if (!html) return html
 
 	const freePool = await workerManager.getFreePool({
 		delay: 500,
@@ -94,7 +95,7 @@ const optimizeContent = async (html, isFullOptimize = false) => {
 exports.optimizeContent = optimizeContent // compressContent
 
 const shallowOptimizeContent = async (html) => {
-	if (!html || _InitEnv.PROCESS_ENV.DISABLE_OPTIMIZE) return html
+	if (!html) return html
 
 	const freePool = await workerManager.getFreePool({
 		delay: 500,
@@ -126,7 +127,7 @@ const shallowOptimizeContent = async (html) => {
 exports.shallowOptimizeContent = shallowOptimizeContent // shallowOptimizeContent
 
 const deepOptimizeContent = async (html, isFullOptimize = false) => {
-	if (!html || _InitEnv.PROCESS_ENV.DISABLE_DEEP_OPTIMIZE) return html
+	if (!html) return html
 
 	const freePool = await workerManager.getFreePool({
 		delay: 500,
@@ -156,3 +157,67 @@ const deepOptimizeContent = async (html, isFullOptimize = false) => {
 	return result
 }
 exports.deepOptimizeContent = deepOptimizeContent // compressContent
+
+const scriptOptimizeContent = async (html) => {
+	if (!html) return html
+
+	const freePool = await workerManager.getFreePool({
+		delay: 500,
+	})
+	const pool = freePool.pool
+	let result
+
+	try {
+		result = await new Promise(async (res) => {
+			const timeout = setTimeout(() => res(html), 5000)
+			const tmpResult = await pool.exec('scriptOptimizeContent', [html])
+
+			clearTimeout(timeout)
+
+			res(tmpResult)
+		})
+	} catch (err) {
+		_ConsoleHandler2.default.error(err)
+		result = html
+	}
+
+	freePool.terminate({
+		force: true,
+		// delay: 0,
+	})
+
+	return result
+}
+exports.scriptOptimizeContent = scriptOptimizeContent // scriptOptimizeContent
+
+const styleOptimizeContent = async (html) => {
+	if (!html) return html
+
+	const freePool = await workerManager.getFreePool({
+		delay: 500,
+	})
+	const pool = freePool.pool
+	let result
+
+	try {
+		result = await new Promise(async (res) => {
+			const timeout = setTimeout(() => res(html), 5000)
+			const tmpResult = await pool.exec('styleOptimizeContent', [html])
+
+			clearTimeout(timeout)
+
+			res(tmpResult)
+		})
+	} catch (err) {
+		_ConsoleHandler2.default.error(err)
+		result = html
+	}
+
+	freePool.terminate({
+		force: true,
+		// delay: 0,
+	})
+
+	return result
+}
+exports.styleOptimizeContent = styleOptimizeContent // styleOptimizeContent

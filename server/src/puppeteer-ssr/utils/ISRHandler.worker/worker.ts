@@ -18,6 +18,8 @@ import {
 	compressContent,
 	shallowOptimizeContent,
 	deepOptimizeContent,
+	scriptOptimizeContent,
+	styleOptimizeContent,
 } from '../OptimizeHtml.worker/utils'
 
 interface IISRHandlerParam {
@@ -84,11 +86,11 @@ const waitResponse = (() => {
 	const firstWaitingDuration =
 		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1500 : 500
 	const defaultRequestWaitingDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1500 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 500 : 500
 	const requestServedFromCacheDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1500 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 500 : 500
 	const requestFailDuration =
-		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 1500 : 500
+		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 500 : 500
 	const maximumTimeout =
 		BANDWIDTH_LEVEL > BANDWIDTH_LEVEL_LIST.ONE ? 20000 : 20000
 
@@ -307,12 +309,32 @@ const ISRHandler = async (params: IISRHandlerParam) => {
 			}
 
 			try {
-				await safePage()?.waitForNetworkIdle({ idleTime: 150 })
-				await safePage()?.setViewport({
-					width: WINDOW_VIEWPORT_WIDTH,
-					height: WINDOW_VIEWPORT_HEIGHT,
-				})
-				await safePage()?.setRequestInterception(true)
+				await Promise.all([
+					safePage()?.waitForNetworkIdle({ idleTime: 150 }),
+					safePage()?.setCacheEnabled(false),
+					safePage()?.setRequestInterception(true),
+					safePage()?.setViewport({
+						width: WINDOW_VIEWPORT_WIDTH,
+						height: WINDOW_VIEWPORT_HEIGHT,
+					}),
+					safePage()?.setExtraHTTPHeaders({
+						...specialInfo,
+						service: 'puppeteer',
+					}),
+				])
+
+				// await safePage()?.waitForNetworkIdle({ idleTime: 150 })
+				// await safePage()?.setCacheEnabled(false)
+				// await safePage()?.setRequestInterception(true)
+				// await safePage()?.setViewport({
+				// 	width: WINDOW_VIEWPORT_WIDTH,
+				// 	height: WINDOW_VIEWPORT_HEIGHT,
+				// })
+				// await safePage()?.setExtraHTTPHeaders({
+				// 	...specialInfo,
+				// 	service: 'puppeteer',
+				// })
+
 				safePage()?.on('request', (req) => {
 					const resourceType = req.resourceType()
 
@@ -329,11 +351,6 @@ const ISRHandler = async (params: IISRHandlerParam) => {
 					} else {
 						req.continue()
 					}
-				})
-
-				await safePage()?.setExtraHTTPHeaders({
-					...specialInfo,
-					service: 'puppeteer',
 				})
 
 				Console.log(`Start to crawl: ${url}`)
@@ -401,14 +418,31 @@ const ISRHandler = async (params: IISRHandlerParam) => {
 
 		const crawlCustomOption = ServerConfig.crawl.custom?.(url)
 
-		const enableToOptimize = (() => {
-			const options =
-				crawlCustomOption ??
-				ServerConfig.crawl.routes[pathname] ??
-				ServerConfig.crawl
+		const optimizeOption = (
+			crawlCustomOption ??
+			ServerConfig.crawl.routes[pathname] ??
+			ServerConfig.crawl
+		).optimize
 
-			return options.optimize && enableOptimizeAndCompressIfRemoteCrawlerFail
-		})()
+		const enableShallowOptimize =
+			(optimizeOption === 'all' || optimizeOption.includes('shallow')) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableDeepOptimize =
+			(optimizeOption === 'all' || optimizeOption.includes('deep')) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableScriptOptimize =
+			optimizeOption !== 'all' &&
+			!optimizeOption.includes('shallow') &&
+			optimizeOption.includes('script') &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableStyleOptimize =
+			optimizeOption !== 'all' &&
+			!optimizeOption.includes('shallow') &&
+			optimizeOption.includes('style') &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
 
 		const enableToCompress = (() => {
 			const options =
@@ -428,7 +462,11 @@ const ISRHandler = async (params: IISRHandlerParam) => {
 				html = crawlCustomOption.onContentCrawled({ html }) as string
 			}
 
-			if (enableToOptimize) html = await shallowOptimizeContent(html)
+			if (enableScriptOptimize) html = await scriptOptimizeContent(html)
+
+			if (enableStyleOptimize) html = await styleOptimizeContent(html)
+
+			if (enableShallowOptimize) html = await shallowOptimizeContent(html)
 
 			if (enableToCompress) html = await compressContent(html)
 
@@ -437,7 +475,7 @@ const ISRHandler = async (params: IISRHandlerParam) => {
 				value: html,
 			})
 
-			if (enableToOptimize) html = await deepOptimizeContent(html)
+			if (enableDeepOptimize) html = await deepOptimizeContent(html)
 			// console.log('finish optimize and compress: ', url.split('?')[0])
 			// console.log('-------')
 		} catch (err) {

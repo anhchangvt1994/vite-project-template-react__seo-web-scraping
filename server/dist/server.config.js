@@ -3,10 +3,7 @@ Object.defineProperty(exports, '__esModule', { value: true })
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj }
 }
-var _path = require('path')
-var _path2 = _interopRequireDefault(_path)
 var _ServerConfigHandler = require('./utils/ServerConfigHandler')
-var _InitEnv = require('./utils/InitEnv')
 
 const ServerConfig = _ServerConfigHandler.defineServerConfig.call(void 0, {
 	crawl: {
@@ -15,14 +12,19 @@ const ServerConfig = _ServerConfigHandler.defineServerConfig.call(void 0, {
 			'/login': {
 				enable: false,
 			},
+			'/': {
+				cache: {
+					time: 'infinite',
+				},
+			},
 		},
 
-		cache: {
-			enable: true,
-			path: _InitEnv.PROCESS_ENV.IS_SERVER
-				? _path2.default.resolve(__dirname, '../../../cache')
-				: '',
-		},
+		// cache: {
+		// 	enable: true,
+		// 	path: PROCESS_ENV.IS_SERVER
+		// 		? path.resolve(__dirname, '../../../cache')
+		// 		: '',
+		// },
 	},
 	api: {
 		list: {

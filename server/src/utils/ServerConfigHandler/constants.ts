@@ -15,7 +15,7 @@ export const defaultServerConfig: IServerConfig = {
 			renewTime: 3 * 60,
 		},
 		compress: true,
-		optimize: true,
+		optimize: ['script'],
 		routes: {},
 	},
 	api: {

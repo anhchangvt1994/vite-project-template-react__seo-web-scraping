@@ -191,12 +191,19 @@ const CacheManager = (url) => {
 		return result
 	} // renew
 
-	const remove = async (url) => {
+	const remove = async (url, options) => {
 		if (!enableToCache) return
 
-		const tmpCacheInfo = await achieve()
+		options = {
+			force: false,
+			...options,
+		}
 
-		if (tmpCacheInfo) return
+		if (!options.force) {
+			const tmpCacheInfo = await achieve()
+
+			if (tmpCacheInfo) return
+		}
 
 		try {
 			await _utils.remove.call(void 0, url)
@@ -222,6 +229,7 @@ const CacheManager = (url) => {
 		renew,
 		remove,
 		rename,
+		isExist: _utils.isExist,
 	}
 }
 

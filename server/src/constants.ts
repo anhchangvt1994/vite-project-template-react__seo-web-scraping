@@ -1,8 +1,8 @@
-import { PROCESS_ENV, ENV } from './utils/InitEnv'
 import fs from 'fs'
 import path from 'path'
 import ServerConfig from './server.config'
 import Console from './utils/ConsoleHandler'
+import { ENV, PROCESS_ENV } from './utils/InitEnv'
 
 export const pagesPath = PROCESS_ENV.IS_SERVER
 	? (() => {

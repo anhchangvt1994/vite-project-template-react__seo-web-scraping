@@ -55,21 +55,16 @@ const browserManager = _BrowserManager2.default.call(void 0)
 const ISRHandler = async (params) => {
 	if (!browserManager || !params.url) return
 
-	const freePool = await workerManager.getFreePool({
-		delay: 500,
-	})
-
 	const browser = await browserManager.get()
 
 	const wsEndpoint =
 		browser && browser.connected ? browser.wsEndpoint() : undefined
 
-	if (!wsEndpoint && !_serverconfig2.default.crawler) {
-		freePool.terminate({
-			force: true,
-		})
-		return
-	}
+	if (!wsEndpoint && !_serverconfig2.default.crawler) return
+
+	const freePool = await workerManager.getFreePool({
+		delay: 500,
+	})
 
 	const pool = freePool.pool
 
@@ -115,10 +110,11 @@ const ISRHandler = async (params) => {
 					}
 				)
 
-				clearTimeout(timeout)
 				res(tmpResult)
 			} catch (err) {
 				rej(err)
+			} finally {
+				clearTimeout(timeout)
 			}
 		})
 	} catch (err) {
@@ -142,14 +138,14 @@ const ISRHandler = async (params) => {
 		})
 	}
 
+	if (!result || result.status !== 200) {
+		cacheManager.remove(params.url)
+	}
+
 	freePool.terminate({
 		force: true,
 		// delay: 30000,
 	})
-
-	if (!result || result.status !== 200) {
-		cacheManager.remove(params.url)
-	}
 
 	return result
 } // getData

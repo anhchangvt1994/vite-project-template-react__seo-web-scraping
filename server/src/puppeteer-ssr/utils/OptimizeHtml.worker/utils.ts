@@ -13,6 +13,8 @@ import {
 	regexRemoveIconTagSecond,
 	regexRemoveScriptTag,
 	regexRemoveSpecialTag,
+	regexRemoveStyleTag,
+	regexShallowOptimize,
 } from '../../constants'
 
 export const compressContent = async (html: string): Promise<string> => {
@@ -48,7 +50,7 @@ export const optimizeContent = async (
 	html: string,
 	isFullOptimize = false
 ): Promise<string> => {
-	if (!html || PROCESS_ENV.DISABLE_OPTIMIZE) return html
+	if (!html) return html
 	// console.log('start optimize')
 
 	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
@@ -207,14 +209,15 @@ export const optimizeContent = async (
 } // optimizeContent
 
 export const shallowOptimizeContent = async (html: string) => {
-	if (!html || PROCESS_ENV.DISABLE_OPTIMIZE) return html
+	if (!html) return html
 
 	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
 
 	html = html
-		.replace(regexRemoveScriptTag, '')
-		.replace(regexRemoveSpecialTag, '')
-		.replace(regexRemoveIconTagFirst, '')
+		// .replace(regexRemoveScriptTag, '')
+		// .replace(regexRemoveSpecialTag, '')
+		// .replace(regexRemoveIconTagFirst, '')
+		.replace(regexShallowOptimize, '')
 		.replace(regexHandleAttrsHtmlTag, (match, tag, curAttrs) => {
 			let newAttrs = curAttrs
 
@@ -251,7 +254,6 @@ export const shallowOptimizeContent = async (html: string) => {
 
 			return `<img ${newAttrs}>`
 		})
-		.replace(regexRemoveClassAndStyleAttrs, '')
 		.replace(
 			regexHandleAttrsInteractiveTag,
 			(math, tag, curAttrs, negative, content, endTag) => {
@@ -292,20 +294,15 @@ export const shallowOptimizeContent = async (html: string) => {
 } // shallowOptimizeContent
 
 export const deepOptimizeContent = async (html: string) => {
-	if (
-		!html ||
-		PROCESS_ENV.DISABLE_OPTIMIZE ||
-		PROCESS_ENV.DISABLE_DEEP_OPTIMIZE
-	)
-		return html
+	if (!html) return html
 
 	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
 
 	let tmpHTML = html
 	try {
 		tmpHTML = tmpHTML
-			.replace(regexHalfOptimizeBody, '')
-			.replace(regexRemoveIconTagSecond, '')
+			// .replace(regexHalfOptimizeBody, '')
+			// .replace(regexRemoveIconTagSecond, '')
 			.replace(
 				regexHandleAttrsInteractiveTag,
 				(math, tag, curAttrs, negative, content, endTag) => {
@@ -394,3 +391,23 @@ export const deepOptimizeContent = async (html: string) => {
 
 	return tmpHTML
 } // deepOptimizeContent
+
+export const scriptOptimizeContent = async (html: string) => {
+	if (!html) return html
+
+	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
+
+	html = html.replace(regexRemoveScriptTag, '')
+
+	return html
+} // scriptOptimizeContent
+
+export const styleOptimizeContent = async (html) => {
+	if (!html) return html
+
+	if (Buffer.isBuffer(html)) html = brotliDecompressSync(html).toString()
+
+	html = html.replace(regexRemoveStyleTag, '')
+
+	return html
+} // styleOptimizeContent

@@ -1,10 +1,13 @@
 import fs from 'fs'
-import crypto from 'crypto'
 import Console from '../../../utils/ConsoleHandler'
 import { pagesPath } from '../../../constants'
 import path from 'path'
 import { brotliCompressSync } from 'zlib'
 import { ISSRResult } from '../../types'
+import {
+	// decryptCrawlerKeyCache,
+	encryptCrawlerKeyCache,
+} from '../../../utils/CryptoHandler'
 
 export interface ICacheSetParams {
 	html: string
@@ -29,8 +32,10 @@ if (!fs.existsSync(pagesPath)) {
 	}
 }
 
+// export const regexKeyConverter =
+// 	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
 export const regexKeyConverter =
-	/^https?:\/\/(www\.)?|^www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
+	/www\.|botInfo=([^&]*)&deviceInfo=([^&]*)&localeInfo=([^&]*)&environmentInfo=([^&]*)/g
 
 export const getKey = (url) => {
 	if (!url) {
@@ -42,7 +47,11 @@ export const getKey = (url) => {
 		.replace('/?', '?')
 		.replace(regexKeyConverter, '')
 		.replace(/\?(?:\&|)$/g, '')
-	return crypto.createHash('md5').update(url).digest('hex')
+
+	const urlEncrypted = encryptCrawlerKeyCache(url)
+	// const urlDecrypted = decryptCrawlerKeyCache(urlEncrypted)
+
+	return urlEncrypted
 } // getKey
 
 export const getFileInfo = async (file: string): Promise<IFileInfo> => {
@@ -354,3 +363,18 @@ export const rename = (params: { url: string; type?: 'raw' | 'renew' }) => {
 		}
 	}
 } // rename
+
+export const isExist = (url: string) => {
+	if (!url) {
+		Console.log('Url can not empty!')
+		return false
+	}
+
+	const key = getKey(url)
+
+	return (
+		fs.existsSync(`${pagesPath}/${key}.raw.br`) ||
+		fs.existsSync(`${pagesPath}/${key}.br`) ||
+		fs.existsSync(`${pagesPath}/${key}.renew.br`)
+	)
+} // isExist

@@ -11,8 +11,9 @@ const detectStaticExtension = (req: HttpRequest) => {
 		return false
 	}
 
-	let isStatic = false
-	isStatic =
+	const isStatic =
+		(typeof req.getHeader('sec-fetch-dest') === 'string' &&
+			/image|script|style/.test(req.getHeader('sec-fetch-dest'))) ||
 		/[A-Za-z0-9-]+\.(vue|ts|js|css|gif|jpg|jpeg|png|ico|bmp|ogg|webp|mp4|webm|mp3|ttf|woff|json|rss|atom|gz|zip|rar|7z|css|js|gzip|exe|svg|pdf|docx)(\?[^\/]*)?$/g.test(
 			url
 		) ||

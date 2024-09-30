@@ -5,6 +5,8 @@ import WorkerPool from 'workerpool'
 import { brotliDecompressSync } from 'zlib'
 import Console from '../ConsoleHandler'
 import { deleteResource as deleteResourceWithWorker } from './utils'
+import { decryptCrawlerKeyCache } from '../CryptoHandler'
+import ServerConfig from '../../server.config'
 
 type IFileInfo =
 	| {
@@ -104,137 +106,81 @@ const checkToCleanFile = async (
 
 const scanToCleanBrowsers = async (
 	dirPath: string,
-	durationValidToKeep = 1,
+	expiredTime = 1,
 	browserStore
 ) => {
-	await new Promise(async (res) => {
-		if (fs.existsSync(dirPath)) {
-			let counter = 0
-			const browserList = fs.readdirSync(dirPath)
+	if (fs.existsSync(dirPath)) {
+		const browserList = fs.readdirSync(dirPath)
 
-			if (!browserList.length) return res(null)
+		const curUserDataPath = browserStore.userDataPath
+			? path.join('', browserStore.userDataPath)
+			: ''
+		const reserveUserDataPath = browserStore.reserveUserDataPath
+			? path.join('', browserStore.reserveUserDataPath)
+			: ''
 
-			const curUserDataPath = browserStore.userDataPath
-				? path.join('', browserStore.userDataPath)
-				: ''
-			const reserveUserDataPath = browserStore.reserveUserDataPath
-				? path.join('', browserStore.reserveUserDataPath)
-				: ''
+		for (const file of browserList) {
+			const absolutePath = path.join(dirPath, file)
 
-			for (const file of browserList) {
-				const absolutePath = path.join(dirPath, file)
+			if (
+				absolutePath === curUserDataPath ||
+				absolutePath === reserveUserDataPath
+			) {
+				continue
+			}
 
-				if (
-					absolutePath === curUserDataPath ||
-					absolutePath === reserveUserDataPath
-				) {
-					counter++
-					if (counter === browserList.length) return res(null)
-					continue
-				}
+			const dirExistTimeInMinutes =
+				(Date.now() - new Date(fs.statSync(absolutePath).mtime).getTime()) /
+				60000
 
-				const dirExistDurationInMinutes =
-					(Date.now() - new Date(fs.statSync(absolutePath).mtime).getTime()) /
-					60000
-
-				if (dirExistDurationInMinutes >= durationValidToKeep) {
-					// NOTE - browser.pages is broken
-					// const browser = await new Promise<Browser>(async (res) => {
-					// 	let promiseBrowser
-					// 	if (browserStore.executablePath) {
-					// 		promiseBrowser = puppeteer.launch({
-					// 			...defaultBrowserOptions,
-					// 			userDataDir: absolutePath,
-					// 			args: Chromium.args,
-					// 			executablePath: browserStore.executablePath,
-					// 		})
-					// 	} else {
-					// 		promiseBrowser = puppeteer.launch({
-					// 			...defaultBrowserOptions,
-					// 			userDataDir: absolutePath,
-					// 		})
-					// 	}
-
-					// 	res(promiseBrowser)
-					// })
-
-					// const pages = await browser.pages()
-
-					// if (pages.length <= 1) {
-					// 	await browser.close()
-					// 	try {
-					// 		await WorkerPool.pool(
-					// 			path.resolve(__dirname, `./index.${resourceExtension}`)
-					// 		)?.exec('deleteResource', [absolutePath])
-					// 	} catch (err) {
-					// 		Console.error(err)
-					// 	} finally {
-					// 		counter++
-
-					// 		if (counter === browserList.length) res(null)
-					// 	}
-					// } else {
-					// 	counter++
-					// 	if (counter === browserList.length) res(null)
-					// }
-
-					// NOTE - Remove without check pages
-					try {
-						deleteResource(absolutePath)
-					} catch (err) {
-						Console.error(err)
-					} finally {
-						counter++
-
-						if (counter === browserList.length) res(null)
-					}
-				} else {
-					counter++
-					if (counter === browserList.length) res(null)
+			if (dirExistTimeInMinutes >= expiredTime) {
+				// NOTE - Remove without check pages
+				try {
+					deleteResource(absolutePath)
+				} catch (err) {
+					Console.error(err)
 				}
 			}
-		} else {
-			res(null)
 		}
-	})
+	}
 } // scanToCleanBrowsers
 
-const scanToCleanPages = async (
-	dirPath: string,
-	durationValidToKeep = 21600
-) => {
-	await new Promise(async (res) => {
-		if (fs.existsSync(dirPath)) {
-			let counter = 0
-			const pageList = fs.readdirSync(dirPath)
+const scanToCleanPages = (dirPath: string) => {
+	if (fs.existsSync(dirPath)) {
+		const pageList = fs.readdirSync(dirPath)
 
-			if (!pageList.length) return res(null)
+		for (const file of pageList) {
+			const urlInfo = new URL(
+				decryptCrawlerKeyCache(file.split('.')[0]) as string
+			)
 
-			for (const file of pageList) {
-				const absolutePath = path.join(dirPath, file)
-				const dirExistDurationInMinutes =
-					(Date.now() - new Date(fs.statSync(absolutePath).atime).getTime()) /
-					1000
+			const expiredTime =
+				process.env.MODE === 'development'
+					? 0
+					: ServerConfig.crawl.routes[urlInfo.pathname].cache.time ||
+					  ServerConfig.crawl.cache.time
 
-				if (dirExistDurationInMinutes >= durationValidToKeep) {
-					try {
-						fs.unlinkSync(absolutePath)
-					} catch (err) {
-						Console.error(err)
-					} finally {
-						counter++
+			if (expiredTime === 'infinite') {
+				continue
+			}
 
-						if (counter === pageList.length) res(null)
-					}
-				} else {
-					counter++
-					if (counter === pageList.length) res(null)
+			const absolutePath = path.join(dirPath, file)
+			const dirExistTimeInMinutes =
+				(Date.now() - new Date(fs.statSync(absolutePath).atime).getTime()) /
+				1000
+
+			if (dirExistTimeInMinutes >= expiredTime) {
+				try {
+					fs.unlinkSync(absolutePath)
+				} catch (err) {
+					Console.error(err)
 				}
 			}
-		} else {
-			res(null)
 		}
-	})
+	}
+	// else {
+	// res(null)
+	// }
 } // scanToCleanPages
 
 const scanToCleanAPIDataCache = async (dirPath: string) => {

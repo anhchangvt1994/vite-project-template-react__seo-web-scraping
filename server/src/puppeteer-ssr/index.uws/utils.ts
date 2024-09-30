@@ -54,7 +54,6 @@ export const handleResultAfterISRGenerator = (
 			result.response
 		) {
 			try {
-				res = _setCookie(res)
 				const body = (() => {
 					let tmpBody: string | Buffer = ''
 
@@ -97,6 +96,8 @@ export const handleResultAfterISRGenerator = (
 				res
 					.writeStatus(String(result.status))
 					.writeHeader('Content-Type', 'text/html; charset=utf-8')
+
+				res = _setCookie(res)
 
 				if (enableContentEncoding && result.status === 200) {
 					res.writeHeader('Content-Encoding', contentEncoding)

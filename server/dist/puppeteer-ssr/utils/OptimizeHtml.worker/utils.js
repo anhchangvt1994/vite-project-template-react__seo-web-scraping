@@ -60,7 +60,7 @@ const compressContent = async (html) => {
 exports.compressContent = compressContent // compressContent
 
 const optimizeContent = async (html, isFullOptimize = false) => {
-	if (!html || _InitEnv.PROCESS_ENV.DISABLE_OPTIMIZE) return html
+	if (!html) return html
 	// console.log('start optimize')
 
 	if (Buffer.isBuffer(html))
@@ -261,15 +261,16 @@ const optimizeContent = async (html, isFullOptimize = false) => {
 exports.optimizeContent = optimizeContent // optimizeContent
 
 const shallowOptimizeContent = async (html) => {
-	if (!html || _InitEnv.PROCESS_ENV.DISABLE_OPTIMIZE) return html
+	if (!html) return html
 
 	if (Buffer.isBuffer(html))
 		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
 
 	html = html
-		.replace(_constants3.regexRemoveScriptTag, '')
-		.replace(_constants3.regexRemoveSpecialTag, '')
-		.replace(_constants3.regexRemoveIconTagFirst, '')
+		// .replace(regexRemoveScriptTag, '')
+		// .replace(regexRemoveSpecialTag, '')
+		// .replace(regexRemoveIconTagFirst, '')
+		.replace(_constants3.regexShallowOptimize, '')
 		.replace(_constants3.regexHandleAttrsHtmlTag, (match, tag, curAttrs) => {
 			let newAttrs = curAttrs
 
@@ -318,7 +319,6 @@ const shallowOptimizeContent = async (html) => {
 
 			return `<img ${newAttrs}>`
 		})
-		.replace(_constants3.regexRemoveClassAndStyleAttrs, '')
 		.replace(
 			_constants3.regexHandleAttrsInteractiveTag,
 			(math, tag, curAttrs, negative, content, endTag) => {
@@ -360,12 +360,7 @@ const shallowOptimizeContent = async (html) => {
 exports.shallowOptimizeContent = shallowOptimizeContent // shallowOptimizeContent
 
 const deepOptimizeContent = async (html) => {
-	if (
-		!html ||
-		_InitEnv.PROCESS_ENV.DISABLE_OPTIMIZE ||
-		_InitEnv.PROCESS_ENV.DISABLE_DEEP_OPTIMIZE
-	)
-		return html
+	if (!html) return html
 
 	if (Buffer.isBuffer(html))
 		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
@@ -373,8 +368,8 @@ const deepOptimizeContent = async (html) => {
 	let tmpHTML = html
 	try {
 		tmpHTML = tmpHTML
-			.replace(_constants3.regexHalfOptimizeBody, '')
-			.replace(_constants3.regexRemoveIconTagSecond, '')
+			// .replace(regexHalfOptimizeBody, '')
+			// .replace(regexRemoveIconTagSecond, '')
 			.replace(
 				_constants3.regexHandleAttrsInteractiveTag,
 				(math, tag, curAttrs, negative, content, endTag) => {
@@ -486,3 +481,27 @@ const deepOptimizeContent = async (html) => {
 	return tmpHTML
 }
 exports.deepOptimizeContent = deepOptimizeContent // deepOptimizeContent
+
+const scriptOptimizeContent = async (html) => {
+	if (!html) return html
+
+	if (Buffer.isBuffer(html))
+		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
+
+	html = html.replace(_constants3.regexRemoveScriptTag, '')
+
+	return html
+}
+exports.scriptOptimizeContent = scriptOptimizeContent // scriptOptimizeContent
+
+const styleOptimizeContent = async (html) => {
+	if (!html) return html
+
+	if (Buffer.isBuffer(html))
+		html = _zlib.brotliDecompressSync.call(void 0, html).toString()
+
+	html = html.replace(_constants3.regexRemoveStyleTag, '')
+
+	return html
+}
+exports.styleOptimizeContent = styleOptimizeContent // styleOptimizeContent

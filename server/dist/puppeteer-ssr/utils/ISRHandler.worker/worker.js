@@ -109,17 +109,11 @@ const waitResponse = (() => {
 			? 1500
 			: 500
 	const defaultRequestWaitingDuration =
-		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE
-			? 1500
-			: 500
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 500 : 500
 	const requestServedFromCacheDuration =
-		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE
-			? 1500
-			: 500
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 500 : 500
 	const requestFailDuration =
-		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE
-			? 1500
-			: 500
+		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE ? 500 : 500
 	const maximumTimeout =
 		_constants.BANDWIDTH_LEVEL > _constants.BANDWIDTH_LEVEL_LIST.ONE
 			? 20000
@@ -440,46 +434,83 @@ const ISRHandler = async (params) => {
 			}
 
 			try {
-				await _optionalChain([
-					safePage,
-					'call',
-					(_32) => _32(),
-					'optionalAccess',
-					(_33) => _33.waitForNetworkIdle,
-					'call',
-					(_34) => _34({ idleTime: 150 }),
+				await Promise.all([
+					_optionalChain([
+						safePage,
+						'call',
+						(_32) => _32(),
+						'optionalAccess',
+						(_33) => _33.waitForNetworkIdle,
+						'call',
+						(_34) => _34({ idleTime: 150 }),
+					]),
+					_optionalChain([
+						safePage,
+						'call',
+						(_35) => _35(),
+						'optionalAccess',
+						(_36) => _36.setCacheEnabled,
+						'call',
+						(_37) => _37(false),
+					]),
+					_optionalChain([
+						safePage,
+						'call',
+						(_38) => _38(),
+						'optionalAccess',
+						(_39) => _39.setRequestInterception,
+						'call',
+						(_40) => _40(true),
+					]),
+					_optionalChain([
+						safePage,
+						'call',
+						(_41) => _41(),
+						'optionalAccess',
+						(_42) => _42.setViewport,
+						'call',
+						(_43) =>
+							_43({
+								width: _constants3.WINDOW_VIEWPORT_WIDTH,
+								height: _constants3.WINDOW_VIEWPORT_HEIGHT,
+							}),
+					]),
+					_optionalChain([
+						safePage,
+						'call',
+						(_44) => _44(),
+						'optionalAccess',
+						(_45) => _45.setExtraHTTPHeaders,
+						'call',
+						(_46) =>
+							_46({
+								...specialInfo,
+								service: 'puppeteer',
+							}),
+					]),
 				])
-				await _optionalChain([
-					safePage,
-					'call',
-					(_35) => _35(),
-					'optionalAccess',
-					(_36) => _36.setViewport,
-					'call',
-					(_37) =>
-						_37({
-							width: _constants3.WINDOW_VIEWPORT_WIDTH,
-							height: _constants3.WINDOW_VIEWPORT_HEIGHT,
-						}),
-				])
-				await _optionalChain([
-					safePage,
-					'call',
-					(_38) => _38(),
-					'optionalAccess',
-					(_39) => _39.setRequestInterception,
-					'call',
-					(_40) => _40(true),
-				])
+
+				// await safePage()?.waitForNetworkIdle({ idleTime: 150 })
+				// await safePage()?.setCacheEnabled(false)
+				// await safePage()?.setRequestInterception(true)
+				// await safePage()?.setViewport({
+				// 	width: WINDOW_VIEWPORT_WIDTH,
+				// 	height: WINDOW_VIEWPORT_HEIGHT,
+				// })
+				// await safePage()?.setExtraHTTPHeaders({
+				// 	...specialInfo,
+				// 	service: 'puppeteer',
+				// })
+
 				_optionalChain([
 					safePage,
 					'call',
-					(_41) => _41(),
+					(_47) => _47(),
 					'optionalAccess',
-					(_42) => _42.on,
+					(_48) => _48.on,
 					'call',
-					(_43) =>
-						_43('request', (req) => {
+					(_49) =>
+						_49('request', (req) => {
 							const resourceType = req.resourceType()
 
 							if (resourceType === 'stylesheet') {
@@ -500,20 +531,6 @@ const ISRHandler = async (params) => {
 						}),
 				])
 
-				await _optionalChain([
-					safePage,
-					'call',
-					(_44) => _44(),
-					'optionalAccess',
-					(_45) => _45.setExtraHTTPHeaders,
-					'call',
-					(_46) =>
-						_46({
-							...specialInfo,
-							service: 'puppeteer',
-						}),
-				])
-
 				_ConsoleHandler2.default.log(`Start to crawl: ${url}`)
 
 				let response
@@ -530,9 +547,9 @@ const ISRHandler = async (params) => {
 						_optionalChain([
 							response,
 							'optionalAccess',
-							(_47) => _47.status,
+							(_50) => _50.status,
 							'optionalCall',
-							(_48) => _48(),
+							(_51) => _51(),
 						]),
 						() => status
 					)
@@ -546,11 +563,11 @@ const ISRHandler = async (params) => {
 				_optionalChain([
 					safePage,
 					'call',
-					(_49) => _49(),
+					(_52) => _52(),
 					'optionalAccess',
-					(_50) => _50.close,
+					(_53) => _53.close,
 					'call',
-					(_51) => _51(),
+					(_54) => _54(),
 				])
 				if (params.hasCache) {
 					cacheManager.rename({
@@ -568,26 +585,14 @@ const ISRHandler = async (params) => {
 					await _optionalChain([
 						safePage,
 						'call',
-						(_52) => _52(),
+						(_55) => _55(),
 						'optionalAccess',
-						(_53) => _53.content,
+						(_56) => _56.content,
 						'call',
-						(_54) => _54(),
+						(_57) => _57(),
 					]),
 					async () => ''
 				) // serialized HTML of page DOM.
-				_optionalChain([
-					safePage,
-					'call',
-					(_55) => _55(),
-					'optionalAccess',
-					(_56) => _56.close,
-					'call',
-					(_57) => _57(),
-				])
-			} catch (err) {
-				_ConsoleHandler2.default.log('ISRHandler line 315:')
-				_ConsoleHandler2.default.error(err)
 				_optionalChain([
 					safePage,
 					'call',
@@ -596,6 +601,18 @@ const ISRHandler = async (params) => {
 					(_59) => _59.close,
 					'call',
 					(_60) => _60(),
+				])
+			} catch (err) {
+				_ConsoleHandler2.default.log('ISRHandler line 315:')
+				_ConsoleHandler2.default.error(err)
+				_optionalChain([
+					safePage,
+					'call',
+					(_61) => _61(),
+					'optionalAccess',
+					(_62) => _62.close,
+					'call',
+					(_63) => _63(),
 				])
 				if (params.hasCache) {
 					cacheManager.rename({
@@ -624,24 +641,40 @@ const ISRHandler = async (params) => {
 		const crawlCustomOption = _optionalChain([
 			_serverconfig2.default,
 			'access',
-			(_61) => _61.crawl,
+			(_64) => _64.crawl,
 			'access',
-			(_62) => _62.custom,
+			(_65) => _65.custom,
 			'optionalCall',
-			(_63) => _63(url),
+			(_66) => _66(url),
 		])
 
-		const enableToOptimize = (() => {
-			const options = _nullishCoalesce(
-				_nullishCoalesce(
-					crawlCustomOption,
-					() => _serverconfig2.default.crawl.routes[pathname]
-				),
-				() => _serverconfig2.default.crawl
-			)
+		const optimizeOption = _nullishCoalesce(
+			_nullishCoalesce(
+				crawlCustomOption,
+				() => _serverconfig2.default.crawl.routes[pathname]
+			),
+			() => _serverconfig2.default.crawl
+		).optimize
 
-			return options.optimize && enableOptimizeAndCompressIfRemoteCrawlerFail
-		})()
+		const enableShallowOptimize =
+			(optimizeOption === 'all' || optimizeOption.includes('shallow')) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableDeepOptimize =
+			(optimizeOption === 'all' || optimizeOption.includes('deep')) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableScriptOptimize =
+			optimizeOption !== 'all' &&
+			!optimizeOption.includes('shallow') &&
+			optimizeOption.includes('script') &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableStyleOptimize =
+			optimizeOption !== 'all' &&
+			!optimizeOption.includes('shallow') &&
+			optimizeOption.includes('style') &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
 
 		const enableToCompress = (() => {
 			const options = _nullishCoalesce(
@@ -664,7 +697,13 @@ const ISRHandler = async (params) => {
 				html = crawlCustomOption.onContentCrawled({ html })
 			}
 
-			if (enableToOptimize)
+			if (enableScriptOptimize)
+				html = await _utils3.scriptOptimizeContent.call(void 0, html)
+
+			if (enableStyleOptimize)
+				html = await _utils3.styleOptimizeContent.call(void 0, html)
+
+			if (enableShallowOptimize)
 				html = await _utils3.shallowOptimizeContent.call(void 0, html)
 
 			if (enableToCompress)
@@ -675,7 +714,7 @@ const ISRHandler = async (params) => {
 				value: html,
 			})
 
-			if (enableToOptimize)
+			if (enableDeepOptimize)
 				html = await _utils3.deepOptimizeContent.call(void 0, html)
 			// console.log('finish optimize and compress: ', url.split('?')[0])
 			// console.log('-------')

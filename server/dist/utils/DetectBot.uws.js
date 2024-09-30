@@ -44,16 +44,14 @@ const BOT_LIST = new Map([
 const detectBot = (req) => {
 	const userAgent = req.getHeader('user-agent') || ''
 	const secCHUA = req.getHeader('sec-ch-ua') || ''
-	if (!userAgent && !secCHUA) {
-		return {
-			isBot: false,
-			name: '',
-		}
-	}
 
 	const tmpBotInfo = {
 		isBot: false,
 		name: '',
+	}
+
+	if (!userAgent && !secCHUA) {
+		return tmpBotInfo
 	}
 
 	for (const [botName, botPattern] of BOT_LIST.entries()) {

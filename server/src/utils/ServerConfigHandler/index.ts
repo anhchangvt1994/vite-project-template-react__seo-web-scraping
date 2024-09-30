@@ -14,39 +14,51 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 					routes: {},
 				}
 
-				if (serverConfigDefined[key].enable) {
-					serverConfigDefined[key] = {
-						...serverConfigDefined[key],
-						defaultLang: tmpOptionCastingType.defaultLang,
-						defaultCountry: tmpOptionCastingType.defaultCountry,
-						hideDefaultLocale: tmpOptionCastingType.hideDefaultLocale,
-						routes: tmpOptionCastingType.routes || {},
-						custom: tmpOptionCastingType.custom,
-					}
+				serverConfigDefined[key] = {
+					...serverConfigDefined[key],
+					defaultLang: tmpOptionCastingType.defaultLang,
+					defaultCountry: tmpOptionCastingType.defaultCountry,
+					hideDefaultLocale: tmpOptionCastingType.hideDefaultLocale,
+					routes: tmpOptionCastingType.routes || {},
+					custom: tmpOptionCastingType.custom,
+				}
 
-					for (const localeRouteKey in serverConfigDefined[key].routes) {
-						if (serverConfigDefined[key].routes[localeRouteKey]) {
+				for (const localeRouteKey in serverConfigDefined[key].routes) {
+					if (serverConfigDefined[key].routes[localeRouteKey]) {
+						serverConfigDefined[key].routes[localeRouteKey] = {
+							enable:
+								serverConfigDefined[key].routes[localeRouteKey].enable ||
+								serverConfigDefined.locale.enable,
+						}
+
+						if (serverConfigDefined[key].routes[localeRouteKey].enable) {
 							serverConfigDefined[key].routes[localeRouteKey] = {
-								enable: serverConfigDefined[key].routes[localeRouteKey].enable,
+								...serverConfigDefined[key].routes[localeRouteKey],
+								defaultLang:
+									serverConfigDefined[key].routes[localeRouteKey]?.defaultLang,
+								defaultCountry:
+									serverConfigDefined[key].routes[localeRouteKey]
+										?.defaultCountry,
+								hideDefaultLocale:
+									serverConfigDefined[key].routes[localeRouteKey]
+										?.hideDefaultLocale ?? true,
 							}
 
-							if (serverConfigDefined[key].routes[localeRouteKey].enable)
-								serverConfigDefined[key].routes[localeRouteKey] = {
-									...serverConfigDefined[key].routes[localeRouteKey],
-									defaultLang:
-										serverConfigDefined[key].routes[localeRouteKey]
-											?.defaultLang,
-									defaultCountry:
-										serverConfigDefined[key].routes[localeRouteKey]
-											?.defaultCountry,
-									hideDefaultLocale:
-										serverConfigDefined[key].routes[localeRouteKey]
-											?.hideDefaultLocale ?? true,
+							if (serverConfigDefined[key].custom) {
+								const customFunc = serverConfigDefined[key].custom
+								serverConfigDefined[key].custom = (url: string) => {
+									const tmpConfig = customFunc(url)
+
+									return {
+										enable: serverConfigDefined[key].enable,
+										...tmpConfig,
+									}
 								}
-						} else
-							serverConfigDefined[key].routes[localeRouteKey] =
-								defaultServerConfig[key]
-					}
+							}
+						}
+					} else
+						serverConfigDefined[key].routes[localeRouteKey] =
+							defaultServerConfig[key]
 				}
 			} else serverConfigDefined[key] = defaultServerConfig[key]
 		} // locale
@@ -63,11 +75,12 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 					optimize:
 						tmpOptionCastingType.optimize === undefined
 							? defaultServerConfig[key].optimize
-							: Boolean(tmpOptionCastingType.optimize),
+							: tmpOptionCastingType.optimize,
 					compress:
 						tmpOptionCastingType.compress === undefined
 							? defaultServerConfig[key].compress
-							: Boolean(tmpOptionCastingType.compress),
+							: Boolean(tmpOptionCastingType.compress) ||
+							  !PROCESS_ENV.DISABLE_COMPRESS,
 					cache:
 						tmpOptionCastingType.cache === undefined
 							? defaultServerConfig[key].cache
@@ -90,14 +103,14 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 				for (const localeRouteKey in serverConfigDefined[key].routes) {
 					if (serverConfigDefined[key].routes[localeRouteKey]) {
 						serverConfigDefined[key].routes[localeRouteKey] = {
-							enable: serverConfigDefined[key].routes[localeRouteKey].enable,
+							enable:
+								serverConfigDefined[key].routes[localeRouteKey].enable ||
+								serverConfigDefined[key].enable,
 							optimize:
 								serverConfigDefined[key].routes[localeRouteKey].optimize ===
 								undefined
 									? defaultServerConfig[key].optimize
-									: Boolean(
-											serverConfigDefined[key].routes[localeRouteKey].optimize
-									  ),
+									: serverConfigDefined[key].routes[localeRouteKey].optimize,
 							compress:
 								serverConfigDefined[key].routes[localeRouteKey].compress ==
 								undefined
@@ -106,12 +119,15 @@ export const defineServerConfig = (options: IServerConfigOptional) => {
 											serverConfigDefined[key].routes[localeRouteKey].compress
 									  ),
 							cache: {
-								enable: serverConfigDefined[key].routes[localeRouteKey].cache
-									? serverConfigDefined[key].routes[localeRouteKey].cache.enable
-									: serverConfigDefined[key].routes[localeRouteKey].enable,
+								enable:
+									serverConfigDefined[key].routes[localeRouteKey].cache
+										?.enable ?? serverConfigDefined[key].cache.enable,
+								time:
+									serverConfigDefined[key].routes[localeRouteKey].cache?.time ??
+									serverConfigDefined[key].cache.time,
 								renewTime:
 									serverConfigDefined[key].routes[localeRouteKey].cache
-										?.renewTime ?? defaultServerConfig[key].cache.renewTime,
+										?.renewTime ?? serverConfigDefined[key].cache.renewTime,
 							},
 						}
 					} else

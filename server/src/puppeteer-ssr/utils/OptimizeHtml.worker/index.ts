@@ -15,11 +15,13 @@ const workerManager = WorkerManager.init(
 		'optimizeContent',
 		'shallowOptimizeContent',
 		'deepOptimizeContent',
+		'scriptOptimizeContent',
+		'styleOptimizeContent',
 	]
 )
 
 export const compressContent = async (html: string) => {
-	if (!html || PROCESS_ENV.DISABLE_COMPRESS) return html
+	if (!html) return html
 
 	const freePool = await workerManager.getFreePool({
 		delay: 500,
@@ -53,7 +55,7 @@ export const optimizeContent = async (
 	html: string,
 	isFullOptimize: boolean = false
 ) => {
-	if (!html || PROCESS_ENV.DISABLE_OPTIMIZE) return html
+	if (!html) return html
 
 	const freePool = await workerManager.getFreePool({
 		delay: 500,
@@ -87,7 +89,7 @@ export const optimizeContent = async (
 } // compressContent
 
 export const shallowOptimizeContent = async (html: string) => {
-	if (!html || PROCESS_ENV.DISABLE_OPTIMIZE) return html
+	if (!html) return html
 
 	const freePool = await workerManager.getFreePool({
 		delay: 500,
@@ -121,7 +123,7 @@ export const deepOptimizeContent = async (
 	html: string,
 	isFullOptimize: boolean = false
 ) => {
-	if (!html || PROCESS_ENV.DISABLE_DEEP_OPTIMIZE) return html
+	if (!html) return html
 
 	const freePool = await workerManager.getFreePool({
 		delay: 500,
@@ -150,3 +152,65 @@ export const deepOptimizeContent = async (
 
 	return result
 } // compressContent
+
+export const scriptOptimizeContent = async (html: string) => {
+	if (!html) return html
+
+	const freePool = await workerManager.getFreePool({
+		delay: 500,
+	})
+	const pool = freePool.pool
+	let result
+
+	try {
+		result = await new Promise(async (res) => {
+			const timeout = setTimeout(() => res(html), 5000)
+			const tmpResult = await pool.exec('scriptOptimizeContent', [html])
+
+			clearTimeout(timeout)
+
+			res(tmpResult)
+		})
+	} catch (err) {
+		Console.error(err)
+		result = html
+	}
+
+	freePool.terminate({
+		force: true,
+		// delay: 0,
+	})
+
+	return result
+} // scriptOptimizeContent
+
+export const styleOptimizeContent = async (html: string) => {
+	if (!html) return html
+
+	const freePool = await workerManager.getFreePool({
+		delay: 500,
+	})
+	const pool = freePool.pool
+	let result
+
+	try {
+		result = await new Promise(async (res) => {
+			const timeout = setTimeout(() => res(html), 5000)
+			const tmpResult = await pool.exec('styleOptimizeContent', [html])
+
+			clearTimeout(timeout)
+
+			res(tmpResult)
+		})
+	} catch (err) {
+		Console.error(err)
+		result = html
+	}
+
+	freePool.terminate({
+		force: true,
+		// delay: 0,
+	})
+
+	return result
+} // styleOptimizeContent

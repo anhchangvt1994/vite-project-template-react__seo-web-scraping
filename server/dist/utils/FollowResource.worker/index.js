@@ -34,6 +34,9 @@ var _zlib = require('zlib')
 var _ConsoleHandler = require('../ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
 var _utils = require('./utils')
+var _CryptoHandler = require('../CryptoHandler')
+var _serverconfig = require('../../server.config')
+var _serverconfig2 = _interopRequireDefault(_serverconfig)
 
 const deleteResource = (path) => {
 	return _utils.deleteResource.call(void 0, path)
@@ -111,138 +114,81 @@ const checkToCleanFile = async (file, { schedule, validRequestAtDuration }) => {
 	// WorkerPool.pool().terminate()
 } // checkToCleanFile
 
-const scanToCleanBrowsers = async (
-	dirPath,
-	durationValidToKeep = 1,
-	browserStore
-) => {
-	await new Promise(async (res) => {
-		if (_fs2.default.existsSync(dirPath)) {
-			let counter = 0
-			const browserList = _fs2.default.readdirSync(dirPath)
+const scanToCleanBrowsers = async (dirPath, expiredTime = 1, browserStore) => {
+	if (_fs2.default.existsSync(dirPath)) {
+		const browserList = _fs2.default.readdirSync(dirPath)
 
-			if (!browserList.length) return res(null)
+		const curUserDataPath = browserStore.userDataPath
+			? _path2.default.join('', browserStore.userDataPath)
+			: ''
+		const reserveUserDataPath = browserStore.reserveUserDataPath
+			? _path2.default.join('', browserStore.reserveUserDataPath)
+			: ''
 
-			const curUserDataPath = browserStore.userDataPath
-				? _path2.default.join('', browserStore.userDataPath)
-				: ''
-			const reserveUserDataPath = browserStore.reserveUserDataPath
-				? _path2.default.join('', browserStore.reserveUserDataPath)
-				: ''
+		for (const file of browserList) {
+			const absolutePath = _path2.default.join(dirPath, file)
 
-			for (const file of browserList) {
-				const absolutePath = _path2.default.join(dirPath, file)
+			if (
+				absolutePath === curUserDataPath ||
+				absolutePath === reserveUserDataPath
+			) {
+				continue
+			}
 
-				if (
-					absolutePath === curUserDataPath ||
-					absolutePath === reserveUserDataPath
-				) {
-					counter++
-					if (counter === browserList.length) return res(null)
-					continue
-				}
+			const dirExistTimeInMinutes =
+				(Date.now() -
+					new Date(_fs2.default.statSync(absolutePath).mtime).getTime()) /
+				60000
 
-				const dirExistDurationInMinutes =
-					(Date.now() -
-						new Date(_fs2.default.statSync(absolutePath).mtime).getTime()) /
-					60000
-
-				if (dirExistDurationInMinutes >= durationValidToKeep) {
-					// NOTE - browser.pages is broken
-					// const browser = await new Promise<Browser>(async (res) => {
-					// 	let promiseBrowser
-					// 	if (browserStore.executablePath) {
-					// 		promiseBrowser = puppeteer.launch({
-					// 			...defaultBrowserOptions,
-					// 			userDataDir: absolutePath,
-					// 			args: Chromium.args,
-					// 			executablePath: browserStore.executablePath,
-					// 		})
-					// 	} else {
-					// 		promiseBrowser = puppeteer.launch({
-					// 			...defaultBrowserOptions,
-					// 			userDataDir: absolutePath,
-					// 		})
-					// 	}
-
-					// 	res(promiseBrowser)
-					// })
-
-					// const pages = await browser.pages()
-
-					// if (pages.length <= 1) {
-					// 	await browser.close()
-					// 	try {
-					// 		await WorkerPool.pool(
-					// 			path.resolve(__dirname, `./index.${resourceExtension}`)
-					// 		)?.exec('deleteResource', [absolutePath])
-					// 	} catch (err) {
-					// 		Console.error(err)
-					// 	} finally {
-					// 		counter++
-
-					// 		if (counter === browserList.length) res(null)
-					// 	}
-					// } else {
-					// 	counter++
-					// 	if (counter === browserList.length) res(null)
-					// }
-
-					// NOTE - Remove without check pages
-					try {
-						deleteResource(absolutePath)
-					} catch (err) {
-						_ConsoleHandler2.default.error(err)
-					} finally {
-						counter++
-
-						if (counter === browserList.length) res(null)
-					}
-				} else {
-					counter++
-					if (counter === browserList.length) res(null)
+			if (dirExistTimeInMinutes >= expiredTime) {
+				// NOTE - Remove without check pages
+				try {
+					deleteResource(absolutePath)
+				} catch (err) {
+					_ConsoleHandler2.default.error(err)
 				}
 			}
-		} else {
-			res(null)
 		}
-	})
+	}
 } // scanToCleanBrowsers
 
-const scanToCleanPages = async (dirPath, durationValidToKeep = 21600) => {
-	await new Promise(async (res) => {
-		if (_fs2.default.existsSync(dirPath)) {
-			let counter = 0
-			const pageList = _fs2.default.readdirSync(dirPath)
+const scanToCleanPages = (dirPath) => {
+	if (_fs2.default.existsSync(dirPath)) {
+		const pageList = _fs2.default.readdirSync(dirPath)
 
-			if (!pageList.length) return res(null)
+		for (const file of pageList) {
+			const urlInfo = new URL(
+				_CryptoHandler.decryptCrawlerKeyCache.call(void 0, file.split('.')[0])
+			)
 
-			for (const file of pageList) {
-				const absolutePath = _path2.default.join(dirPath, file)
-				const dirExistDurationInMinutes =
-					(Date.now() -
-						new Date(_fs2.default.statSync(absolutePath).atime).getTime()) /
-					1000
+			const expiredTime =
+				process.env.MODE === 'development'
+					? 0
+					: _serverconfig2.default.crawl.routes[urlInfo.pathname].cache.time ||
+					  _serverconfig2.default.crawl.cache.time
 
-				if (dirExistDurationInMinutes >= durationValidToKeep) {
-					try {
-						_fs2.default.unlinkSync(absolutePath)
-					} catch (err) {
-						_ConsoleHandler2.default.error(err)
-					} finally {
-						counter++
+			if (expiredTime === 'infinite') {
+				continue
+			}
 
-						if (counter === pageList.length) res(null)
-					}
-				} else {
-					counter++
-					if (counter === pageList.length) res(null)
+			const absolutePath = _path2.default.join(dirPath, file)
+			const dirExistTimeInMinutes =
+				(Date.now() -
+					new Date(_fs2.default.statSync(absolutePath).atime).getTime()) /
+				1000
+
+			if (dirExistTimeInMinutes >= expiredTime) {
+				try {
+					_fs2.default.unlinkSync(absolutePath)
+				} catch (err) {
+					_ConsoleHandler2.default.error(err)
 				}
 			}
-		} else {
-			res(null)
 		}
-	})
+	}
+	// else {
+	// res(null)
+	// }
 } // scanToCleanPages
 
 const scanToCleanAPIDataCache = async (dirPath) => {

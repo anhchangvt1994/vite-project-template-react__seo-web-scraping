@@ -9,14 +9,19 @@ const ServerConfig = defineServerConfig({
 			'/login': {
 				enable: false,
 			},
+			'/': {
+				cache: {
+					time: 'infinite',
+				},
+			},
 		},
 
-		cache: {
-			enable: true,
-			path: PROCESS_ENV.IS_SERVER
-				? path.resolve(__dirname, '../../../cache')
-				: '',
-		},
+		// cache: {
+		// 	enable: true,
+		// 	path: PROCESS_ENV.IS_SERVER
+		// 		? path.resolve(__dirname, '../../../cache')
+		// 		: '',
+		// },
 	},
 	api: {
 		list: {

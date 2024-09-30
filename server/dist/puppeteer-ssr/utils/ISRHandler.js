@@ -539,7 +539,7 @@ const ISRHandler = async (params) => {
 				_ConsoleHandler2.default.log('ISRHandler line 297:')
 				_ConsoleHandler2.default.log('Crawler is fail!')
 				_ConsoleHandler2.default.error(err)
-				cacheManager.remove(url)
+				cacheManager.remove(url, { force: true })
 				_optionalChain([
 					safePage,
 					'call',
@@ -636,71 +636,92 @@ const ISRHandler = async (params) => {
 	let result
 	if (_constants3.CACHEABLE_STATUS_CODE[status]) {
 		const pathname = new URL(url).pathname
-		const enableToOptimize =
-			(_optionalChain([
-				_serverconfig2.default,
-				'access',
-				(_61) => _61.crawl,
-				'access',
-				(_62) => _62.routes,
-				'access',
-				(_63) => _63[pathname],
-				'optionalAccess',
-				(_64) => _64.optimize,
-			]) ||
-				_optionalChain([
-					_serverconfig2.default,
-					'access',
-					(_65) => _65.crawl,
-					'access',
-					(_66) => _66.custom,
-					'optionalCall',
-					(_67) => _67(pathname),
-					'optionalAccess',
-					(_68) => _68.optimize,
-				]) ||
-				_serverconfig2.default.crawl.optimize) &&
+		const crawlCustomOption = _optionalChain([
+			_serverconfig2.default,
+			'access',
+			(_61) => _61.crawl,
+			'access',
+			(_62) => _62.custom,
+			'optionalCall',
+			(_63) => _63(url),
+		])
+
+		const optimizeOption = _nullishCoalesce(
+			_nullishCoalesce(
+				crawlCustomOption,
+				() => _serverconfig2.default.crawl.routes[pathname]
+			),
+			() => _serverconfig2.default.crawl
+		).optimize
+
+		const enableShallowOptimize =
+			(optimizeOption === 'all' || optimizeOption.includes('shallow')) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableDeepOptimize =
+			(optimizeOption === 'all' || optimizeOption.includes('deep')) &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableScriptOptimize =
+			optimizeOption !== 'all' &&
+			!optimizeOption.includes('shallow') &&
+			optimizeOption.includes('script') &&
+			enableOptimizeAndCompressIfRemoteCrawlerFail
+
+		const enableStyleOptimize =
+			optimizeOption !== 'all' &&
+			!optimizeOption.includes('shallow') &&
+			optimizeOption.includes('style') &&
 			enableOptimizeAndCompressIfRemoteCrawlerFail
 
 		const enableToCompress =
 			(_optionalChain([
 				_serverconfig2.default,
 				'access',
-				(_69) => _69.crawl,
+				(_64) => _64.crawl,
 				'access',
-				(_70) => _70.routes,
+				(_65) => _65.routes,
 				'access',
-				(_71) => _71[pathname],
+				(_66) => _66[pathname],
 				'optionalAccess',
-				(_72) => _72.compress,
+				(_67) => _67.compress,
 			]) ||
 				_optionalChain([
 					_serverconfig2.default,
 					'access',
-					(_73) => _73.crawl,
+					(_68) => _68.crawl,
 					'access',
-					(_74) => _74.custom,
+					(_69) => _69.custom,
 					'optionalCall',
-					(_75) => _75(pathname),
+					(_70) => _70(pathname),
 					'optionalAccess',
-					(_76) => _76.compress,
+					(_71) => _71.compress,
 				]) ||
 				_serverconfig2.default.crawl.compress) &&
 			enableOptimizeAndCompressIfRemoteCrawlerFail
 
 		let isRaw = false
 		try {
-			if (enableToOptimize)
+			if (enableScriptOptimize)
+				html = await _OptimizeHtmlworker.scriptOptimizeContent.call(
+					void 0,
+					html
+				)
+
+			if (enableStyleOptimize)
+				html = await _OptimizeHtmlworker.styleOptimizeContent.call(void 0, html)
+
+			if (enableShallowOptimize)
 				html = await _OptimizeHtmlworker.shallowOptimizeContent.call(
 					void 0,
 					html
 				)
 
-			if (enableToOptimize)
-				html = await _OptimizeHtmlworker.deepOptimizeContent.call(void 0, html)
-
 			if (enableToCompress)
 				html = await _utils3.compressContent.call(void 0, html)
+
+			if (enableDeepOptimize)
+				html = await _OptimizeHtmlworker.deepOptimizeContent.call(void 0, html)
 			// console.log('finish optimize and compress: ', url.split('?')[0])
 			// console.log('-------')
 		} catch (err) {
@@ -719,7 +740,7 @@ const ISRHandler = async (params) => {
 			isRaw,
 		})
 	} else {
-		cacheManager.remove(url)
+		cacheManager.remove(url, { force: true })
 		return {
 			status,
 			html: status === 404 ? 'Page not found!' : html,

@@ -3,7 +3,6 @@ Object.defineProperty(exports, '__esModule', { value: true })
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj }
 }
-var _InitEnv = require('./utils/InitEnv')
 var _fs = require('fs')
 var _fs2 = _interopRequireDefault(_fs)
 var _path = require('path')
@@ -12,6 +11,7 @@ var _serverconfig = require('./server.config')
 var _serverconfig2 = _interopRequireDefault(_serverconfig)
 var _ConsoleHandler = require('./utils/ConsoleHandler')
 var _ConsoleHandler2 = _interopRequireDefault(_ConsoleHandler)
+var _InitEnv = require('./utils/InitEnv')
 
 const pagesPath = _InitEnv.PROCESS_ENV.IS_SERVER
 	? (() => {
